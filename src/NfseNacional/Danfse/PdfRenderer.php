@@ -90,8 +90,15 @@ class PdfRenderer
      * setListIndentWidth(). Sendo bloco, indenta TODAS as linhas — um
      * espacador &nbsp; indentaria so a primeira, deixando serrilhada a
      * margem de qualquer texto que quebre. E o custo de altura e zero.
+     *
+     * CUIDADO: o TCPDF desloca o texto para a direita mas NAO reduz a
+     * largura de quebra, entao este recuo sai da folga do lado direito.
+     * Com cellpadding=2 a celula tem 2,31mm de folga horizontal no total;
+     * medido, cada milimetro aqui e um milimetro a menos antes da borda
+     * direita, e a 1,5mm o texto passava a encostar nela. 0,75mm reparte
+     * a folga sem encostar de nenhum dos lados.
      */
-    private const RECUO_TEXTO = 1.5;
+    private const RECUO_TEXTO = 0.75;
 
     private float $margem;
     private string $fonte;
