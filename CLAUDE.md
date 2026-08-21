@@ -351,9 +351,18 @@ O `DownloadController` verifica o token, busca o arquivo no governo com o certif
 3. **Nenhum dado sensível exposto** — o token não contém o ID da fatura nem do cliente
 
 ### Portal público do governo (www.nfse.gov.br)
-- Existe URL pública `https://www.nfse.gov.br/ConsultaPublica/Download/DANFSe?chave=...` acessível via browser sem mTLS.
-- O parâmetro `chave` é double Base64 de um token binário de 56 bytes gerado internamente pelo governo — **não é derivável a partir da chave de acesso** que temos.
+
+São **dois endereços diferentes**, ambos com um parâmetro chamado `chave`, com significados distintos. Confundir os dois custa tempo.
+
+**1. Download do PDF** — `https://www.nfse.gov.br/ConsultaPublica/Download/DANFSe?chave=...`
+- Acessível via browser sem mTLS.
+- O `chave` aqui é double Base64 de um token binário de 56 bytes gerado internamente pelo governo — **não é derivável a partir da chave de acesso**.
 - Não há API pública documentada para obter esse token. Nosso proxy mTLS permanece como abordagem correta.
+
+**2. Consulta pública / conteúdo do QR Code** — `https://www.nfse.gov.br/ConsultaPublica?tpc=1&chave=<chave de acesso>`
+- Aqui o `chave` é a **chave de acesso de 50 dígitos**, em texto puro.
+- É exatamente isto que o QR do DANFS-e carrega. Obtido decodificando o QR do DANFS-e oficial da NFS-e 597 com `tools/ler-qr.py` — os 50 dígitos lidos batem com a chave da própria nota, o que confirma a leitura.
+- Implementado em `Danfse\ConsultaPublica::url()`. O significado de `tpc=1` não é documentado publicamente; foi preservado como lido. **Não alterar sem reler o QR de um DANFS-e do governo.**
 
 ### Geração das URLs
 `DownloadUrlService::danfseUrl(Nfse)` e `xmlUrl(Nfse)` lêem `SystemURL` da `tblconfiguration` e retornam a URL completa com token assinado. Usar sempre este serviço — nunca montar a URL manualmente.
