@@ -309,6 +309,10 @@ class TokenMapper
     /**
      * Texto da Lei 12.741/2012, montado — nao vem do XML.
      * Anexa xInfComp da DPS quando o emitente informou algo.
+     *
+     * Separa com \n, nao com <br>: o TemplateRenderer escapa todo valor
+     * como HTML e so depois converte quebras de linha. Um <br> literal
+     * aqui sairia impresso como "&lt;br&gt;".
      */
     private function infoComplementares(NfseXml $x): string
     {
@@ -326,6 +330,6 @@ class TokenMapper
             $linhas[] = $extra;
         }
 
-        return implode('<br>', $linhas);
+        return implode("\n", $linhas);
     }
 }

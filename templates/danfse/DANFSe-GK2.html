@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>DANFS-e · GK2 Cloud</title>
+<!--
+  ============================================================================
+  DANFS-e GK2 Cloud - HTML para renderizacao em TCPDF 6.10.0
+  A4 retrato · margens 10mm · area util 190mm · 1 pagina (suporta quebra p/ 2)
+  Estrutura espelha o DANFSe v2.0 oficial (mesmos blocos e rotulos fiscais).
+
+  RESTRICOES RESPEITADAS (secao 02 do escopo):
+  sem flex/grid · sem border-radius · sem box-shadow · sem gradiente
+  sem opacity · sem position · sem media query · sem CSS externo · sem SVG
+  Grade 100% em table com width em % · fontes helvetica e dejavusansmono
+  Nenhum glifo fora do Latin-1.
+
+  AREAS ESPECIAIS:
+  LOGO ..... img id="logo" - altura 12mm, PNG colorido
+  QR CODE .. celula id="qr-slot" - 25 x 25 mm
+             TCPDF: write2DBarcode($url, 'QRCODE,M', x, y, 25, 25)
+
+  CAMPOS VARIAVEIS: marcados com chaves duplas (ver secao 06 do escopo).
+  BLOCO CONDICIONAL: aviso de homologacao - fica no corpo, logo apos a regua
+  tri-cor, envolvido pelos tokens se_homologacao.
+  ============================================================================
+-->
+<style>
+  body { margin:0; padding:0; font-family: helvetica, sans-serif; font-size:7.5pt; color:#1a1a1a; }
+  table { border-collapse:collapse; }
+  .wrap { width:100%; border:0.4mm solid #9a9a9a; }
+  .pad  { padding:2mm; }
+
+  .lbl  { font-size:5.8pt; letter-spacing:0.5pt; text-transform:uppercase; color:#6b6b6b; font-weight:bold; }
+  .val  { font-size:8pt; color:#1a1a1a; }
+  .valb { font-size:8.5pt; font-weight:bold; color:#111111; }
+
+  .sec  { background-color:#23242b; color:#ffffff; font-size:6.6pt; font-weight:bold;
+          letter-spacing:0.9pt; text-transform:uppercase; }
+  .box  { border:0.3mm solid #c9c9c9; }
+  .cel  { border:0.2mm solid #dcdcdc; }
+  .zebra{ background-color:#f6f6f7; }
+  .brand{ color:#F26522; }
+  .money{ font-size:8.5pt; font-weight:bold; color:#111111; text-align:right; }
+  .key  { font-family: dejavusansmono, monospace; font-size:8.4pt; letter-spacing:0.2pt; color:#111111; }
+  .foot { font-size:6pt; color:#6b6b6b; line-height:145%; }
+  .warn { background-color:#fdecec; border:0.3mm solid #e0b4ae; color:#8e2420;
+          font-size:7.5pt; font-weight:bold; text-align:center; letter-spacing:0.5pt; }
+</style>
+</head>
+<body>
+
+<table class="wrap" width="100%" cellpadding="0" cellspacing="0">
+<tr><td class="pad" valign="top">
+
+  <!-- ═════════ CABEÇALHO ═════════ -->
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td width="46%" valign="top">
+        <img id="logo" src="__LOGO__" alt="GK2 Cloud" height="44">
+        <div style="font-size:11pt; font-weight:bold; color:#111111; padding-top:2.6mm;">DANFS-e <span style="font-size:7pt; color:#8a8a8a; font-weight:normal;">v2.0</span></div>
+        <div style="font-size:7pt; color:#6b6b6b; padding-top:0.5mm;">Documento Auxiliar da NFS-e</div>
+        <div class="val" style="padding-top:1.6mm;">Munic&iacute;pio: <b>{{municipio_emissor}}</b></div>
+      </td>
+      <td width="34%" valign="top" align="right">
+        <div class="lbl">N&uacute;mero da NFS-e</div>
+        <div style="font-size:17pt; font-weight:bold; color:#111111; line-height:110%;">{{numero_nfse}}</div>
+        <div class="lbl" style="padding-top:2mm;">Compet&ecirc;ncia</div>
+        <div class="valb">{{competencia}}</div>
+        <div class="lbl" style="padding-top:1.6mm;">Emiss&atilde;o da NFS-e</div>
+        <div class="valb">{{data_emissao}}</div>
+      </td>
+      <td width="20%" valign="top" align="right">
+        <table cellpadding="0" cellspacing="0" align="right">
+          <tr>
+            <td id="qr-slot" class="box" width="95" height="95" align="center" valign="middle"
+                style="background-color:#f6f6f7; font-size:5.6pt; color:#9a9a9a;">
+              <!-- QR 25x25mm -->
+              QR CODE<br>25 &times; 25 mm
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:2mm;">
+    <tr>
+      <td width="60%" height="4" style="background-color:#F26522;"></td>
+      <td width="20%" height="4" style="background-color:#22A45D;"></td>
+      <td width="20%" height="4" style="background-color:#2C74C9;"></td>
+    </tr>
+  </table>
+
+  {{#se_homologacao}}
+  <table width="100%" cellpadding="5" cellspacing="0" style="margin-top:1.4mm;">
+    <tr><td class="warn">AMBIENTE DE HOMOLOGA&Ccedil;&Atilde;O &mdash; DOCUMENTO SEM VALOR FISCAL</td></tr>
+  </table>
+  {{/se_homologacao}}
+
+  <!-- ═════════ CHAVE DE ACESSO ═════════ -->
+  <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm; background-color:#f6f6f7;">
+    <tr>
+      <td width="62%" valign="top">
+        <div class="lbl">Chave de acesso da NFS-e</div>
+        <div class="key" style="padding-top:1mm;">{{chave_acesso}}</div>
+        <div class="foot" style="padding-top:1mm;">A autenticidade desta NFS-e pode ser verificada pela leitura do c&oacute;digo QR ou pela consulta da chave de acesso no portal nacional da NFS-e (<b>www.nfse.gov.br</b>).</div>
+      </td>
+      <td width="38%" valign="top">
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td width="50%"><div class="lbl">N&ordm; da DPS</div><div class="valb">{{numero_dps}}</div></td>
+            <td width="50%"><div class="lbl">S&eacute;rie da DPS</div><div class="valb">{{serie_dps}}</div></td>
+          </tr>
+          <tr>
+            <td style="padding-top:1.6mm;"><div class="lbl">Situa&ccedil;&atilde;o</div><div class="valb">{{situacao}}</div></td>
+            <td style="padding-top:1.6mm;"><div class="lbl">Finalidade</div><div class="valb">{{finalidade}}</div></td>
+          </tr>
+          <tr>
+            <td style="padding-top:1.6mm;"><div class="lbl">Emitente</div><div class="val">{{emitente_tipo}}</div></td>
+            <td style="padding-top:1.6mm;"><div class="lbl">Tipo de ambiente</div><div class="val">{{ambiente}}</div></td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <!-- ═════════ PRESTADOR ═════════ -->
+  <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
+    <tr><td colspan="4" class="sec" style="padding:1.6mm 2mm;">Prestador / Fornecedor</td></tr>
+    <tr>
+      <td width="34%" class="cel"><div class="lbl">Nome / Nome empresarial</div><div class="valb">{{prestador_razao_social}}</div></td>
+      <td width="22%" class="cel"><div class="lbl">CNPJ / CPF / NIF</div><div class="valb">{{prestador_cnpj}}</div></td>
+      <td width="22%" class="cel"><div class="lbl">Inscri&ccedil;&atilde;o municipal</div><div class="val">{{prestador_im}}</div></td>
+      <td width="22%" class="cel"><div class="lbl">Telefone</div><div class="val">{{prestador_telefone}}</div></td>
+    </tr>
+    <tr class="zebra">
+      <td class="cel"><div class="lbl">Endere&ccedil;o</div><div class="val">{{prestador_endereco}}</div></td>
+      <td class="cel"><div class="lbl">Munic&iacute;pio / UF</div><div class="val">{{prestador_municipio}} / {{prestador_uf}}</div></td>
+      <td class="cel"><div class="lbl">C&oacute;d. IBGE / CEP</div><div class="val">{{prestador_ibge}} / {{prestador_cep}}</div></td>
+      <td class="cel"><div class="lbl">E-mail</div><div class="val">{{prestador_email}}</div></td>
+    </tr>
+    <tr>
+      <td colspan="2" class="cel"><div class="lbl">Simples Nacional na data de compet&ecirc;ncia</div><div class="valb brand">{{prestador_simples}}</div></td>
+      <td colspan="2" class="cel"><div class="lbl">Regime de apura&ccedil;&atilde;o tribut&aacute;ria</div><div class="val">{{prestador_regime}}</div></td>
+    </tr>
+  </table>
+
+  <!-- ═════════ TOMADOR ═════════ -->
+  <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
+    <tr><td colspan="4" class="sec" style="padding:1.6mm 2mm;">Tomador / Adquirente</td></tr>
+    <tr>
+      <td width="34%" class="cel"><div class="lbl">Nome / Nome empresarial</div><div class="valb">{{tomador_razao_social}}</div></td>
+      <td width="22%" class="cel"><div class="lbl">CNPJ / CPF / NIF</div><div class="valb">{{tomador_documento}}</div></td>
+      <td width="22%" class="cel"><div class="lbl">Inscri&ccedil;&atilde;o municipal</div><div class="val">{{tomador_im}}</div></td>
+      <td width="22%" class="cel"><div class="lbl">Telefone</div><div class="val">{{tomador_telefone}}</div></td>
+    </tr>
+    <tr class="zebra">
+      <td class="cel"><div class="lbl">Endere&ccedil;o</div><div class="val">{{tomador_endereco}}</div></td>
+      <td class="cel"><div class="lbl">Munic&iacute;pio / UF</div><div class="val">{{tomador_municipio}} / {{tomador_uf}}</div></td>
+      <td class="cel"><div class="lbl">C&oacute;d. IBGE / CEP</div><div class="val">{{tomador_ibge}} / {{tomador_cep}}</div></td>
+      <td class="cel"><div class="lbl">E-mail</div><div class="val">{{tomador_email}}</div></td>
+    </tr>
+    <tr>
+      <td colspan="4" class="cel"><div class="foot">{{intermediario_info}}</div></td>
+    </tr>
+  </table>
+
+  <!-- ═════════ SERVIÇO PRESTADO ═════════ -->
+  <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
+    <tr><td colspan="3" class="sec" style="padding:1.6mm 2mm;">Servi&ccedil;o prestado</td></tr>
+    <tr>
+      <td width="30%" class="cel"><div class="lbl">C&oacute;d. tributa&ccedil;&atilde;o nacional / municipal</div><div class="valb">{{cod_tributacao_nacional}}</div></td>
+      <td width="30%" class="cel"><div class="lbl">C&oacute;digo da NBS</div><div class="valb">{{cod_nbs}}</div></td>
+      <td width="40%" class="cel"><div class="lbl">Local da presta&ccedil;&atilde;o / UF / Pa&iacute;s</div><div class="valb">{{local_prestacao}}</div></td>
+    </tr>
+    <tr class="zebra">
+      <td colspan="3" class="cel"><div class="lbl">Tributa&ccedil;&atilde;o nacional</div><div class="val">{{descricao_tributacao_nacional}}</div></td>
+    </tr>
+    <tr>
+      <td colspan="3" class="cel" valign="top">
+        <div class="lbl">Descri&ccedil;&atilde;o do servi&ccedil;o</div>
+        <div class="val" style="padding-top:0.8mm; line-height:150%;">{{discriminacao}}</div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- ═════════ TRIBUTAÇÃO MUNICIPAL ═════════ -->
+  <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
+    <tr><td colspan="6" class="sec" style="padding:1.6mm 2mm;">Tributa&ccedil;&atilde;o municipal (ISSQN)</td></tr>
+    <tr>
+      <td width="22%" class="cel"><div class="lbl">Tipo de tributa&ccedil;&atilde;o</div><div class="val">{{issqn_tipo}}</div></td>
+      <td width="22%" class="cel"><div class="lbl">Munic&iacute;pio de incid&ecirc;ncia</div><div class="val">{{issqn_municipio}}</div></td>
+      <td width="14%" class="cel"><div class="lbl">BC ISSQN</div><div class="val">{{issqn_bc}}</div></td>
+      <td width="14%" class="cel"><div class="lbl">Al&iacute;quota</div><div class="val">{{issqn_aliquota}}</div></td>
+      <td width="14%" class="cel"><div class="lbl">Reten&ccedil;&atilde;o</div><div class="val">{{issqn_retencao}}</div></td>
+      <td width="14%" class="cel"><div class="lbl">ISSQN apurado</div><div class="val">{{issqn_apurado}}</div></td>
+    </tr>
+  </table>
+
+  <!-- ═════════ TRIBUTAÇÃO FEDERAL ═════════ -->
+  <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
+    <tr><td colspan="5" class="sec" style="padding:1.6mm 2mm;">Tributa&ccedil;&atilde;o federal (exceto CBS)</td></tr>
+    <tr class="zebra">
+      <td width="20%" class="cel"><div class="lbl">IRRF</div><div class="val">{{irrf}}</div></td>
+      <td width="20%" class="cel"><div class="lbl">Prev. retida</div><div class="val">{{prev_retida}}</div></td>
+      <td width="20%" class="cel"><div class="lbl">Contrib. sociais retidas</div><div class="val">{{contrib_retidas}}</div></td>
+      <td width="20%" class="cel"><div class="lbl">PIS</div><div class="val">{{pis}}</div></td>
+      <td width="20%" class="cel"><div class="lbl">COFINS</div><div class="val">{{cofins}}</div></td>
+    </tr>
+  </table>
+
+  <!-- ═════════ TRIBUTAÇÃO IBS / CBS ═════════ -->
+  <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
+    <tr><td colspan="6" class="sec" style="padding:1.6mm 2mm;">Tributa&ccedil;&atilde;o IBS / CBS</td></tr>
+    <tr>
+      <td width="16%" class="cel"><div class="lbl">CST / cClassTrib</div><div class="val">{{ibs_cst}}</div></td>
+      <td width="24%" class="cel"><div class="lbl">Ind. opera&ccedil;&atilde;o / munic&iacute;pio incid&ecirc;ncia</div><div class="val">{{ibs_indicador}}</div></td>
+      <td width="15%" class="cel"><div class="lbl">Exclus&otilde;es / redu&ccedil;&otilde;es</div><div class="val">{{ibs_exclusoes}}</div></td>
+      <td width="15%" class="cel"><div class="lbl">BC ap&oacute;s redu&ccedil;&otilde;es</div><div class="val">{{ibs_bc}}</div></td>
+      <td width="15%" class="cel"><div class="lbl">Al&iacute;q. IBS UF / Mun</div><div class="val">{{ibs_aliquotas}}</div></td>
+      <td width="15%" class="cel"><div class="lbl">Al&iacute;quota CBS</div><div class="val">{{cbs_aliquota}}</div></td>
+    </tr>
+    <tr class="zebra">
+      <td class="cel"><div class="lbl">IBS estadual</div><div class="money">{{ibs_estadual}}</div></td>
+      <td class="cel"><div class="lbl">IBS municipal</div><div class="money">{{ibs_municipal}}</div></td>
+      <td colspan="2" class="cel"><div class="lbl">Total apurado IBS</div><div class="money">{{ibs_total}}</div></td>
+      <td colspan="2" class="cel"><div class="lbl">Total apurado CBS</div><div class="money">{{cbs_total}}</div></td>
+    </tr>
+  </table>
+
+  <!-- ═════════ VALOR TOTAL ═════════ -->
+  <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
+    <tr><td colspan="4" class="sec" style="padding:1.6mm 2mm;">Valor total da NFS-e</td></tr>
+    <tr>
+      <td width="25%" class="cel"><div class="lbl">Valor da opera&ccedil;&atilde;o / servi&ccedil;o</div><div class="money">{{valor_servico}}</div></td>
+      <td width="25%" class="cel"><div class="lbl">Descontos (incond. / cond.)</div><div class="money">{{descontos}}</div></td>
+      <td width="25%" class="cel"><div class="lbl">Total das reten&ccedil;&otilde;es</div><div class="money">{{retencoes}}</div></td>
+      <td width="25%" class="cel"><div class="lbl">Total do IBS / CBS</div><div class="money">{{ibs_cbs_total}}</div></td>
+    </tr>
+    <tr>
+      <td colspan="2" style="background-color:#F26522; padding:2.6mm 2mm;">
+        <span style="font-size:7pt; font-weight:bold; letter-spacing:0.6pt; text-transform:uppercase; color:#ffffff;">Valor l&iacute;quido da NFS-e</span>
+      </td>
+      <td colspan="2" align="right" style="background-color:#F26522; padding:2.6mm 2mm;">
+        <span style="font-size:13pt; font-weight:bold; color:#ffffff;">{{valor_liquido}}</span>
+      </td>
+    </tr>
+  </table>
+
+  <!-- ═════════ INFORMAÇÕES COMPLEMENTARES ═════════ -->
+  <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
+    <tr><td class="sec" style="padding:1.6mm 2mm;">Informa&ccedil;&otilde;es complementares</td></tr>
+    <tr><td><div class="foot">{{info_complementares}}</div></td></tr>
+  </table>
+
+  <!-- ═════════ RODAPÉ ═════════ -->
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:1.4mm;">
+    <tr>
+      <td width="70%" class="foot" valign="top">
+        Documento Auxiliar da NFS-e &mdash; n&atilde;o substitui a Nota Fiscal de Servi&ccedil;o eletr&ocirc;nica.
+        Autenticidade em <b>www.nfse.gov.br</b> pela chave de acesso.
+      </td>
+      <td width="30%" class="foot" align="right" valign="top">
+        Processamento: {{data_processamento}}<br>
+        GK2 CLOUD LTDA &middot; gk2.cloud
+      </td>
+    </tr>
+  </table>
+
+</td></tr>
+</table>
+
+</body>
+</html>
