@@ -40,14 +40,23 @@ class PdfRenderer
     private const QR_CORRECAO = 'QRCODE,H';
 
     /**
-     * Recuo do QR em relacao a margem da pagina, em mm.
+     * Recuo horizontal do QR em relacao a margem da pagina, em mm.
      *
-     * A moldura (.wrap) fica na margem, e o conteudo dela e recuado pelo
-     * cellpadding do template (~2,1mm). Encostado nesses limites o QR fica
-     * espremido contra as linhas; este recuo maior abre a folga visual
-     * entre o codigo e a moldura, na horizontal e na vertical.
+     * 4mm poe a aresta direita do QR em 196mm — exatamente onde terminam
+     * as faixas de secao e os blocos do corpo. Medido no PDF; mexer aqui
+     * desalinha o QR da coluna do documento.
      */
-    private const QR_RECUO = 4.0;
+    private const QR_RECUO_X = 4.0;
+
+    /**
+     * Topo do QR, em mm a partir da borda da pagina.
+     *
+     * Calibrado para que a BASE do QR (topo + 25mm = 42,9mm) coincida com
+     * a ultima linha do cabecalho, a data de emissao. Alinhado so pelo
+     * topo, o QR terminava 4mm acima dela e o cabecalho ficava com a base
+     * irregular.
+     */
+    private const QR_Y = 17.9;
 
     /**
      * Fonte base do documento.
@@ -74,15 +83,15 @@ class PdfRenderer
         $this->fonte  = $fonte  ?? self::FONTE_PADRAO;
     }
 
-    /** Canto superior esquerdo do QR, recuado da moldura. */
+    /** Aresta direita do QR alinhada a coluna do documento (196mm). */
     private function qrX(): float
     {
-        return 210.0 - $this->margem - self::QR_RECUO - self::QR_LADO;
+        return 210.0 - $this->margem - self::QR_RECUO_X - self::QR_LADO;
     }
 
     private function qrY(): float
     {
-        return $this->margem + self::QR_RECUO;
+        return self::QR_Y;
     }
 
     /**
