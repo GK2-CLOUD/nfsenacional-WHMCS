@@ -6,10 +6,16 @@ namespace GK2\NfseNacional\Danfse;
  * Traducao dos codigos do XML para o texto que vai impresso.
  *
  * REGRA: codigo desconhecido devolve o proprio codigo, nunca um palpite.
- * Uma nota so exercita um valor por dominio; os valores marcados
- * "@conferido" foram lidos no DANFS-e oficial da NFS-e 597. Os demais vem
- * da tabela de dominios do XSD e devem ser confirmados contra o manual
- * oficial antes de virar verdade — por isso o fallback nunca inventa.
+ * Uma nota so exercita um valor por dominio, entao a suite de testes nao
+ * protege dominio nenhum sozinha — cada entrada precisa de fonte.
+ *
+ * Cada entrada carrega a sua:
+ *   @conferido — lido no DANFS-e oficial da NFS-e 597
+ *   @modulo    — dominio declarado pelo proprio addon, em ConfigFields
+ *                (dropdowns) e no CLAUDE.md do modulo
+ *
+ * Sem uma das duas, a entrada NAO existe aqui: cai no fallback e imprime
+ * o codigo cru. Melhor um "7" na nota do que um rotulo inventado.
  */
 class Codigos
 {
@@ -18,59 +24,85 @@ class Codigos
         '100' => 'NFS-e Gerada',           // @conferido
     ];
 
-    /** Emitente do documento (tpEmit). */
+    /**
+     * Emitente do documento (tpEmit).
+     *
+     * So o valor 1 tem fonte. Tomador e intermediario como emitentes
+     * existem no padrao, mas nao aparecem em nenhuma fonte local — ficam
+     * de fora ate alguem confirmar no manual.
+     */
     private const TP_EMIT = [
         '1' => 'Prestador',                // @conferido
-        '2' => 'Tomador',
-        '3' => 'Intermediário',
     ];
 
     /** Finalidade (finNFSe). */
     private const FIN_NFSE = [
         '0' => 'NFS-e regular',            // @conferido
-        '3' => 'NFS-e de substituição',
-        '4' => 'NFS-e de ajuste',
     ];
 
-    /** Tipo de tributacao do ISSQN (tribISSQN). */
+    /**
+     * Tipo de tributacao do ISSQN (tribISSQN).
+     *
+     * Dominio de ConfigFields['exigibilidade_iss'], que alimenta este mesmo
+     * elemento no XML. O valor 1 sai com o rotulo do DANFS-e oficial
+     * ("Operação Tributável"), nao com o do dropdown ("Exigível"): quem le
+     * a nota le o documento fiscal, nao a tela de configuracao.
+     */
     private const TRIB_ISSQN = [
-        '1' => 'Operação Tributável',      // @conferido
-        '2' => 'Exportação de serviço',
-        '3' => 'Não Incidência',
-        '4' => 'Imunidade',
+        '1' => 'Operação Tributável',              // @conferido
+        '2' => 'Não Incidência',                   // @modulo
+        '3' => 'Isenção',                          // @modulo
+        '4' => 'Exportação',                       // @modulo
+        '5' => 'Imunidade',                        // @modulo
+        '6' => 'Suspensa por Decisão Judicial',    // @modulo
+        '7' => 'Suspensa por Processo Administrativo', // @modulo
     ];
 
-    /** Retencao do ISSQN (tpRetISSQN). */
+    /**
+     * Retencao do ISSQN (tpRetISSQN).
+     *
+     * 2 e 3 vem do proprio EmissaoService, que trata "> 1" como retido
+     * e distingue tomador de intermediario ao gravar retido_iss.
+     */
     private const TP_RET_ISSQN = [
-        '1' => 'Não Retido',               // @conferido
-        '2' => 'Retido pelo Tomador',
-        '3' => 'Retido pelo Intermediário',
+        '1' => 'Não Retido',                  // @conferido
+        '2' => 'Retido pelo Tomador',         // @modulo
+        '3' => 'Retido pelo Intermediário',   // @modulo
     ];
 
-    /** Enquadramento no Simples Nacional (opSimpNac). */
+    /** Enquadramento no Simples Nacional (opSimpNac). @modulo: PrestadorMapper */
     private const OP_SIMP_NAC = [
-        '1' => 'Não Optante',
-        '2' => 'Optante - MEI',
+        '1' => 'Não Optante',                 // @modulo
+        '2' => 'Optante - MEI',               // @modulo
         '3' => 'Optante - Microempresa ou Empresa de Pequeno Porte', // @conferido
     ];
 
-    /** Regime de apuracao pelo SN (regApTribSN). */
+    /**
+     * Regime de apuracao pelo SN (regApTribSN).
+     *
+     * CONFLITO DE FONTES, deliberadamente nao resolvido:
+     * o DANFS-e oficial imprime, para o valor 1, a frase longa abaixo;
+     * ConfigFields['reg_ap_trib_sn'] rotula o mesmo 1 como "Competência"
+     * e o 2 como "Caixa" — registros diferentes, e nao da para saber se
+     * descrevem a mesma coisa.
+     *
+     * Mantemos so o 1, que tem o texto lido no documento oficial. O 2 cai
+     * no fallback e imprime "2" ate alguem conferir no manual. Preferimos
+     * um numero na nota a escolher o rotulo errado entre dois candidatos.
+     */
     private const REG_AP_TRIB_SN = [
-        // @conferido
-        '1' => 'Regime de apuração dos tributos federais e municipal pelo Simples Nacional',
-        '2' => 'Regime de apuração dos tributos federais pelo SN e ISSQN por fora do SN',
-        '3' => 'Regime de apuração dos tributos federais e municipal por fora do Simples Nacional',
+        '1' => 'Regime de apuração dos tributos federais e municipal pelo Simples Nacional', // @conferido
     ];
 
-    /** Regime especial de tributacao (regEspTrib). */
+    /** Regime especial de tributacao (regEspTrib). @modulo: ConfigFields */
     private const REG_ESP_TRIB = [
-        '0' => 'Nenhum',
-        '1' => 'Ato Cooperado',
-        '2' => 'Estimativa',
-        '3' => 'Microempresa Municipal',
-        '4' => 'Notário ou Registrador',
-        '5' => 'Profissional Autônomo',
-        '6' => 'Sociedade de Profissionais',
+        '0' => 'Nenhum',                      // @modulo
+        '1' => 'Estimativa Anual',            // @modulo
+        '2' => 'Profissional Autônomo',       // @modulo
+        '3' => 'Sociedade de Profissionais',  // @modulo
+        '4' => 'Cooperativa',                 // @modulo
+        '5' => 'MEI',                         // @modulo
+        '6' => 'ME-EPP Simples Nacional',     // @modulo
     ];
 
     /**
@@ -83,13 +115,7 @@ class Codigos
      */
     private const TP_AMB = [
         '1' => 'Produção',                 // @conferido
-        '2' => 'Homologação',
-    ];
-
-    /** Ambiente gerador (ambGer) — ver aviso acima. */
-    private const AMB_GER = [
-        '1' => 'Prefeitura',
-        '2' => 'SEFIN Nacional',           // @conferido
+        '2' => 'Homologação',              // @modulo: enum Ambiente
     ];
 
     public static function situacao(?string $c): ?string
@@ -130,11 +156,6 @@ class Codigos
     public static function regimeEspecial(?string $c): ?string
     {
         return self::traduzir(self::REG_ESP_TRIB, $c);
-    }
-
-    public static function ambienteGerador(?string $c): ?string
-    {
-        return self::traduzir(self::AMB_GER, $c);
     }
 
     /**
