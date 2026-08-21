@@ -19,20 +19,25 @@ class PdfRenderer
     /**
      * Lado do QR Code, em mm.
      *
-     * 28,4mm — a ALTURA DA COLUNA DE TEXTO do cabecalho (rotulo, numero,
-     * competencia e emissao), medida no PDF: de 14,55mm a 42,94mm.
+     * 22,85mm — a ALTURA DA COLUNA DE TEXTO do cabecalho, medida no PDF.
      *
-     * O lado nao e arbitrario nem os 25mm do slot do mockup: sendo o QR
-     * um quadrado, so ha como alinhar topo E base com a coluna vizinha se
-     * ele tiver exatamente a altura dela. Com 25mm sobravam 3,4mm em uma
-     * das pontas, dependendo de qual aresta se escolhesse casar.
+     * Tres restricoes se cruzam aqui, e o valor e o unico ponto onde as
+     * tres fecham:
      *
-     * O tamanho sozinho nao decide a aparencia: o que deixa o QR "grosso"
-     * e a razao entre lado e numero de modulos. Com correcao H sao 49
-     * modulos, e 28,4mm dao 0,58mm por modulo — dentro da faixa fina.
-     * Ver QR_CORRECAO.
+     *   alinhar topo E base   -> sendo quadrado, o QR precisa ter
+     *                            exatamente a altura da coluna vizinha
+     *   modulo fino           -> lado pequeno (o numero de modulos e
+     *                            fixo em 49; ver QR_CORRECAO)
+     *   cabecalho respirando  -> coluna alta
+     *
+     * As duas primeiras empurram o lado para baixo, a terceira para cima.
+     * O cabecalho foi comprimido ate 22,85mm — separando os grupos com
+     * uma linha de 2pt em vez de outra de 7,5pt — e o QR acompanha.
+     * Resultado: 0,467mm por modulo, mais fino que os 0,49mm de antes.
+     *
+     * Mexer na altura do cabecalho exige remedir e ajustar este valor.
      */
-    private const QR_LADO = 28.4;
+    private const QR_LADO = 22.85;
 
     /**
      * Nivel de correcao de erro.
