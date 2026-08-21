@@ -3,6 +3,7 @@
 namespace GK2\NfseNacional\Config;
 
 use GK2\NfseNacional\Domain\Enum\Ambiente;
+use GK2\NfseNacional\Domain\Enum\DanfseModelo;
 use GK2\NfseNacional\Domain\Enum\EmissaoPolitica;
 use WHMCS\Database\Capsule;
 
@@ -304,6 +305,20 @@ class ModuleConfig
         return $this->get('documento_cliente', 'taxid');
     }
 
+    /**
+     * Modelo de DANFS-e entregue ao cliente (oficial do governo ou GK2 local).
+     *
+     * Qualquer valor desconhecido cai em OFICIAL — o comportamento atual do
+     * modulo. Config corrompida nunca deve promover o modelo novo sozinha.
+     */
+    public function getDanfseModelo(): DanfseModelo
+    {
+        $valor = $this->get('danfse_modelo', '1');
+        $numero = (int) preg_replace('/\D.*/', '', $valor);
+
+        return DanfseModelo::tryFrom($numero) ?? DanfseModelo::OFICIAL;
+    }
+
     // ─── Setup (ativacao) ──────────────────────────────────────────
 
     /**
@@ -318,6 +333,7 @@ class ModuleConfig
             'documento_cliente' => 'taxid',
             'optante_simples' => '1',
             'emissao_padrao' => '1-Nao Emitir',
+            'danfse_modelo' => '1-Oficial (governo)',
             'email' => '0',
             'cancelar' => '0',
             'debug' => '0',

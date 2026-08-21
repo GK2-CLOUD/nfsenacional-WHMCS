@@ -464,6 +464,21 @@ HTML;
             'Default'      => '1-Não Emitir',
         ];
 
+        $configarray['fields']['danfse_modelo'] = [
+            'FriendlyName' => $fn('Modelo do DANFS-e', true),
+            'Type'         => 'dropdown',
+            'Options'      => '1-Oficial (governo),2-GK2',
+            'Description'  => 'Qual PDF o cliente recebe ao clicar em "Ver DANFS-e".'
+                . $tip('Modelo do DANFS-e',
+                    '"Oficial (governo)": baixa o documento do ADN a cada acesso — '
+                    . 'depende do serviço do governo estar no ar. '
+                    . '"GK2": gera o documento localmente a partir do XML já guardado pelo módulo, '
+                    . 'com a identidade visual da GK2 e sem chamada de API. '
+                    . 'Troque para GK2 somente após validar o resultado em homologação; '
+                    . 'voltar para o oficial é imediato e não exige atualização do módulo.'),
+            'Default'      => '1-Oficial (governo)',
+        ];
+
         $emailFriendlyName = $fn('Enviar NFS-e por E-mail', false);
         if ($linkEmailTemplate) {
             $emailFriendlyName .= ' &nbsp;<a target="_blank" href="' . $linkEmailTemplate . '">'
