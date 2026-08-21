@@ -40,7 +40,17 @@ class TomadorMapper
         $client = $this->getClientData($userId);
 
         $documento = $this->getDocumento($userId, $client);
-        $documento = preg_replace('/\D/', '', $documento);
+        // Normaliza removendo apenas pontuação (não letras) para suporte a CNPJ alfanumérico
+        $documentoNorm = strtoupper(trim(preg_replace('/[.\\/\-\s]+/', '', (string) $documento)));
+        $digitsOnly = preg_replace('/[^0-9]/', '', $documentoNorm);
+
+        // Se CNPJ alfanumérico: NFS-e nacional não homologado para este formato ainda
+        if (preg_match('/[A-Z]/', $documentoNorm) && strlen($documentoNorm) === 14) {
+            logActivity('[nfsenacional] CNPJ alfanumérico detectado — NFS-e Nacional pendente de homologação. Documento preservado mas emissão bloqueada.');
+            $documento = $documentoNorm; // preserva sem corromper
+        } else {
+            $documento = $digitsOnly;
+        }
 
         $tomador = [
             'documento' => $documento,

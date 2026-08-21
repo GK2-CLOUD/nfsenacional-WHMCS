@@ -1,102 +1,121 @@
 # NFS-e Nacional — Addon WHMCS
 
-Addon para WHMCS que integra a emissão de faturas com a **NFS-e Nacional (ADN)** —
-o padrão nacional de Nota Fiscal de Serviço Eletrônica mantido pela RFB/ENCAT
-(https://www.gov.br/nfse). Cobre emissão, consulta, cancelamento, download de
-DANFS-e/XML e envio automático por e-mail, com isolamento total entre os
-ambientes de **produção** e **homologação**.
+Addon WHMCS para emissão, consulta, cancelamento e download de **NFS-e** no padrão nacional da Receita Federal, integrado à API SEFIN/ADN via mTLS com certificado digital ICP-Brasil A1.
 
-> Desenvolvido pela [GK2](https://gk2.com.br).
+---
 
-## Instalação
+## Funcionalidades
 
-Guia completo de instalação e configuração (produção e homologação):
-**https://oraculo.gk2.cloud/books/whmcs/page/configuracao-nfs-e-nacional-v10-producao-e-homologacao**
+- Emissão automática de NFS-e ao criar ou ao pagar fatura (configurável por cliente)
+- Emissão manual pelo painel admin com confirmação
+- Cancelamento via evento `101101` (API SEFIN)
+- Download de DANFS-e (PDF) e XML via proxy mTLS — sem expor o certificado ao cliente
+- Envio de e-mail com links de DANFS-e e XML após autorização
+- Área do cliente com listagem, busca, ordenação e reenvio de e-mail
+- Ícones de status de NFS-e na listagem de faturas (admin e área do cliente)
+- Criptografia AES-256-CBC da senha do certificado em banco de dados
+- Suporte ao bloco **IBS/CBS** (Reforma Tributária — XSD v1.01, obrigatório a partir de 2026)
+- Fallback de resolução de CEP → IBGE via ViaCEP + cache local editável (`data/cep_ibge.json`)
 
-Resumo rápido:
-
-1. Copie o conteúdo deste repositório para `modules/addons/nfsenacional/` na sua instalação WHMCS.
-2. As dependências (Guzzle, xmlseclibs, PSR) já vêm versionadas em `vendor/` — não é necessário rodar `composer install` no servidor de produção.
-3. Em **Configuration Value → System → Activate Modules → Other Addon Modules**, ative o addon "NFS-e Nacional".
-4. Preencha as configurações do addon (certificado A1, série DPS, ambiente, política de emissão) — detalhado no guia acima.
-
-## O que o addon faz
-
-- Emite a DPS (Declaração de Prestação de Serviço) a partir de uma fatura paga/gerada no WHMCS e obtém a NFS-e autorizada pelo SEFIN Nacional.
-- Consulta, cancela e reenvia por e-mail notas já emitidas.
-- Disponibiliza download de DANFS-e (PDF) e XML tanto na área do cliente quanto no admin.
-- Mantém histórico completo por fatura (status, protocolo, chave de acesso, valores de ISS) em tabela própria do banco.
-
-## Arquitetura
-
-O código vive em `src/NfseNacional/` sob o namespace `GK2\NfseNacional`, organizado
-por responsabilidade (não por tipo de arquivo MVC):
-
-```
-nfsenacional.php     Entry point do addon (config/activate/deactivate/output/clientarea)
-hooks.php             Registro dos hooks do WHMCS (carregado automaticamente)
-src/NfseNacional/
-├── Bootstrap.php              Autoload (Composer, com fallback PSR-4 manual)
-├── Admin/                     Painel administrativo do addon
-│   ├── AdminController.php    Dispatch de páginas (dashboard, list, detail)
-│   ├── ConfigFields.php       Definição dos campos de configuração
-│   └── Action/                Ações disparadas do admin (Emitir, Cancelar, Excluir, Reenviar e-mail)
-├── ClientArea/                 Área do cliente (listagem de notas do usuário logado)
-│   ├── ClientAreaController.php
-│   └── DownloadController.php  Proxy de download (DANFS-e / XML)
-├── Config/
-│   └── ModuleConfig.php        Leitura/escrita das configurações do addon (inclui
-│                                criptografia AES-256-CBC da senha do certificado)
-├── Domain/                     Regras de negócio e modelos de domínio
-│   ├── AmbienteGuard.php        Trava central: resolve o ambiente (produção/homologação)
-│   │                             uma única vez por requisição e nunca deixa misturar dados
-│   │                             ou chamadas de API entre os dois ambientes
-│   ├── Entity/                  Dps, Nfse
-│   ├── Enum/                    Ambiente, EmissaoPolitica, NfseStatus
-│   └── Service/                 Orquestração dos casos de uso:
-│       EmissaoService, ConsultaService, CancelamentoService,
-│       EmailService, DownloadUrlService, CepIbgeCache
-├── Fiscal/                     Tudo relacionado à montagem e assinatura do documento fiscal
-│   ├── NacionalProvider.php     Implementação de ProviderInterface para a API ADN
-│   ├── Mapper/                  Fatura/cliente WHMCS → estruturas fiscais
-│   │                             (Prestador, Tomador, Serviço, Tributo)
-│   ├── Payload/                 Monta o XML da DPS/Evento conforme XSD oficial
-│   └── Signer/XmlSigner.php     Assinatura digital XML (via robrichards/xmlseclibs)
-├── Hook/                        Integração com os hooks do WHMCS
-│   ├── HookHandler.php          Registro central de todos os hooks
-│   ├── InvoiceHooks.php         Gatilhos de emissão automática (fatura criada/paga)
-│   └── AdminInvoiceUI.php, AdminInvoiceListUI.php,
-│       ClientInvoiceListUI.php, ClientAreaMenu.php   Injeção de UI nas telas do WHMCS
-├── Persistence/                 Acesso a dados (tblnfsenacional e tabelas de apoio)
-│   ├── NfseRepository.php, Migration.php, DpsSequence.php
-├── Security/TokenSigner.php     Assinatura/validação de tokens usados nos links de download
-└── Transport/                   Cliente HTTP e autenticação com a API Nacional
-    ├── HttpClient.php, ApiEndpoints.php, ApiResponse.php
-    └── Auth/                    CertificateAuth (mTLS via certificado A1) e TokenAuth
-```
-
-### Fluxo de emissão (resumo)
-
-1. Um hook (`InvoiceHooks`) ou uma ação manual do admin chama `EmissaoService::processarEmissao()`.
-2. `AmbienteGuard` resolve o ambiente ativo (produção/homologação) uma vez e o propaga
-   para repositório, provider e endpoints — impedindo qualquer mistura entre os dois.
-3. `DpsPayloadBuilder` (usando os `Mapper`s) monta o XML da DPS a partir da fatura e do cliente.
-4. `NacionalProvider` compacta o XML (GZip + base64) e envia para o SEFIN Nacional
-   (`ApiEndpoints` resolve as URLs por ambiente: `*.nfse.gov.br` em produção,
-   `*.producaorestrita.nfse.gov.br` em homologação).
-5. A resposta é persistida via `NfseRepository`, e-mail é disparado se habilitado
-   (`EmailService`), e o resultado é exibido no admin/área do cliente.
-
-Consulta, cancelamento e obtenção de DANFS-e/XML seguem o mesmo padrão através de
-`ConsultaService` e `CancelamentoService`.
+---
 
 ## Requisitos
 
-- PHP >= 8.1
-- WHMCS >= 8.12
-- Certificado digital A1 (.pfx) do prestador de serviços
+| Item | Versão mínima |
+|------|---------------|
+| WHMCS | 8.0+ |
+| PHP | 8.1+ |
+| Extensões PHP | `openssl`, `curl`, `mbstring`, `zlib`, `json` |
+| Certificado digital | ICP-Brasil A1 (arquivo `.pfx` / `.p12`) |
 
-## Stack
+---
 
-- [`guzzlehttp/guzzle`](https://github.com/guzzle/guzzle) — cliente HTTP (com autenticação mTLS via certificado A1)
-- [`robrichards/xmlseclibs`](https://github.com/robrichards/xmlseclibs) — assinatura digital XML
+## Documentação
+
+| Guia | Descrição |
+|------|-----------|
+| [Instalação e Configuração](https://oraculo.gk2.cloud/books/whmcs/page/configuracao-nfs-e-nacional-v10-producao-e-homologacao) | Upload, Composer, permissões, certificado, ativação no WHMCS e configuração de todos os campos |
+| [Guia de Utilização](https://oraculo.gk2.cloud/books/whmcs/page/guia-nfs-e-nacional-utilizacao-e-operacao) | Emissão manual e automática, cancelamento, download, erros comuns, FAQ |
+
+---
+
+## Instalação rápida
+
+```bash
+# 1. Copie a pasta para o diretório de addons do WHMCS
+cp -r nfsenacional/ /caminho/para/whmcs/modules/addons/
+
+# 2. Instale as dependências
+cd /caminho/para/whmcs/modules/addons/nfsenacional
+composer install --no-dev --optimize-autoloader
+
+# 3. Ajuste permissões
+chown -R www-data:www-data .
+chmod -R 755 .
+```
+
+Em seguida, ative o addon em **Admin → Configurações → Apps & Integrações → NFS-e Nacional** e siga o [guia de configuração](https://oraculo.gk2.cloud/books/whmcs/page/configuracao-nfs-e-nacional-v10-producao-e-homologacao).
+
+---
+
+## Ambientes
+
+| Ambiente | Endpoint SEFIN | Validade fiscal |
+|----------|----------------|-----------------|
+| `homologacao` | `sefin.producaorestrita.nfse.gov.br` | Não — apenas testes |
+| `producao` | `sefin.nfse.gov.br` | Sim |
+
+---
+
+## Estrutura do projeto
+
+```
+modules/addons/nfsenacional/
+├── nfsenacional.php        # Entry point do addon
+├── hooks.php               # Registro de hooks WHMCS
+├── cron.php                # Cron de emissão automática
+├── composer.json
+├── data/
+│   └── cep_ibge.json       # Cache manual CEP → IBGE (fallback do ViaCEP)
+├── src/NfseNacional/
+│   ├── Admin/              # Painel admin, ações e campos de configuração
+│   ├── ClientArea/         # Área do cliente e proxy de download
+│   ├── Config/             # Leitura de configurações (inclui criptografia AES)
+│   ├── Domain/             # Entidades, enums e serviços de domínio
+│   ├── Fiscal/             # Mappers, builders de DPS/Evento, assinador XML
+│   ├── Hook/               # Hooks WHMCS (faturas, listagens, área do cliente)
+│   ├── Persistence/        # Repositório NFS-e e sequência DPS
+│   ├── Security/           # TokenSigner HMAC-SHA256
+│   └── Transport/          # HTTP client (cURL + mTLS), endpoints, auth
+└── templates/
+    ├── admin/
+    └── client/
+```
+
+---
+
+## Segurança
+
+- **Senha do certificado** armazenada criptografada (AES-256-CBC) no banco — a chave fica em `.nfse_enc_key` no sistema de arquivos, separada do banco
+- **Tokens de ação** (emitir, cancelar, excluir) assinados com HMAC-SHA256 por instalação — resistentes a CSRF e timing attacks
+- **Proxy mTLS** para DANFS-e e XML — o certificado nunca é exposto ao navegador do cliente
+- **Proteção do `.nfse_enc_key`**: bloquear via nginx ou Apache (veja o guia de instalação)
+
+---
+
+## Erros comuns
+
+| Código | Causa | Solução |
+|--------|-------|---------|
+| E0120 | `<IM>` enviado, município sem IM no CNC | Deixe *Inscrição Municipal* vazio |
+| E0166 | `regApTribSN` ausente (Simples Nacional) | Preencha *Apuração Simples Nacional* |
+| E0240 | CEP do tomador não pertence ao município | Corrija o CEP ou edite `data/cep_ibge.json` |
+| E0314 | Código tributação municipal inválido | Deixe *cTribMun* vazio |
+| E0316 | Código NBS inválido | Deixe *Código de Serviço NBS* vazio |
+| HTTP 496 | mTLS ausente — certificado não configurado | Verifique caminho e senha do `.pfx` |
+
+---
+
+## Suporte
+
+[gk2.com.br](https://gk2.com.br) · [WhatsApp](https://gk2.cloud/whatsapp)
