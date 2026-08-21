@@ -42,7 +42,7 @@
   .zebra{ background-color:#f6f6f7; }
   .brand{ color:#F26522; }
   .money{ font-size:8.5pt; font-weight:bold; color:#111111; text-align:right; }
-  .key  { font-family: dejavusansmono, monospace; font-size:8.4pt; letter-spacing:0.2pt; color:#111111; }
+  .key  { font-family: dejavusans, sans-serif; font-size:8.4pt; letter-spacing:0.2pt; color:#111111; }
   .foot { font-size:6pt; color:#6b6b6b; line-height:145%; }
   .warn { background-color:#fdecec; border:0.3mm solid #e0b4ae; color:#8e2420;
           font-size:7.5pt; font-weight:bold; text-align:center; letter-spacing:0.5pt; }
@@ -60,24 +60,20 @@
         <img id="logo" src="__LOGO__" alt="GK2 Cloud" height="44">
         <div style="font-size:11pt; font-weight:bold; color:#111111; padding-top:2.6mm;">DANFS-e <span style="font-size:7pt; color:#8a8a8a; font-weight:normal;">v2.0</span></div>
         <div style="font-size:7pt; color:#6b6b6b; padding-top:0.5mm;">Documento Auxiliar da NFS-e</div>
-        <div class="val" style="padding-top:1.6mm;">Munic&iacute;pio: <b>{{municipio_emissor}}</b></div>
+        <div class="val" style="padding-top:1.6mm;">Município: <b>{{municipio_emissor}}</b></div>
       </td>
       <td width="34%" valign="top" align="right">
-        <div class="lbl">N&uacute;mero da NFS-e</div>
+        <div class="lbl">Número da NFS-e</div>
         <div style="font-size:17pt; font-weight:bold; color:#111111; line-height:110%;">{{numero_nfse}}</div>
-        <div class="lbl" style="padding-top:2mm;">Compet&ecirc;ncia</div>
+        <div class="lbl" style="padding-top:2mm;">Competência</div>
         <div class="valb">{{competencia}}</div>
-        <div class="lbl" style="padding-top:1.6mm;">Emiss&atilde;o da NFS-e</div>
+        <div class="lbl" style="padding-top:1.6mm;">Emissão da NFS-e</div>
         <div class="valb">{{data_emissao}}</div>
       </td>
       <td width="20%" valign="top" align="right">
         <table cellpadding="0" cellspacing="0" align="right">
           <tr>
-            <td id="qr-slot" class="box" width="95" height="95" align="center" valign="middle"
-                style="background-color:#f6f6f7; font-size:5.6pt; color:#9a9a9a;">
-              <!-- QR 25x25mm -->
-              QR CODE<br>25 &times; 25 mm
-            </td>
+            <td id="qr-slot" width="95" height="95">&nbsp;</td>
           </tr>
         </table>
       </td>
@@ -94,7 +90,7 @@
 
   {{#se_homologacao}}
   <table width="100%" cellpadding="5" cellspacing="0" style="margin-top:1.4mm;">
-    <tr><td class="warn">AMBIENTE DE HOMOLOGA&Ccedil;&Atilde;O &mdash; DOCUMENTO SEM VALOR FISCAL</td></tr>
+    <tr><td class="warn">AMBIENTE DE HOMOLOGAÇÃO — DOCUMENTO SEM VALOR FISCAL</td></tr>
   </table>
   {{/se_homologacao}}
 
@@ -104,21 +100,21 @@
       <td width="62%" valign="top">
         <div class="lbl">Chave de acesso da NFS-e</div>
         <div class="key" style="padding-top:1mm;">{{chave_acesso}}</div>
-        <div class="foot" style="padding-top:1mm;">A autenticidade desta NFS-e pode ser verificada pela leitura do c&oacute;digo QR ou pela consulta da chave de acesso no portal nacional da NFS-e (<b>www.nfse.gov.br</b>).</div>
+        <div class="foot" style="padding-top:1mm;">A autenticidade desta NFS-e pode ser verificada pela leitura do código QR ou pela consulta da chave de acesso no portal nacional da NFS-e (<b>www.nfse.gov.br</b>).</div>
       </td>
       <td width="38%" valign="top">
         <table width="100%" cellpadding="0" cellspacing="0">
           <tr>
-            <td width="50%"><div class="lbl">N&ordm; da DPS</div><div class="valb">{{numero_dps}}</div></td>
-            <td width="50%"><div class="lbl">S&eacute;rie da DPS</div><div class="valb">{{serie_dps}}</div></td>
+            <td width="50%"><span class="lbl">Nº da DPS</span><br><span class="valb">{{numero_dps}}</span></td>
+            <td width="50%"><span class="lbl">Série da DPS</span><br><span class="valb">{{serie_dps}}</span></td>
           </tr>
           <tr>
-            <td style="padding-top:1.6mm;"><div class="lbl">Situa&ccedil;&atilde;o</div><div class="valb">{{situacao}}</div></td>
-            <td style="padding-top:1.6mm;"><div class="lbl">Finalidade</div><div class="valb">{{finalidade}}</div></td>
+            <td style="padding-top:1.6mm;"><span class="lbl">Situação</span><br><span class="valb">{{situacao}}</span></td>
+            <td style="padding-top:1.6mm;"><span class="lbl">Finalidade</span><br><span class="valb">{{finalidade}}</span></td>
           </tr>
           <tr>
-            <td style="padding-top:1.6mm;"><div class="lbl">Emitente</div><div class="val">{{emitente_tipo}}</div></td>
-            <td style="padding-top:1.6mm;"><div class="lbl">Tipo de ambiente</div><div class="val">{{ambiente}}</div></td>
+            <td style="padding-top:1.6mm;"><span class="lbl">Emitente</span><br><span class="val">{{emitente_tipo}}</span></td>
+            <td style="padding-top:1.6mm;"><span class="lbl">Tipo de ambiente</span><br><span class="val">{{ambiente}}</span></td>
           </tr>
         </table>
       </td>
@@ -127,39 +123,39 @@
 
   <!-- ═════════ PRESTADOR ═════════ -->
   <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
-    <tr><td colspan="4" class="sec" style="padding:1.6mm 2mm;">Prestador / Fornecedor</td></tr>
+    <tr><td colspan="4" class="sec" style="padding:1.6mm 2mm;">PRESTADOR / FORNECEDOR</td></tr>
     <tr>
-      <td width="34%" class="cel"><div class="lbl">Nome / Nome empresarial</div><div class="valb">{{prestador_razao_social}}</div></td>
-      <td width="22%" class="cel"><div class="lbl">CNPJ / CPF / NIF</div><div class="valb">{{prestador_cnpj}}</div></td>
-      <td width="22%" class="cel"><div class="lbl">Inscri&ccedil;&atilde;o municipal</div><div class="val">{{prestador_im}}</div></td>
-      <td width="22%" class="cel"><div class="lbl">Telefone</div><div class="val">{{prestador_telefone}}</div></td>
+      <td width="34%" class="cel"><span class="lbl">Nome / Nome empresarial</span><br><span class="valb">{{prestador_razao_social}}</span></td>
+      <td width="22%" class="cel"><span class="lbl">CNPJ / CPF / NIF</span><br><span class="valb">{{prestador_cnpj}}</span></td>
+      <td width="22%" class="cel"><span class="lbl">Inscrição municipal</span><br><span class="val">{{prestador_im}}</span></td>
+      <td width="22%" class="cel"><span class="lbl">Telefone</span><br><span class="val">{{prestador_telefone}}</span></td>
     </tr>
     <tr class="zebra">
-      <td class="cel"><div class="lbl">Endere&ccedil;o</div><div class="val">{{prestador_endereco}}</div></td>
-      <td class="cel"><div class="lbl">Munic&iacute;pio / UF</div><div class="val">{{prestador_municipio}} / {{prestador_uf}}</div></td>
-      <td class="cel"><div class="lbl">C&oacute;d. IBGE / CEP</div><div class="val">{{prestador_ibge}} / {{prestador_cep}}</div></td>
-      <td class="cel"><div class="lbl">E-mail</div><div class="val">{{prestador_email}}</div></td>
+      <td class="cel"><span class="lbl">Endereço</span><br><span class="val">{{prestador_endereco}}</span></td>
+      <td class="cel"><span class="lbl">Município / UF</span><br><span class="val">{{prestador_municipio}} / {{prestador_uf}}</span></td>
+      <td class="cel"><span class="lbl">Cód. IBGE / CEP</span><br><span class="val">{{prestador_ibge}} / {{prestador_cep}}</span></td>
+      <td class="cel"><span class="lbl">E-mail</span><br><span class="val">{{prestador_email}}</span></td>
     </tr>
     <tr>
-      <td colspan="2" class="cel"><div class="lbl">Simples Nacional na data de compet&ecirc;ncia</div><div class="valb brand">{{prestador_simples}}</div></td>
-      <td colspan="2" class="cel"><div class="lbl">Regime de apura&ccedil;&atilde;o tribut&aacute;ria</div><div class="val">{{prestador_regime}}</div></td>
+      <td colspan="2" class="cel"><span class="lbl">Simples Nacional na data de competência</span><br><span class="valb brand">{{prestador_simples}}</span></td>
+      <td colspan="2" class="cel"><span class="lbl">Regime de apuração tributária</span><br><span class="val">{{prestador_regime}}</span></td>
     </tr>
   </table>
 
   <!-- ═════════ TOMADOR ═════════ -->
   <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
-    <tr><td colspan="4" class="sec" style="padding:1.6mm 2mm;">Tomador / Adquirente</td></tr>
+    <tr><td colspan="4" class="sec" style="padding:1.6mm 2mm;">TOMADOR / ADQUIRENTE</td></tr>
     <tr>
-      <td width="34%" class="cel"><div class="lbl">Nome / Nome empresarial</div><div class="valb">{{tomador_razao_social}}</div></td>
-      <td width="22%" class="cel"><div class="lbl">CNPJ / CPF / NIF</div><div class="valb">{{tomador_documento}}</div></td>
-      <td width="22%" class="cel"><div class="lbl">Inscri&ccedil;&atilde;o municipal</div><div class="val">{{tomador_im}}</div></td>
-      <td width="22%" class="cel"><div class="lbl">Telefone</div><div class="val">{{tomador_telefone}}</div></td>
+      <td width="34%" class="cel"><span class="lbl">Nome / Nome empresarial</span><br><span class="valb">{{tomador_razao_social}}</span></td>
+      <td width="22%" class="cel"><span class="lbl">CNPJ / CPF / NIF</span><br><span class="valb">{{tomador_documento}}</span></td>
+      <td width="22%" class="cel"><span class="lbl">Inscrição municipal</span><br><span class="val">{{tomador_im}}</span></td>
+      <td width="22%" class="cel"><span class="lbl">Telefone</span><br><span class="val">{{tomador_telefone}}</span></td>
     </tr>
     <tr class="zebra">
-      <td class="cel"><div class="lbl">Endere&ccedil;o</div><div class="val">{{tomador_endereco}}</div></td>
-      <td class="cel"><div class="lbl">Munic&iacute;pio / UF</div><div class="val">{{tomador_municipio}} / {{tomador_uf}}</div></td>
-      <td class="cel"><div class="lbl">C&oacute;d. IBGE / CEP</div><div class="val">{{tomador_ibge}} / {{tomador_cep}}</div></td>
-      <td class="cel"><div class="lbl">E-mail</div><div class="val">{{tomador_email}}</div></td>
+      <td class="cel"><span class="lbl">Endereço</span><br><span class="val">{{tomador_endereco}}</span></td>
+      <td class="cel"><span class="lbl">Município / UF</span><br><span class="val">{{tomador_municipio}} / {{tomador_uf}}</span></td>
+      <td class="cel"><span class="lbl">Cód. IBGE / CEP</span><br><span class="val">{{tomador_ibge}} / {{tomador_cep}}</span></td>
+      <td class="cel"><span class="lbl">E-mail</span><br><span class="val">{{tomador_email}}</span></td>
     </tr>
     <tr>
       <td colspan="4" class="cel"><div class="foot">{{intermediario_info}}</div></td>
@@ -168,79 +164,78 @@
 
   <!-- ═════════ SERVIÇO PRESTADO ═════════ -->
   <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
-    <tr><td colspan="3" class="sec" style="padding:1.6mm 2mm;">Servi&ccedil;o prestado</td></tr>
+    <tr><td colspan="3" class="sec" style="padding:1.6mm 2mm;">SERVIÇO PRESTADO</td></tr>
     <tr>
-      <td width="30%" class="cel"><div class="lbl">C&oacute;d. tributa&ccedil;&atilde;o nacional / municipal</div><div class="valb">{{cod_tributacao_nacional}}</div></td>
-      <td width="30%" class="cel"><div class="lbl">C&oacute;digo da NBS</div><div class="valb">{{cod_nbs}}</div></td>
-      <td width="40%" class="cel"><div class="lbl">Local da presta&ccedil;&atilde;o / UF / Pa&iacute;s</div><div class="valb">{{local_prestacao}}</div></td>
+      <td width="30%" class="cel"><span class="lbl">Cód. tributação nacional / municipal</span><br><span class="valb">{{cod_tributacao_nacional}}</span></td>
+      <td width="30%" class="cel"><span class="lbl">Código da NBS</span><br><span class="valb">{{cod_nbs}}</span></td>
+      <td width="40%" class="cel"><span class="lbl">Local da prestação / UF / País</span><br><span class="valb">{{local_prestacao}}</span></td>
     </tr>
     <tr class="zebra">
-      <td colspan="3" class="cel"><div class="lbl">Tributa&ccedil;&atilde;o nacional</div><div class="val">{{descricao_tributacao_nacional}}</div></td>
+      <td colspan="3" class="cel"><span class="lbl">Tributação nacional</span><br><span class="val">{{descricao_tributacao_nacional}}</span></td>
     </tr>
     <tr>
       <td colspan="3" class="cel" valign="top">
-        <div class="lbl">Descri&ccedil;&atilde;o do servi&ccedil;o</div>
-        <div class="val" style="padding-top:0.8mm; line-height:150%;">{{discriminacao}}</div>
+        <span class="lbl">Descrição do serviço</span><br><span class="val">{{discriminacao}}</span>
       </td>
     </tr>
   </table>
 
   <!-- ═════════ TRIBUTAÇÃO MUNICIPAL ═════════ -->
   <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
-    <tr><td colspan="6" class="sec" style="padding:1.6mm 2mm;">Tributa&ccedil;&atilde;o municipal (ISSQN)</td></tr>
+    <tr><td colspan="6" class="sec" style="padding:1.6mm 2mm;">TRIBUTAÇÃO MUNICIPAL (ISSQN)</td></tr>
     <tr>
-      <td width="22%" class="cel"><div class="lbl">Tipo de tributa&ccedil;&atilde;o</div><div class="val">{{issqn_tipo}}</div></td>
-      <td width="22%" class="cel"><div class="lbl">Munic&iacute;pio de incid&ecirc;ncia</div><div class="val">{{issqn_municipio}}</div></td>
-      <td width="14%" class="cel"><div class="lbl">BC ISSQN</div><div class="val">{{issqn_bc}}</div></td>
-      <td width="14%" class="cel"><div class="lbl">Al&iacute;quota</div><div class="val">{{issqn_aliquota}}</div></td>
-      <td width="14%" class="cel"><div class="lbl">Reten&ccedil;&atilde;o</div><div class="val">{{issqn_retencao}}</div></td>
-      <td width="14%" class="cel"><div class="lbl">ISSQN apurado</div><div class="val">{{issqn_apurado}}</div></td>
+      <td width="22%" class="cel"><span class="lbl">Tipo de tributação</span><br><span class="val">{{issqn_tipo}}</span></td>
+      <td width="22%" class="cel"><span class="lbl">Município de incidência</span><br><span class="val">{{issqn_municipio}}</span></td>
+      <td width="14%" class="cel"><span class="lbl">BC ISSQN</span><br><span class="val">{{issqn_bc}}</span></td>
+      <td width="14%" class="cel"><span class="lbl">Alíquota</span><br><span class="val">{{issqn_aliquota}}</span></td>
+      <td width="14%" class="cel"><span class="lbl">Retenção</span><br><span class="val">{{issqn_retencao}}</span></td>
+      <td width="14%" class="cel"><span class="lbl">ISSQN apurado</span><br><span class="val">{{issqn_apurado}}</span></td>
     </tr>
   </table>
 
   <!-- ═════════ TRIBUTAÇÃO FEDERAL ═════════ -->
   <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
-    <tr><td colspan="5" class="sec" style="padding:1.6mm 2mm;">Tributa&ccedil;&atilde;o federal (exceto CBS)</td></tr>
+    <tr><td colspan="5" class="sec" style="padding:1.6mm 2mm;">TRIBUTAÇÃO FEDERAL (EXCETO CBS)</td></tr>
     <tr class="zebra">
-      <td width="20%" class="cel"><div class="lbl">IRRF</div><div class="val">{{irrf}}</div></td>
-      <td width="20%" class="cel"><div class="lbl">Prev. retida</div><div class="val">{{prev_retida}}</div></td>
-      <td width="20%" class="cel"><div class="lbl">Contrib. sociais retidas</div><div class="val">{{contrib_retidas}}</div></td>
-      <td width="20%" class="cel"><div class="lbl">PIS</div><div class="val">{{pis}}</div></td>
-      <td width="20%" class="cel"><div class="lbl">COFINS</div><div class="val">{{cofins}}</div></td>
+      <td width="20%" class="cel"><span class="lbl">IRRF</span><br><span class="val">{{irrf}}</span></td>
+      <td width="20%" class="cel"><span class="lbl">Prev. retida</span><br><span class="val">{{prev_retida}}</span></td>
+      <td width="20%" class="cel"><span class="lbl">Contrib. sociais retidas</span><br><span class="val">{{contrib_retidas}}</span></td>
+      <td width="20%" class="cel"><span class="lbl">PIS</span><br><span class="val">{{pis}}</span></td>
+      <td width="20%" class="cel"><span class="lbl">COFINS</span><br><span class="val">{{cofins}}</span></td>
     </tr>
   </table>
 
   <!-- ═════════ TRIBUTAÇÃO IBS / CBS ═════════ -->
   <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
-    <tr><td colspan="6" class="sec" style="padding:1.6mm 2mm;">Tributa&ccedil;&atilde;o IBS / CBS</td></tr>
+    <tr><td colspan="6" class="sec" style="padding:1.6mm 2mm;">TRIBUTAÇÃO IBS / CBS</td></tr>
     <tr>
-      <td width="16%" class="cel"><div class="lbl">CST / cClassTrib</div><div class="val">{{ibs_cst}}</div></td>
-      <td width="24%" class="cel"><div class="lbl">Ind. opera&ccedil;&atilde;o / munic&iacute;pio incid&ecirc;ncia</div><div class="val">{{ibs_indicador}}</div></td>
-      <td width="15%" class="cel"><div class="lbl">Exclus&otilde;es / redu&ccedil;&otilde;es</div><div class="val">{{ibs_exclusoes}}</div></td>
-      <td width="15%" class="cel"><div class="lbl">BC ap&oacute;s redu&ccedil;&otilde;es</div><div class="val">{{ibs_bc}}</div></td>
-      <td width="15%" class="cel"><div class="lbl">Al&iacute;q. IBS UF / Mun</div><div class="val">{{ibs_aliquotas}}</div></td>
-      <td width="15%" class="cel"><div class="lbl">Al&iacute;quota CBS</div><div class="val">{{cbs_aliquota}}</div></td>
+      <td width="16%" class="cel"><span class="lbl">CST / cClassTrib</span><br><span class="val">{{ibs_cst}}</span></td>
+      <td width="24%" class="cel"><span class="lbl">Ind. operação / município incidência</span><br><span class="val">{{ibs_indicador}}</span></td>
+      <td width="15%" class="cel"><span class="lbl">Exclusões / reduções</span><br><span class="val">{{ibs_exclusoes}}</span></td>
+      <td width="15%" class="cel"><span class="lbl">BC após reduções</span><br><span class="val">{{ibs_bc}}</span></td>
+      <td width="15%" class="cel"><span class="lbl">Alíq. IBS UF / Mun</span><br><span class="val">{{ibs_aliquotas}}</span></td>
+      <td width="15%" class="cel"><span class="lbl">Alíquota CBS</span><br><span class="val">{{cbs_aliquota}}</span></td>
     </tr>
     <tr class="zebra">
-      <td class="cel"><div class="lbl">IBS estadual</div><div class="money">{{ibs_estadual}}</div></td>
-      <td class="cel"><div class="lbl">IBS municipal</div><div class="money">{{ibs_municipal}}</div></td>
-      <td colspan="2" class="cel"><div class="lbl">Total apurado IBS</div><div class="money">{{ibs_total}}</div></td>
-      <td colspan="2" class="cel"><div class="lbl">Total apurado CBS</div><div class="money">{{cbs_total}}</div></td>
+      <td class="cel"><span class="lbl">IBS estadual</span><div class="money">{{ibs_estadual}}</div></td>
+      <td class="cel"><span class="lbl">IBS municipal</span><div class="money">{{ibs_municipal}}</div></td>
+      <td colspan="2" class="cel"><span class="lbl">Total apurado IBS</span><div class="money">{{ibs_total}}</div></td>
+      <td colspan="2" class="cel"><span class="lbl">Total apurado CBS</span><div class="money">{{cbs_total}}</div></td>
     </tr>
   </table>
 
   <!-- ═════════ VALOR TOTAL ═════════ -->
   <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
-    <tr><td colspan="4" class="sec" style="padding:1.6mm 2mm;">Valor total da NFS-e</td></tr>
+    <tr><td colspan="4" class="sec" style="padding:1.6mm 2mm;">VALOR TOTAL DA NFS-E</td></tr>
     <tr>
-      <td width="25%" class="cel"><div class="lbl">Valor da opera&ccedil;&atilde;o / servi&ccedil;o</div><div class="money">{{valor_servico}}</div></td>
-      <td width="25%" class="cel"><div class="lbl">Descontos (incond. / cond.)</div><div class="money">{{descontos}}</div></td>
-      <td width="25%" class="cel"><div class="lbl">Total das reten&ccedil;&otilde;es</div><div class="money">{{retencoes}}</div></td>
-      <td width="25%" class="cel"><div class="lbl">Total do IBS / CBS</div><div class="money">{{ibs_cbs_total}}</div></td>
+      <td width="25%" class="cel"><span class="lbl">Valor da operação / serviço</span><div class="money">{{valor_servico}}</div></td>
+      <td width="25%" class="cel"><span class="lbl">Descontos (incond. / cond.)</span><div class="money">{{descontos}}</div></td>
+      <td width="25%" class="cel"><span class="lbl">Total das retenções</span><div class="money">{{retencoes}}</div></td>
+      <td width="25%" class="cel"><span class="lbl">Total do IBS / CBS</span><div class="money">{{ibs_cbs_total}}</div></td>
     </tr>
     <tr>
       <td colspan="2" style="background-color:#F26522; padding:2.6mm 2mm;">
-        <span style="font-size:7pt; font-weight:bold; letter-spacing:0.6pt; text-transform:uppercase; color:#ffffff;">Valor l&iacute;quido da NFS-e</span>
+        <span style="font-size:7pt; font-weight:bold; letter-spacing:0.6pt; text-transform:uppercase; color:#ffffff;">Valor líquido da NFS-e</span>
       </td>
       <td colspan="2" align="right" style="background-color:#F26522; padding:2.6mm 2mm;">
         <span style="font-size:13pt; font-weight:bold; color:#ffffff;">{{valor_liquido}}</span>
@@ -250,7 +245,7 @@
 
   <!-- ═════════ INFORMAÇÕES COMPLEMENTARES ═════════ -->
   <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
-    <tr><td class="sec" style="padding:1.6mm 2mm;">Informa&ccedil;&otilde;es complementares</td></tr>
+    <tr><td class="sec" style="padding:1.6mm 2mm;">INFORMAÇÕES COMPLEMENTARES</td></tr>
     <tr><td><div class="foot">{{info_complementares}}</div></td></tr>
   </table>
 
@@ -258,12 +253,12 @@
   <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:1.4mm;">
     <tr>
       <td width="70%" class="foot" valign="top">
-        Documento Auxiliar da NFS-e &mdash; n&atilde;o substitui a Nota Fiscal de Servi&ccedil;o eletr&ocirc;nica.
+        Documento Auxiliar da NFS-e — não substitui a Nota Fiscal de Serviço eletrônica.
         Autenticidade em <b>www.nfse.gov.br</b> pela chave de acesso.
       </td>
       <td width="30%" class="foot" align="right" valign="top">
         Processamento: {{data_processamento}}<br>
-        GK2 CLOUD LTDA &middot; gk2.cloud
+        GK2 CLOUD LTDA · gk2.cloud
       </td>
     </tr>
   </table>
