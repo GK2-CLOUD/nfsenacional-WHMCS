@@ -19,15 +19,20 @@ class PdfRenderer
     /**
      * Lado do QR Code, em mm.
      *
-     * 25mm, o slot que o mockup reserva.
+     * 28,4mm — a ALTURA DA COLUNA DE TEXTO do cabecalho (rotulo, numero,
+     * competencia e emissao), medida no PDF: de 14,55mm a 42,94mm.
+     *
+     * O lado nao e arbitrario nem os 25mm do slot do mockup: sendo o QR
+     * um quadrado, so ha como alinhar topo E base com a coluna vizinha se
+     * ele tiver exatamente a altura dela. Com 25mm sobravam 3,4mm em uma
+     * das pontas, dependendo de qual aresta se escolhesse casar.
      *
      * O tamanho sozinho nao decide a aparencia: o que deixa o QR "grosso"
-     * e a razao entre lado e numero de modulos. Com correcao M sao 37
-     * modulos, e 25mm daria 0,68mm por modulo — visivelmente grosso. Com
-     * correcao H sao 49 modulos, e os mesmos 25mm dao 0,51mm: preenche o
-     * slot do mockup e mantem o aspecto fino. Ver QR_CORRECAO.
+     * e a razao entre lado e numero de modulos. Com correcao H sao 49
+     * modulos, e 28,4mm dao 0,58mm por modulo — dentro da faixa fina.
+     * Ver QR_CORRECAO.
      */
-    private const QR_LADO = 25.0;
+    private const QR_LADO = 28.4;
 
     /**
      * Nivel de correcao de erro.
@@ -51,12 +56,10 @@ class PdfRenderer
     /**
      * Topo do QR, em mm a partir da borda da pagina.
      *
-     * Calibrado para que a BASE do QR (topo + 25mm = 42,9mm) coincida com
-     * a ultima linha do cabecalho, a data de emissao. Alinhado so pelo
-     * topo, o QR terminava 4mm acima dela e o cabecalho ficava com a base
-     * irregular.
+     * 14,55mm e o topo da coluna de texto do cabecalho. Com QR_LADO igual
+     * a altura dessa coluna, topo e base coincidem com ela.
      */
-    private const QR_Y = 17.9;
+    private const QR_Y = 14.55;
 
     /**
      * Fonte base do documento.
