@@ -41,8 +41,10 @@
   .cel  { border:0.2mm solid #dcdcdc; }
   .zebra{ background-color:#f6f6f7; }
   .brand{ color:#F26522; }
+  /* Classe unica: o TCPDF ignora a 2a classe de class="valbrand". */
+  .valbrand { line-height:105%; font-size:8.5pt; font-weight:bold; color:#F26522; }
   .money{ font-size:8.5pt; font-weight:bold; color:#111111; text-align:right; }
-  .key  { font-family: dejavusans, sans-serif; font-size:8.4pt; letter-spacing:0.2pt; color:#111111; }
+  .key  { font-family: dejavusans, sans-serif; font-size:7.4pt; letter-spacing:0; color:#111111; }
   .foot { font-size:6pt; color:#6b6b6b; line-height:120%; }
   .warn { background-color:#fdecec; border:0.3mm solid #e0b4ae; color:#8e2420;
           font-size:7.5pt; font-weight:bold; text-align:center; letter-spacing:0.5pt; }
@@ -55,7 +57,7 @@
 
 <!-- cellspacing=2 => 1,41mm entre secoes. O TCPDF ignora margin em
      tabela, e qualquer bloco espacador vazio custa 3,3mm. -->
-<table width="100%" cellpadding="0" cellspacing="4">
+<table width="100%" cellpadding="0" cellspacing="5">
   {{#se_homologacao}}<tr><td>
 <!-- ═════════ CABEÇALHO ═════════ -->
   <table width="100%" cellpadding="0" cellspacing="0">
@@ -96,8 +98,8 @@
 <!-- ═════════ CHAVE DE ACESSO ═════════ -->
   <table width="100%" cellpadding="2" cellspacing="0" class="box" style="margin-top:1.4mm; background-color:#f6f6f7;">
     <tr>
-      <td width="62%" class="cel" valign="top"><span class="lbl">Chave de acesso da NFS-e</span><br><span class="key">{{chave_acesso}}</span><br><span class="foot">A autenticidade desta NFS-e pode ser verificada pela leitura do código QR ou pela consulta da chave de acesso no portal nacional da NFS-e (<b>www.nfse.gov.br</b>).</span></td>
-      <td width="38%" class="cel" valign="top"><table width="100%" cellpadding="0" cellspacing="0">
+      <td width="66%" class="cel" valign="top"><span class="lbl">Chave de acesso da NFS-e</span><br><span class="key">{{chave_acesso}}</span><br><span class="foot">A autenticidade desta NFS-e pode ser verificada pela leitura do código QR ou pela consulta da chave de acesso no portal nacional da NFS-e (<b>www.nfse.gov.br</b>).</span></td>
+      <td width="34%" class="cel" valign="top"><table width="100%" cellpadding="0" cellspacing="0">
           <tr>
             <td width="50%"><span class="lbl">Nº da DPS</span><br><span class="valb">{{numero_dps}}</span></td>
             <td width="50%"><span class="lbl">Série da DPS</span><br><span class="valb">{{serie_dps}}</span></td>
@@ -130,7 +132,7 @@
       <td class="cel"><span class="lbl">E-mail</span><br><span class="val">{{prestador_email}}</span></td>
     </tr>
     <tr>
-      <td colspan="2" class="cel"><span class="lbl">Simples Nacional na data de competência</span><br><span class="valb brand">{{prestador_simples}}</span></td>
+      <td colspan="2" class="cel"><span class="lbl">Simples Nacional na data de competência</span><br><span class="valbrand">{{prestador_simples}}</span></td>
       <td colspan="2" class="cel"><span class="lbl">Regime de apuração tributária</span><br><span class="val">{{prestador_regime}}</span></td>
     </tr>
   </table></td></tr>

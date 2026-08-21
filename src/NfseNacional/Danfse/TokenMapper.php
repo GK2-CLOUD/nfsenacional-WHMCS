@@ -69,7 +69,7 @@ class TokenMapper
             'numero_nfse'        => Formato::texto($x->v(NfseXml::INF_NFSE . '/n:nNFSe')),
             'competencia'        => Formato::data($x->v(NfseXml::INF_DPS . '/n:dCompet')),
             'data_emissao'       => Formato::dataHora($x->v(NfseXml::INF_DPS . '/n:dhEmi')),
-            'chave_acesso'       => Formato::chave($x->chaveAcesso()),
+            'chave_acesso'       => Formato::chave($x->chaveAcesso(), 4),
             'numero_dps'         => Formato::texto($x->v(NfseXml::INF_DPS . '/n:nDPS')),
             'serie_dps'          => Formato::serie($x->v(NfseXml::INF_DPS . '/n:serie')),
             'situacao'           => Formato::texto(Codigos::situacao($x->v(NfseXml::INF_NFSE . '/n:cStat'))),
