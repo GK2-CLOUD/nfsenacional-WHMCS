@@ -46,8 +46,8 @@
   .money{ font-size:8.5pt; font-weight:bold; color:#111111; text-align:right; }
   .key  { font-family: dejavusans, sans-serif; font-size:7.4pt; letter-spacing:0; color:#111111; }
   .foot { font-size:6pt; color:#6b6b6b; line-height:120%; }
-  .warn { background-color:#fdecec; border:0.3mm solid #e0b4ae; color:#8e2420;
-          font-size:7.5pt; font-weight:bold; text-align:center; letter-spacing:0.5pt; }
+  .warn { background-color:#fdf2f2; border:0.2mm solid #e8c4c0; color:#9a3b30;
+          font-size:5.8pt; font-weight:bold; text-align:center; letter-spacing:0.6pt; }
 </style>
 </head>
 <body>
@@ -58,7 +58,7 @@
 <!-- cellspacing=2 => 1,41mm entre secoes. O TCPDF ignora margin em
      tabela, e qualquer bloco espacador vazio custa 3,3mm. -->
 <table width="100%" cellpadding="0" cellspacing="5">
-  {{#se_homologacao}}<tr><td>
+  <tr><td>
 <!-- ═════════ CABEÇALHO ═════════ -->
   <table width="100%" cellpadding="0" cellspacing="0">
     <tr>
@@ -90,10 +90,14 @@
     </tr>
   </table>
 
-  
-  <table width="100%" cellpadding="5" cellspacing="0" style="margin-top:1.4mm;">
+  </td></tr>
+
+  <!-- ═════════ AVISO DE HOMOLOGAÇÃO ═════════ -->
+  {{#se_homologacao}}<tr><td>
+  <table width="100%" cellpadding="1" cellspacing="0">
     <tr><td class="warn">AMBIENTE DE HOMOLOGAÇÃO — DOCUMENTO SEM VALOR FISCAL</td></tr>
-  </table></td></tr>{{/se_homologacao}}
+  </table>
+  </td></tr>{{/se_homologacao}}
   <tr><td>
 <!-- ═════════ CHAVE DE ACESSO ═════════ -->
   <table width="100%" cellpadding="2" cellspacing="0" class="box" style="margin-top:1.4mm; background-color:#f6f6f7;">
