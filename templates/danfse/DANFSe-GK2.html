@@ -55,7 +55,7 @@
 
 <!-- cellspacing=2 => 1,41mm entre secoes. O TCPDF ignora margin em
      tabela, e qualquer bloco espacador vazio custa 3,3mm. -->
-<table width="100%" cellpadding="0" cellspacing="2">
+<table width="100%" cellpadding="0" cellspacing="4">
   {{#se_homologacao}}<tr><td>
 <!-- ═════════ CABEÇALHO ═════════ -->
   <table width="100%" cellpadding="0" cellspacing="0">
@@ -64,50 +64,40 @@
         <img id="logo" src="__LOGO__" alt="GK2 Cloud" height="44">
         <br><span style="font-size:11pt; font-weight:bold; color:#111111;">DANFS-e <span style="font-size:7pt; color:#8a8a8a; font-weight:normal;">v2.0</span></span>
         <br><span style="font-size:7pt; color:#6b6b6b;">Documento Auxiliar da NFS-e</span>
-        <br><span class="val">Município: <b>{{municipio_emissor}}</b></span>
-      </td>
-      <td width="34%" valign="top" align="right">
-        <span class="lbl">Número da NFS-e</span>
+        <br><span class="val">Município: <b>{{municipio_emissor}}</b></span></td>
+      <td width="34%" valign="top" align="right"><span class="lbl">Número da NFS-e</span>
         <br><span style="font-size:17pt; font-weight:bold; color:#111111;">{{numero_nfse}}</span>
         <br><br><span class="lbl">Competência</span>
         <br><span class="valb">{{competencia}}</span>
         <br><br><span class="lbl">Emissão da NFS-e</span>
-        <br><span class="valb">{{data_emissao}}</span>
-      </td>
+        <br><span class="valb">{{data_emissao}}</span></td>
       <td width="20%" valign="top" align="right">
         <table cellpadding="0" cellspacing="0" align="right">
           <tr>
-            <td id="qr-slot" width="95" height="95">&nbsp;</td>
+            <td id="qr-slot" width="68" height="68">&nbsp;</td>
           </tr>
-        </table>
-      </td>
+        </table></td>
     </tr>
   </table>
 
   <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:2mm;">
     <tr>
-      <td width="60%" height="2" style="background-color:#F26522;"></td>
-      <td width="20%" height="2" style="background-color:#22A45D;"></td>
-      <td width="20%" height="2" style="background-color:#2C74C9;"></td>
+      <td width="60%" height="1" style="background-color:#F26522;"></td>
+      <td width="20%" height="1" style="background-color:#22A45D;"></td>
+      <td width="20%" height="1" style="background-color:#2C74C9;"></td>
     </tr>
   </table>
 
   
   <table width="100%" cellpadding="5" cellspacing="0" style="margin-top:1.4mm;">
     <tr><td class="warn">AMBIENTE DE HOMOLOGAÇÃO — DOCUMENTO SEM VALOR FISCAL</td></tr>
-  </table>
-  </td></tr>{{/se_homologacao}}
+  </table></td></tr>{{/se_homologacao}}
   <tr><td>
 <!-- ═════════ CHAVE DE ACESSO ═════════ -->
-  <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm; background-color:#f6f6f7;">
+  <table width="100%" cellpadding="2" cellspacing="0" class="box" style="margin-top:1.4mm; background-color:#f6f6f7;">
     <tr>
-      <td width="62%" valign="top">
-        <div class="lbl">Chave de acesso da NFS-e</div>
-        <div class="key" style="padding-top:1mm;">{{chave_acesso}}</div>
-        <div class="foot" style="padding-top:1mm;">A autenticidade desta NFS-e pode ser verificada pela leitura do código QR ou pela consulta da chave de acesso no portal nacional da NFS-e (<b>www.nfse.gov.br</b>).</div>
-      </td>
-      <td width="38%" valign="top">
-        <table width="100%" cellpadding="0" cellspacing="0">
+      <td width="62%" class="cel" valign="top"><span class="lbl">Chave de acesso da NFS-e</span><br><span class="key">{{chave_acesso}}</span><br><span class="foot">A autenticidade desta NFS-e pode ser verificada pela leitura do código QR ou pela consulta da chave de acesso no portal nacional da NFS-e (<b>www.nfse.gov.br</b>).</span></td>
+      <td width="38%" class="cel" valign="top"><table width="100%" cellpadding="0" cellspacing="0">
           <tr>
             <td width="50%"><span class="lbl">Nº da DPS</span><br><span class="valb">{{numero_dps}}</span></td>
             <td width="50%"><span class="lbl">Série da DPS</span><br><span class="valb">{{serie_dps}}</span></td>
@@ -120,14 +110,12 @@
             <td style="padding-top:1.6mm;"><span class="lbl">Emitente</span><br><span class="val">{{emitente_tipo}}</span></td>
             <td style="padding-top:1.6mm;"><span class="lbl">Tipo de ambiente</span><br><span class="val">{{ambiente}}</span></td>
           </tr>
-        </table>
-      </td>
+        </table></td>
     </tr>
-  </table>
-  </td></tr>
+  </table></td></tr>
   <tr><td>
 <!-- ═════════ PRESTADOR ═════════ -->
-  <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
+  <table width="100%" cellpadding="2" cellspacing="0" class="box" style="margin-top:1.4mm;">
     <tr><td colspan="4" class="sec" style="padding:1.6mm 2mm;">PRESTADOR / FORNECEDOR</td></tr>
     <tr>
       <td width="34%" class="cel"><span class="lbl">Nome / Nome empresarial</span><br><span class="valb">{{prestador_razao_social}}</span></td>
@@ -145,11 +133,10 @@
       <td colspan="2" class="cel"><span class="lbl">Simples Nacional na data de competência</span><br><span class="valb brand">{{prestador_simples}}</span></td>
       <td colspan="2" class="cel"><span class="lbl">Regime de apuração tributária</span><br><span class="val">{{prestador_regime}}</span></td>
     </tr>
-  </table>
-  </td></tr>
+  </table></td></tr>
   <tr><td>
 <!-- ═════════ TOMADOR ═════════ -->
-  <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
+  <table width="100%" cellpadding="2" cellspacing="0" class="box" style="margin-top:1.4mm;">
     <tr><td colspan="4" class="sec" style="padding:1.6mm 2mm;">TOMADOR / ADQUIRENTE</td></tr>
     <tr>
       <td width="34%" class="cel"><span class="lbl">Nome / Nome empresarial</span><br><span class="valb">{{tomador_razao_social}}</span></td>
@@ -166,11 +153,10 @@
     <tr>
       <td colspan="4" class="cel"><div class="foot">{{intermediario_info}}</div></td>
     </tr>
-  </table>
-  </td></tr>
+  </table></td></tr>
   <tr><td>
 <!-- ═════════ SERVIÇO PRESTADO ═════════ -->
-  <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
+  <table width="100%" cellpadding="2" cellspacing="0" class="box" style="margin-top:1.4mm;">
     <tr><td colspan="3" class="sec" style="padding:1.6mm 2mm;">SERVIÇO PRESTADO</td></tr>
     <tr>
       <td width="30%" class="cel"><span class="lbl">Cód. tributação nacional / municipal</span><br><span class="valb">{{cod_tributacao_nacional}}</span></td>
@@ -181,15 +167,12 @@
       <td colspan="3" class="cel"><span class="lbl">Tributação nacional</span><br><span class="val">{{descricao_tributacao_nacional}}</span></td>
     </tr>
     <tr>
-      <td colspan="3" class="cel" valign="top">
-        <span class="lbl">Descrição do serviço</span><br><span class="val">{{discriminacao}}</span>
-      </td>
+      <td colspan="3" class="cel" valign="top"><span class="lbl">Descrição do serviço</span><br><span class="val">{{discriminacao}}</span></td>
     </tr>
-  </table>
-  </td></tr>
+  </table></td></tr>
   <tr><td>
 <!-- ═════════ TRIBUTAÇÃO MUNICIPAL ═════════ -->
-  <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
+  <table width="100%" cellpadding="2" cellspacing="0" class="box" style="margin-top:1.4mm;">
     <tr><td colspan="6" class="sec" style="padding:1.6mm 2mm;">TRIBUTAÇÃO MUNICIPAL (ISSQN)</td></tr>
     <tr>
       <td width="22%" class="cel"><span class="lbl">Tipo de tributação</span><br><span class="val">{{issqn_tipo}}</span></td>
@@ -199,11 +182,10 @@
       <td width="14%" class="cel"><span class="lbl">Retenção</span><br><span class="val">{{issqn_retencao}}</span></td>
       <td width="14%" class="cel"><span class="lbl">ISSQN apurado</span><br><span class="val">{{issqn_apurado}}</span></td>
     </tr>
-  </table>
-  </td></tr>
+  </table></td></tr>
   <tr><td>
 <!-- ═════════ TRIBUTAÇÃO FEDERAL ═════════ -->
-  <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
+  <table width="100%" cellpadding="2" cellspacing="0" class="box" style="margin-top:1.4mm;">
     <tr><td colspan="5" class="sec" style="padding:1.6mm 2mm;">TRIBUTAÇÃO FEDERAL (EXCETO CBS)</td></tr>
     <tr class="zebra">
       <td width="20%" class="cel"><span class="lbl">IRRF</span><br><span class="val">{{irrf}}</span></td>
@@ -212,11 +194,10 @@
       <td width="20%" class="cel"><span class="lbl">PIS</span><br><span class="val">{{pis}}</span></td>
       <td width="20%" class="cel"><span class="lbl">COFINS</span><br><span class="val">{{cofins}}</span></td>
     </tr>
-  </table>
-  </td></tr>
+  </table></td></tr>
   <tr><td>
 <!-- ═════════ TRIBUTAÇÃO IBS / CBS ═════════ -->
-  <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
+  <table width="100%" cellpadding="2" cellspacing="0" class="box" style="margin-top:1.4mm;">
     <tr><td colspan="6" class="sec" style="padding:1.6mm 2mm;">TRIBUTAÇÃO IBS / CBS</td></tr>
     <tr>
       <td width="16%" class="cel"><span class="lbl">CST / cClassTrib</span><br><span class="val">{{ibs_cst}}</span></td>
@@ -232,11 +213,10 @@
       <td colspan="2" class="cel" align="right"><span class="lbl">Total apurado IBS</span><br><span class="money">{{ibs_total}}</span></td>
       <td colspan="2" class="cel" align="right"><span class="lbl">Total apurado CBS</span><br><span class="money">{{cbs_total}}</span></td>
     </tr>
-  </table>
-  </td></tr>
+  </table></td></tr>
   <tr><td>
 <!-- ═════════ VALOR TOTAL ═════════ -->
-  <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
+  <table width="100%" cellpadding="2" cellspacing="0" class="box" style="margin-top:1.4mm;">
     <tr><td colspan="4" class="sec" style="padding:1.6mm 2mm;">VALOR TOTAL DA NFS-E</td></tr>
     <tr>
       <td width="25%" class="cel" align="right"><span class="lbl">Valor da operação / serviço</span><br><span class="money">{{valor_servico}}</span></td>
@@ -244,41 +224,31 @@
       <td width="25%" class="cel" align="right"><span class="lbl">Total das retenções</span><br><span class="money">{{retencoes}}</span></td>
       <td width="25%" class="cel" align="right"><span class="lbl">Total do IBS / CBS</span><br><span class="money">{{ibs_cbs_total}}</span></td>
     </tr>
+    </table>
+
+  <table width="100%" cellpadding="5" cellspacing="0">
     <tr>
-      <td colspan="2" style="background-color:#F26522; padding:2.6mm 2mm;">
-        <span style="font-size:7pt; font-weight:bold; letter-spacing:0.6pt; text-transform:uppercase; color:#ffffff;">Valor líquido da NFS-e</span>
-      </td>
-      <td colspan="2" align="right" style="background-color:#F26522; padding:2.6mm 2mm;">
-        <span style="font-size:13pt; font-weight:bold; color:#ffffff;">{{valor_liquido}}</span>
-      </td>
+      <td width="50%" valign="middle" style="background-color:#F26522;"><span style="font-size:7pt; font-weight:bold; letter-spacing:0.6pt; text-transform:uppercase; color:#ffffff;">Valor líquido da NFS-e</span></td>
+      <td width="50%" align="right" valign="middle" style="background-color:#F26522;"><span style="font-size:13pt; font-weight:bold; color:#ffffff;">{{valor_liquido}}</span></td>
     </tr>
-  </table>
-  </td></tr>
+  </table></td></tr>
   <tr><td>
 <!-- ═════════ INFORMAÇÕES COMPLEMENTARES ═════════ -->
-  <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
+  <table width="100%" cellpadding="2" cellspacing="0" class="box" style="margin-top:1.4mm;">
     <tr><td class="sec" style="padding:1.6mm 2mm;">INFORMAÇÕES COMPLEMENTARES</td></tr>
     <tr><td><div class="foot">{{info_complementares}}</div></td></tr>
-  </table>
-  </td></tr>
+  </table></td></tr>
   <tr><td>
 <!-- ═════════ RODAPÉ ═════════ -->
   <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:1.4mm;">
     <tr>
-      <td width="70%" class="foot" valign="top">
-        Documento Auxiliar da NFS-e — não substitui a Nota Fiscal de Serviço eletrônica.
-        Autenticidade em <b>www.nfse.gov.br</b> pela chave de acesso.
-      </td>
-      <td width="30%" class="foot" align="right" valign="top">
-        Processamento: {{data_processamento}}<br>
-        GK2 CLOUD LTDA · gk2.cloud
-      </td>
+      <td width="70%" class="foot" valign="top">Documento Auxiliar da NFS-e — não substitui a Nota Fiscal de Serviço eletrônica.
+        Autenticidade em <b>www.nfse.gov.br</b> pela chave de acesso.</td>
+      <td width="30%" class="foot" align="right" valign="top">Processamento: {{data_processamento}}<br>
+        GK2 CLOUD LTDA · gk2.cloud</td>
     </tr>
-  </table>
-  </td></tr>
-</table>
-
-</td></tr>
+  </table></td></tr>
+</table></td></tr>
 </table>
 
 </body>

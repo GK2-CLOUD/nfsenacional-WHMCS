@@ -16,8 +16,16 @@ class PdfRenderer
 {
     private const MARGEM_PADRAO = 10.0;
 
-    /** Lado do QR Code, em mm. */
-    private const QR_LADO = 25.0;
+    /**
+     * Lado do QR Code, em mm.
+     *
+     * 18mm, nao os 25mm do slot original. Com ~37 modulos, 25mm dava
+     * modulos de 0,68mm — visivelmente grossos, longe do aspecto de um QR
+     * comum. O DANFS-e oficial usa 15,6mm (modulo de 0,38mm); 18mm nos
+     * poe em 0,49mm, fino o suficiente para parecer convencional e bem
+     * acima do limite de leitura de impressora laser.
+     */
+    private const QR_LADO = 18.0;
 
     /**
      * Recuo do QR em relacao a margem da pagina, em mm.
