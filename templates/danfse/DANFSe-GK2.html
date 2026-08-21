@@ -32,8 +32,8 @@
   .pad  { padding:2mm; }
 
   .lbl  { font-size:5.8pt; letter-spacing:0.5pt; text-transform:uppercase; color:#6b6b6b; font-weight:bold; }
-  .val  { font-size:8pt; color:#1a1a1a; }
-  .valb { font-size:8.5pt; font-weight:bold; color:#111111; }
+  .val  { line-height:105%; font-size:8pt; color:#1a1a1a; }
+  .valb { line-height:105%; font-size:8.5pt; font-weight:bold; color:#111111; }
 
   .sec  { background-color:#23242b; color:#ffffff; font-size:6.6pt; font-weight:bold;
           letter-spacing:0.9pt; text-transform:uppercase; }
@@ -43,32 +43,36 @@
   .brand{ color:#F26522; }
   .money{ font-size:8.5pt; font-weight:bold; color:#111111; text-align:right; }
   .key  { font-family: dejavusans, sans-serif; font-size:8.4pt; letter-spacing:0.2pt; color:#111111; }
-  .foot { font-size:6pt; color:#6b6b6b; line-height:145%; }
+  .foot { font-size:6pt; color:#6b6b6b; line-height:120%; }
   .warn { background-color:#fdecec; border:0.3mm solid #e0b4ae; color:#8e2420;
           font-size:7.5pt; font-weight:bold; text-align:center; letter-spacing:0.5pt; }
 </style>
 </head>
 <body>
 
-<table class="wrap" width="100%" cellpadding="0" cellspacing="0">
-<tr><td class="pad" valign="top">
+<table class="wrap" width="100%" cellpadding="6" cellspacing="0">
+<tr><td valign="top">
 
-  <!-- ═════════ CABEÇALHO ═════════ -->
+<!-- cellspacing=2 => 1,41mm entre secoes. O TCPDF ignora margin em
+     tabela, e qualquer bloco espacador vazio custa 3,3mm. -->
+<table width="100%" cellpadding="0" cellspacing="2">
+  {{#se_homologacao}}<tr><td>
+<!-- ═════════ CABEÇALHO ═════════ -->
   <table width="100%" cellpadding="0" cellspacing="0">
     <tr>
       <td width="46%" valign="top">
         <img id="logo" src="__LOGO__" alt="GK2 Cloud" height="44">
-        <div style="font-size:11pt; font-weight:bold; color:#111111; padding-top:2.6mm;">DANFS-e <span style="font-size:7pt; color:#8a8a8a; font-weight:normal;">v2.0</span></div>
-        <div style="font-size:7pt; color:#6b6b6b; padding-top:0.5mm;">Documento Auxiliar da NFS-e</div>
-        <div class="val" style="padding-top:1.6mm;">Município: <b>{{municipio_emissor}}</b></div>
+        <br><span style="font-size:11pt; font-weight:bold; color:#111111;">DANFS-e <span style="font-size:7pt; color:#8a8a8a; font-weight:normal;">v2.0</span></span>
+        <br><span style="font-size:7pt; color:#6b6b6b;">Documento Auxiliar da NFS-e</span>
+        <br><span class="val">Município: <b>{{municipio_emissor}}</b></span>
       </td>
       <td width="34%" valign="top" align="right">
-        <div class="lbl">Número da NFS-e</div>
-        <div style="font-size:17pt; font-weight:bold; color:#111111; line-height:110%;">{{numero_nfse}}</div>
-        <div class="lbl" style="padding-top:2mm;">Competência</div>
-        <div class="valb">{{competencia}}</div>
-        <div class="lbl" style="padding-top:1.6mm;">Emissão da NFS-e</div>
-        <div class="valb">{{data_emissao}}</div>
+        <span class="lbl">Número da NFS-e</span>
+        <br><span style="font-size:17pt; font-weight:bold; color:#111111;">{{numero_nfse}}</span>
+        <br><br><span class="lbl">Competência</span>
+        <br><span class="valb">{{competencia}}</span>
+        <br><br><span class="lbl">Emissão da NFS-e</span>
+        <br><span class="valb">{{data_emissao}}</span>
       </td>
       <td width="20%" valign="top" align="right">
         <table cellpadding="0" cellspacing="0" align="right">
@@ -82,19 +86,19 @@
 
   <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:2mm;">
     <tr>
-      <td width="60%" height="4" style="background-color:#F26522;"></td>
-      <td width="20%" height="4" style="background-color:#22A45D;"></td>
-      <td width="20%" height="4" style="background-color:#2C74C9;"></td>
+      <td width="60%" height="2" style="background-color:#F26522;"></td>
+      <td width="20%" height="2" style="background-color:#22A45D;"></td>
+      <td width="20%" height="2" style="background-color:#2C74C9;"></td>
     </tr>
   </table>
 
-  {{#se_homologacao}}
+  
   <table width="100%" cellpadding="5" cellspacing="0" style="margin-top:1.4mm;">
     <tr><td class="warn">AMBIENTE DE HOMOLOGAÇÃO — DOCUMENTO SEM VALOR FISCAL</td></tr>
   </table>
-  {{/se_homologacao}}
-
-  <!-- ═════════ CHAVE DE ACESSO ═════════ -->
+  </td></tr>{{/se_homologacao}}
+  <tr><td>
+<!-- ═════════ CHAVE DE ACESSO ═════════ -->
   <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm; background-color:#f6f6f7;">
     <tr>
       <td width="62%" valign="top">
@@ -120,8 +124,9 @@
       </td>
     </tr>
   </table>
-
-  <!-- ═════════ PRESTADOR ═════════ -->
+  </td></tr>
+  <tr><td>
+<!-- ═════════ PRESTADOR ═════════ -->
   <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
     <tr><td colspan="4" class="sec" style="padding:1.6mm 2mm;">PRESTADOR / FORNECEDOR</td></tr>
     <tr>
@@ -141,8 +146,9 @@
       <td colspan="2" class="cel"><span class="lbl">Regime de apuração tributária</span><br><span class="val">{{prestador_regime}}</span></td>
     </tr>
   </table>
-
-  <!-- ═════════ TOMADOR ═════════ -->
+  </td></tr>
+  <tr><td>
+<!-- ═════════ TOMADOR ═════════ -->
   <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
     <tr><td colspan="4" class="sec" style="padding:1.6mm 2mm;">TOMADOR / ADQUIRENTE</td></tr>
     <tr>
@@ -161,8 +167,9 @@
       <td colspan="4" class="cel"><div class="foot">{{intermediario_info}}</div></td>
     </tr>
   </table>
-
-  <!-- ═════════ SERVIÇO PRESTADO ═════════ -->
+  </td></tr>
+  <tr><td>
+<!-- ═════════ SERVIÇO PRESTADO ═════════ -->
   <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
     <tr><td colspan="3" class="sec" style="padding:1.6mm 2mm;">SERVIÇO PRESTADO</td></tr>
     <tr>
@@ -179,8 +186,9 @@
       </td>
     </tr>
   </table>
-
-  <!-- ═════════ TRIBUTAÇÃO MUNICIPAL ═════════ -->
+  </td></tr>
+  <tr><td>
+<!-- ═════════ TRIBUTAÇÃO MUNICIPAL ═════════ -->
   <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
     <tr><td colspan="6" class="sec" style="padding:1.6mm 2mm;">TRIBUTAÇÃO MUNICIPAL (ISSQN)</td></tr>
     <tr>
@@ -192,8 +200,9 @@
       <td width="14%" class="cel"><span class="lbl">ISSQN apurado</span><br><span class="val">{{issqn_apurado}}</span></td>
     </tr>
   </table>
-
-  <!-- ═════════ TRIBUTAÇÃO FEDERAL ═════════ -->
+  </td></tr>
+  <tr><td>
+<!-- ═════════ TRIBUTAÇÃO FEDERAL ═════════ -->
   <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
     <tr><td colspan="5" class="sec" style="padding:1.6mm 2mm;">TRIBUTAÇÃO FEDERAL (EXCETO CBS)</td></tr>
     <tr class="zebra">
@@ -204,8 +213,9 @@
       <td width="20%" class="cel"><span class="lbl">COFINS</span><br><span class="val">{{cofins}}</span></td>
     </tr>
   </table>
-
-  <!-- ═════════ TRIBUTAÇÃO IBS / CBS ═════════ -->
+  </td></tr>
+  <tr><td>
+<!-- ═════════ TRIBUTAÇÃO IBS / CBS ═════════ -->
   <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
     <tr><td colspan="6" class="sec" style="padding:1.6mm 2mm;">TRIBUTAÇÃO IBS / CBS</td></tr>
     <tr>
@@ -217,21 +227,22 @@
       <td width="15%" class="cel"><span class="lbl">Alíquota CBS</span><br><span class="val">{{cbs_aliquota}}</span></td>
     </tr>
     <tr class="zebra">
-      <td class="cel"><span class="lbl">IBS estadual</span><div class="money">{{ibs_estadual}}</div></td>
-      <td class="cel"><span class="lbl">IBS municipal</span><div class="money">{{ibs_municipal}}</div></td>
-      <td colspan="2" class="cel"><span class="lbl">Total apurado IBS</span><div class="money">{{ibs_total}}</div></td>
-      <td colspan="2" class="cel"><span class="lbl">Total apurado CBS</span><div class="money">{{cbs_total}}</div></td>
+      <td class="cel" align="right"><span class="lbl">IBS estadual</span><br><span class="money">{{ibs_estadual}}</span></td>
+      <td class="cel" align="right"><span class="lbl">IBS municipal</span><br><span class="money">{{ibs_municipal}}</span></td>
+      <td colspan="2" class="cel" align="right"><span class="lbl">Total apurado IBS</span><br><span class="money">{{ibs_total}}</span></td>
+      <td colspan="2" class="cel" align="right"><span class="lbl">Total apurado CBS</span><br><span class="money">{{cbs_total}}</span></td>
     </tr>
   </table>
-
-  <!-- ═════════ VALOR TOTAL ═════════ -->
+  </td></tr>
+  <tr><td>
+<!-- ═════════ VALOR TOTAL ═════════ -->
   <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
     <tr><td colspan="4" class="sec" style="padding:1.6mm 2mm;">VALOR TOTAL DA NFS-E</td></tr>
     <tr>
-      <td width="25%" class="cel"><span class="lbl">Valor da operação / serviço</span><div class="money">{{valor_servico}}</div></td>
-      <td width="25%" class="cel"><span class="lbl">Descontos (incond. / cond.)</span><div class="money">{{descontos}}</div></td>
-      <td width="25%" class="cel"><span class="lbl">Total das retenções</span><div class="money">{{retencoes}}</div></td>
-      <td width="25%" class="cel"><span class="lbl">Total do IBS / CBS</span><div class="money">{{ibs_cbs_total}}</div></td>
+      <td width="25%" class="cel" align="right"><span class="lbl">Valor da operação / serviço</span><br><span class="money">{{valor_servico}}</span></td>
+      <td width="25%" class="cel" align="right"><span class="lbl">Descontos (incond. / cond.)</span><br><span class="money">{{descontos}}</span></td>
+      <td width="25%" class="cel" align="right"><span class="lbl">Total das retenções</span><br><span class="money">{{retencoes}}</span></td>
+      <td width="25%" class="cel" align="right"><span class="lbl">Total do IBS / CBS</span><br><span class="money">{{ibs_cbs_total}}</span></td>
     </tr>
     <tr>
       <td colspan="2" style="background-color:#F26522; padding:2.6mm 2mm;">
@@ -242,14 +253,16 @@
       </td>
     </tr>
   </table>
-
-  <!-- ═════════ INFORMAÇÕES COMPLEMENTARES ═════════ -->
+  </td></tr>
+  <tr><td>
+<!-- ═════════ INFORMAÇÕES COMPLEMENTARES ═════════ -->
   <table width="100%" cellpadding="3" cellspacing="0" class="box" style="margin-top:1.4mm;">
     <tr><td class="sec" style="padding:1.6mm 2mm;">INFORMAÇÕES COMPLEMENTARES</td></tr>
     <tr><td><div class="foot">{{info_complementares}}</div></td></tr>
   </table>
-
-  <!-- ═════════ RODAPÉ ═════════ -->
+  </td></tr>
+  <tr><td>
+<!-- ═════════ RODAPÉ ═════════ -->
   <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:1.4mm;">
     <tr>
       <td width="70%" class="foot" valign="top">
@@ -262,6 +275,8 @@
       </td>
     </tr>
   </table>
+  </td></tr>
+</table>
 
 </td></tr>
 </table>

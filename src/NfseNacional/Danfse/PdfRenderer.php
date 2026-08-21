@@ -20,11 +20,14 @@ class PdfRenderer
     private const QR_LADO = 25.0;
 
     /**
-     * Topo do QR, em mm. O X e calculado em qrX(), a partir da margem.
-     * Calibrado contra o PDF gerado — mexer aqui desalinha o QR do slot
-     * reservado no cabecalho do template.
+     * Recuo do QR em relacao a margem da pagina, em mm.
+     *
+     * A moldura (.wrap) fica na margem, e o conteudo dela e recuado pelo
+     * cellpadding do template (~2,1mm). Encostado nesses limites o QR fica
+     * espremido contra as linhas; este recuo maior abre a folga visual
+     * entre o codigo e a moldura, na horizontal e na vertical.
      */
-    private const QR_Y = 11.0;
+    private const QR_RECUO = 4.0;
 
     /**
      * Fonte base do documento.
@@ -51,10 +54,15 @@ class PdfRenderer
         $this->fonte  = $fonte  ?? self::FONTE_PADRAO;
     }
 
-    /** O slot do QR fica encostado na margem direita. */
+    /** Canto superior esquerdo do QR, recuado da moldura. */
     private function qrX(): float
     {
-        return 210.0 - $this->margem - self::QR_LADO;
+        return 210.0 - $this->margem - self::QR_RECUO - self::QR_LADO;
+    }
+
+    private function qrY(): float
+    {
+        return $this->margem + self::QR_RECUO;
     }
 
     /**
@@ -146,6 +154,13 @@ class PdfRenderer
             return;
         }
 
+        // write2DBarcode desenha na pagina CORRENTE. Se o conteudo tiver
+        // transbordado para a segunda pagina, a corrente e a 2 — e o QR
+        // sumiria do cabecalho sem ninguem notar. O slot esta sempre na 1.
+        if ($pdf->getNumPages() > 1) {
+            $pdf->setPage(1);
+        }
+
         $estilo = [
             'border'  => false,
             'padding' => 0,
@@ -157,7 +172,7 @@ class PdfRenderer
             $conteudo,
             'QRCODE,M',
             $this->qrX(),
-            self::QR_Y,
+            $this->qrY(),
             self::QR_LADO,
             self::QR_LADO,
             $estilo,
