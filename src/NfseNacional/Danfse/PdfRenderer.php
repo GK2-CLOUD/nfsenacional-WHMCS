@@ -52,11 +52,11 @@ class PdfRenderer
     /**
      * Recuo horizontal do QR em relacao a margem da pagina, em mm.
      *
-     * 4mm poe a aresta direita do QR em 196mm — exatamente onde terminam
+     * 5,4mm poe a aresta direita do QR na mesma coluna onde terminam
      * as faixas de secao e os blocos do corpo. Medido no PDF; mexer aqui
      * desalinha o QR da coluna do documento.
      */
-    private const QR_RECUO_X = 4.0;
+    private const QR_RECUO_X = 5.4;
 
     /**
      * Topo do QR, em mm a partir da borda da pagina.
