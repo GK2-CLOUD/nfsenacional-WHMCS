@@ -172,7 +172,7 @@ class TokenMapper
         return [
             'issqn_tipo'      => Formato::texto(Codigos::tributacaoIssqn($x->v($mun . '/n:tribISSQN'))),
             'issqn_municipio' => Formato::juntar(
-                ' - ',
+                ' / ',
                 $x->v(NfseXml::INF_NFSE . '/n:xLocIncid'),
                 $this->ufDoMunicipio($x, $x->v(NfseXml::INF_NFSE . '/n:cLocIncid'))
             ),
@@ -214,9 +214,13 @@ class TokenMapper
                 ' / ',
                 $x->v(NfseXml::INF_DPS . '/n:IBSCBS/n:cIndOp'),
                 Formato::juntar(
-                    ' - ',
-                    $x->v(NfseXml::IBSCBS . '/n:xLocalidadeIncid'),
-                    $this->ufDoMunicipio($x, $x->v(NfseXml::IBSCBS . '/n:cLocalidadeIncid'))
+                    ' — ',
+                    $x->v(NfseXml::IBSCBS . '/n:cLocalidadeIncid'),
+                    Formato::juntar(
+                        '/',
+                        $x->v(NfseXml::IBSCBS . '/n:xLocalidadeIncid'),
+                        $this->ufDoMunicipio($x, $x->v(NfseXml::IBSCBS . '/n:cLocalidadeIncid'))
+                    )
                 )
             ),
             'ibs_exclusoes' => Formato::moeda($x->v($val . '/n:vCalcReeRepRes')),
@@ -257,11 +261,16 @@ class TokenMapper
 
         return [
             'valor_servico' => Formato::moeda($x->v($vsp . '/n:vServ')),
-            'descontos'     => Formato::juntar(
-                ' / ',
-                Formato::moeda($x->v($vsp . '/n:vDescIncond')),
-                Formato::moeda($x->v($vsp . '/n:vDescCond'))
-            ),
+            // O mockup mostra um travessao unico quando nao ha desconto
+            // algum, e so separa com barra quando ha algum valor.
+            'descontos'     => ($x->v($vsp . '/n:vDescIncond') === null
+                                && $x->v($vsp . '/n:vDescCond') === null)
+                ? Formato::TRACO
+                : Formato::juntar(
+                    ' / ',
+                    Formato::moeda($x->v($vsp . '/n:vDescIncond')),
+                    Formato::moeda($x->v($vsp . '/n:vDescCond'))
+                ),
             'retencoes'     => Formato::moeda($retencoes),
             'ibs_cbs_total' => Formato::moeda($ibsCbs),
             'valor_liquido' => Formato::moeda($x->v(NfseXml::INF_NFSE . '/n:valores/n:vLiq')),
@@ -282,7 +291,15 @@ class TokenMapper
             fn($p) => $p !== ''
         ));
 
-        return $limpo === [] ? Formato::TRACO : implode(', ', $limpo);
+        if ($limpo === []) {
+            return Formato::TRACO;
+        }
+
+        // "Avenida XV de Novembro, 1058 — Zona 01": o bairro entra apos
+        // travessao, separando-o do logradouro e numero (mockup).
+        $bairro = count($limpo) > 2 ? array_pop($limpo) : null;
+
+        return implode(', ', $limpo) . ($bairro !== null ? ' — ' . $bairro : '');
     }
 
     /**

@@ -61,7 +61,7 @@ class Formato
             return self::TRACO;
         }
 
-        return number_format((float) $v, 2, ',', '.') . ' %';
+        return number_format((float) $v, 2, ',', '.') . '%';
     }
 
     /**
