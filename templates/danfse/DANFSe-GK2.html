@@ -248,12 +248,15 @@
   </table></td></tr>
   <tr><td>
 <!-- ═════════ RODAPÉ ═════════ -->
-  <table width="100%" cellpadding="2" cellspacing="0" style="margin-top:1.4mm;">
+  <!-- Fica FORA dos blocos: alinha pela BORDA deles (16,34 / 196,60mm),
+       nao pelo texto interno. Por isso cellpadding=0 e sem <blockquote>,
+       ao contrario de todas as celulas do corpo. -->
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:1.4mm;">
     <tr>
-      <td width="70%" class="foot" valign="top"><blockquote>Documento Auxiliar da NFS-e — não substitui a Nota Fiscal de Serviço eletrônica.
-        Autenticidade em <b>www.nfse.gov.br</b> pela chave de acesso.</blockquote></td>
-      <td width="30%" class="foot" align="right" valign="top"><blockquote>Processamento: {{data_processamento}}<br>
-        GK2 CLOUD LTDA · gk2.cloud</blockquote></td>
+      <td width="70%" class="foot" valign="top">Documento Auxiliar da NFS-e — não substitui a Nota Fiscal de Serviço eletrônica.
+        Autenticidade em <b>www.nfse.gov.br</b> pela chave de acesso.</td>
+      <td width="30%" class="foot" align="right" valign="top">Processamento: {{data_processamento}}<br>
+        GK2 CLOUD LTDA · gk2.cloud</td>
     </tr>
   </table></td></tr>
 </table></td></tr>
