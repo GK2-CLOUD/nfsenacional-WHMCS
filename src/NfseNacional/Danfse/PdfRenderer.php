@@ -19,13 +19,25 @@ class PdfRenderer
     /**
      * Lado do QR Code, em mm.
      *
-     * 18mm, nao os 25mm do slot original. Com ~37 modulos, 25mm dava
-     * modulos de 0,68mm — visivelmente grossos, longe do aspecto de um QR
-     * comum. O DANFS-e oficial usa 15,6mm (modulo de 0,38mm); 18mm nos
-     * poe em 0,49mm, fino o suficiente para parecer convencional e bem
-     * acima do limite de leitura de impressora laser.
+     * 25mm, o slot que o mockup reserva.
+     *
+     * O tamanho sozinho nao decide a aparencia: o que deixa o QR "grosso"
+     * e a razao entre lado e numero de modulos. Com correcao M sao 37
+     * modulos, e 25mm daria 0,68mm por modulo — visivelmente grosso. Com
+     * correcao H sao 49 modulos, e os mesmos 25mm dao 0,51mm: preenche o
+     * slot do mockup e mantem o aspecto fino. Ver QR_CORRECAO.
      */
-    private const QR_LADO = 18.0;
+    private const QR_LADO = 25.0;
+
+    /**
+     * Nivel de correcao de erro.
+     *
+     * H (30% de recuperacao) em vez de M (15%). Escolhido por dois
+     * motivos que apontam na mesma direcao: adensa a malha, o que resolve
+     * o aspecto grosso no slot de 25mm, e dobra a tolerancia a sujeira,
+     * dobra e desgaste — o DANFS-e e feito para ser impresso.
+     */
+    private const QR_CORRECAO = 'QRCODE,H';
 
     /**
      * Recuo do QR em relacao a margem da pagina, em mm.
@@ -178,7 +190,7 @@ class PdfRenderer
 
         $pdf->write2DBarcode(
             $conteudo,
-            'QRCODE,M',
+            self::QR_CORRECAO,
             $this->qrX(),
             $this->qrY(),
             self::QR_LADO,

@@ -46,6 +46,15 @@ def funcao(n, versao):
     for r in range(0, 9):                                    # format info
         if r < n: f[r][8] = True; f[8][r] = True
     for r in range(n-8, n): f[r][8] = True; f[8][r] = True
+    if versao >= 7:                                          # info de versao
+        # Dois blocos 6x3, junto ao finder superior-direito e ao
+        # inferior-esquerdo. So existem da versao 7 em diante; sem
+        # mascara-los, a leitura pega 4 codewords a mais e o conteudo
+        # sai embaralhado a partir do meio.
+        for r in range(6):
+            for c in range(n-11, n-8):
+                f[r][c] = True
+                f[c][r] = True
     for a in ALIGN.get(versao, []):                          # alignment
         for b in ALIGN.get(versao, []):
             if (a,b) in [(6,6), (6,n-7), (n-7,6)]: continue
@@ -101,6 +110,8 @@ BLOCOS = {  # versao: {ec: [(n_blocos, dados_por_bloco, ec_por_bloco), ...]}
     6: {'L': [(1,136,36)], 'M': [(4,27,16)], 'Q': [(4,19,24)], 'H': [(4,15,28)]},
     7: {'L': [(2,98,40)],  'M': [(4,31,18)],
         'Q': [(2,14,18),(4,15,18)], 'H': [(4,13,26),(1,14,26)]},
+    8: {'L': [(2,97,48)],  'M': [(2,38,22),(2,39,22)],
+        'Q': [(4,18,22),(2,19,22)], 'H': [(4,14,26),(2,15,26)]},
 }
 
 def deinterleave(cw, plano):
