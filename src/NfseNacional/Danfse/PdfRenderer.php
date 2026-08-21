@@ -52,11 +52,11 @@ class PdfRenderer
     /**
      * Recuo horizontal do QR em relacao a margem da pagina, em mm.
      *
-     * 7,5mm poe a aresta direita do QR na mesma coluna onde terminam
+     * 3,9mm poe a aresta direita do QR em 196mm — onde terminam
      * as faixas de secao e os blocos do corpo. Medido no PDF; mexer aqui
      * desalinha o QR da coluna do documento.
      */
-    private const QR_RECUO_X = 7.5;
+    private const QR_RECUO_X = 3.9;
 
     /**
      * Topo do QR, em mm a partir da borda da pagina.
@@ -76,6 +76,22 @@ class PdfRenderer
      */
     private const FONTE_PADRAO = 'dejavusans';
     private const TAMANHO = 7.5;
+
+    /**
+     * Recuo horizontal do texto dentro das celulas, em mm.
+     *
+     * O TCPDF nao aceita padding-left, padding abreviado nem margin-left
+     * para isso — todos testados e ignorados. O cellpadding funciona, mas
+     * incide nos DOIS eixos e em cada uma das ~24 linhas do documento:
+     * subir de 2 para 3 custaria 16mm de altura para render 0,35mm de
+     * recuo.
+     *
+     * A saida e o <blockquote>, cujo recuo esquerdo o TCPDF expoe por
+     * setListIndentWidth(). Sendo bloco, indenta TODAS as linhas — um
+     * espacador &nbsp; indentaria so a primeira, deixando serrilhada a
+     * margem de qualquer texto que quebre. E o custo de altura e zero.
+     */
+    private const RECUO_TEXTO = 1.5;
 
     private float $margem;
     private string $fonte;
@@ -126,6 +142,7 @@ class PdfRenderer
         $pdf->setPrintHeader(false);
         $pdf->setPrintFooter(false);
         $pdf->SetFont($this->fonte, '', self::TAMANHO);
+        $pdf->setListIndentWidth(self::RECUO_TEXTO);
 
         $this->aplicarMetadados($pdf, $meta);
 
@@ -155,6 +172,7 @@ class PdfRenderer
         $pdf->setPrintHeader(false);
         $pdf->setPrintFooter(false);
         $pdf->SetFont($this->fonte, '', self::TAMANHO);
+        $pdf->setListIndentWidth(self::RECUO_TEXTO);
         $pdf->AddPage();
         $pdf->writeHTML($html, true, false, true, false, '');
 

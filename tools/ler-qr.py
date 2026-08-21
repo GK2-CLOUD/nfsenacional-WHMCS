@@ -21,6 +21,12 @@ def matriz(png, y0, y1, x0, x1):
         run += 1
     mp = run / 7.0
     n = int(round(qr.shape[1] / mp))
+    # So existem tamanhos 17+4v. Um erro de 1px na medida do finder joga
+    # o calculo para um valor invalido (48, por exemplo) e o grid inteiro
+    # sai deslocado. Ancorar no valido mais proximo e recalcular o modulo.
+    validos = [17 + 4*v for v in range(1, 41)]
+    n = min(validos, key=lambda k: abs(k - n))
+    mp = qr.shape[1] / n
 
     m = np.zeros((n, n), dtype=np.uint8)
     for r in range(n):
