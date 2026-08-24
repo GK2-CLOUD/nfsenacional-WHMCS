@@ -59,9 +59,14 @@
 <tr><td valign="top">
 
 <!-- cellspacing=2 => 1,41mm entre secoes. O TCPDF ignora margin em
-     tabela, e qualquer bloco espacador vazio custa 3,3mm. -->
+     tabela, e qualquer bloco espacador vazio custa 3,3mm.
+
+     nobr nas linhas: cada <tr> daqui e uma SECAO inteira do documento. Sem
+     isso o TCPDF quebra no meio dela quando o texto empurra para a segunda
+     pagina — ja aconteceu de a faixa "Valor liquido da NFS-e" ficar com o
+     rotulo numa pagina e o valor na outra. -->
 <table width="100%" cellpadding="0" cellspacing="4">
-  <tr><td>
+  <tr nobr="true"><td>
 <!-- ═════════ CABEÇALHO ═════════ -->
   <table width="100%" cellpadding="0" cellspacing="0">
     <tr>
@@ -98,12 +103,12 @@
   </td></tr>
 
   <!-- ═════════ AVISO DE HOMOLOGAÇÃO ═════════ -->
-  {{#se_homologacao}}<tr><td>
+  {{#se_homologacao}}<tr nobr="true"><td>
   <table width="100%" cellpadding="1" cellspacing="0">
     <tr><td class="warn"><blockquote>AMBIENTE DE HOMOLOGAÇÃO — DOCUMENTO SEM VALOR FISCAL</blockquote></td></tr>
   </table>
   </td></tr>{{/se_homologacao}}
-  <tr><td>
+  <tr nobr="true"><td>
 <!-- ═════════ CHAVE DE ACESSO ═════════ -->
   <table width="100%" cellpadding="2" cellspacing="0" style="background-color:#f6f6f7; border:0.8mm solid #dcdcdc;">
     <tr>
@@ -124,7 +129,7 @@
         </table></td>
     </tr>
   </table></td></tr>
-  <tr><td>
+  <tr nobr="true"><td>
 <!-- ═════════ PRESTADOR ═════════ -->
   <table width="100%" cellpadding="2" cellspacing="0" class="box" style="margin-top:1.4mm;">
     <tr><td colspan="4" class="sec" style="padding:1.6mm 2mm;"><blockquote>PRESTADOR / FORNECEDOR</blockquote></td></tr>
@@ -145,7 +150,7 @@
       <td colspan="2" class="cel"><blockquote><span class="lbl">Regime de apuração tributária</span><br><span class="val">{{prestador_regime}}</span></blockquote></td>
     </tr>
   </table></td></tr>
-  <tr><td>
+  <tr nobr="true"><td>
 <!-- ═════════ TOMADOR ═════════ -->
   <table width="100%" cellpadding="2" cellspacing="0" class="box" style="margin-top:1.4mm;">
     <tr><td colspan="4" class="sec" style="padding:1.6mm 2mm;"><blockquote>TOMADOR / ADQUIRENTE</blockquote></td></tr>
@@ -165,7 +170,7 @@
       <td colspan="4" class="cel"><blockquote><span class="foot">{{intermediario_info}}</span></blockquote></td>
     </tr>
   </table></td></tr>
-  <tr><td>
+  <tr nobr="true"><td>
 <!-- ═════════ SERVIÇO PRESTADO ═════════ -->
   <table width="100%" cellpadding="2" cellspacing="0" class="box" style="margin-top:1.4mm;">
     <tr><td colspan="3" class="sec" style="padding:1.6mm 2mm;"><blockquote>SERVIÇO PRESTADO</blockquote></td></tr>
@@ -181,7 +186,7 @@
       <td colspan="3" class="cel" valign="top"><blockquote><span class="lbl">Descrição do serviço</span><br><span class="val">{{discriminacao}}</span></blockquote></td>
     </tr>
   </table></td></tr>
-  <tr><td>
+  <tr nobr="true"><td>
 <!-- ═════════ TRIBUTAÇÃO MUNICIPAL ═════════ -->
   <table width="100%" cellpadding="2" cellspacing="0" class="box" style="margin-top:1.4mm;">
     <tr><td colspan="6" class="sec" style="padding:1.6mm 2mm;"><blockquote>TRIBUTAÇÃO MUNICIPAL (ISSQN)</blockquote></td></tr>
@@ -194,7 +199,7 @@
       <td width="14%" class="cel"><blockquote><span class="lbl">ISSQN apurado</span><br><span class="val">{{issqn_apurado}}</span></blockquote></td>
     </tr>
   </table></td></tr>
-  <tr><td>
+  <tr nobr="true"><td>
 <!-- ═════════ TRIBUTAÇÃO FEDERAL ═════════ -->
   <table width="100%" cellpadding="2" cellspacing="0" class="box" style="margin-top:1.4mm;">
     <tr><td colspan="5" class="sec" style="padding:1.6mm 2mm;"><blockquote>TRIBUTAÇÃO FEDERAL (EXCETO CBS)</blockquote></td></tr>
@@ -206,7 +211,7 @@
       <td width="20%" class="cel"><blockquote><span class="lbl">COFINS</span><br><span class="val">{{cofins}}</span></blockquote></td>
     </tr>
   </table></td></tr>
-  <tr><td>
+  <tr nobr="true"><td>
 <!-- ═════════ TRIBUTAÇÃO IBS / CBS ═════════ -->
   <table width="100%" cellpadding="2" cellspacing="0" class="box" style="margin-top:1.4mm;">
     <tr><td colspan="6" class="sec" style="padding:1.6mm 2mm;"><blockquote>TRIBUTAÇÃO IBS / CBS</blockquote></td></tr>
@@ -225,7 +230,7 @@
       <td colspan="2" class="cel"><blockquote><span class="lbl">Total apurado CBS</span><div class="money">{{cbs_total}}</div></blockquote></td>
     </tr>
   </table></td></tr>
-  <tr><td>
+  <tr nobr="true"><td>
 <!-- ═════════ VALOR TOTAL ═════════ -->
   <table width="100%" cellpadding="2" cellspacing="0" class="box" style="margin-top:1.4mm;">
     <tr><td colspan="4" class="sec" style="padding:1.6mm 2mm;"><blockquote>VALOR TOTAL DA NFS-E</blockquote></td></tr>
@@ -243,13 +248,13 @@
       <td width="50%" align="right" valign="middle" style="background-color:#F26522;"><span style="line-height:210%; font-size:13pt; font-weight:bold; color:#ffffff;">{{valor_liquido}}</span></td>
     </tr>
   </table></td></tr>
-  <tr><td>
+  <tr nobr="true"><td>
 <!-- ═════════ INFORMAÇÕES COMPLEMENTARES ═════════ -->
   <table width="100%" cellpadding="2" cellspacing="0" class="box" style="margin-top:1.4mm;">
     <tr><td class="sec" style="padding:1.6mm 2mm;"><blockquote>INFORMAÇÕES COMPLEMENTARES</blockquote></td></tr>
     <tr><td><blockquote><span class="foot">{{info_complementares}}</span></blockquote></td></tr>
   </table></td></tr>
-  <tr><td>
+  <tr nobr="true"><td>
 <!-- ═════════ RODAPÉ ═════════ -->
   <!-- Fica FORA dos blocos: alinha pela BORDA deles (16,34 / 196,60mm),
        nao pelo texto interno. Por isso cellpadding=0 e sem <blockquote>,

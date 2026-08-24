@@ -55,6 +55,11 @@ class PdfRenderer
      */
     private const FOLGA_MOLDURA = 4.24;
 
+    /** Distancia entre a linha de paginacao e o pe da moldura, em mm. */
+    private const RODAPE_RECUO = 5.5;
+    private const RODAPE_TAMANHO = 6.0;
+    private const RODAPE_COR = [107, 107, 107];   // #6b6b6b, o mesmo de .foot
+
     /** Traco e cor da moldura — os mesmos que .wrap tinha no HTML. */
     private const MOLDURA_ESPESSURA = 0.4;
     private const MOLDURA_COR = [154, 154, 154];   // #9a9a9a
@@ -161,12 +166,26 @@ class PdfRenderer
         $this->fonte  = $fonte  ?? self::FONTE_PADRAO;
     }
 
+    /**
+     * Coluna util do documento: [x da aresta esquerda, largura].
+     *
+     * E onde comecam e terminam os blocos. O QR e a linha de paginacao se
+     * alinham por ela, nao pela margem.
+     */
+    private function colunaConteudo(): array
+    {
+        [$esq, , $dir] = $this->margens();
+        $x = $esq + self::RECUO_BLOCO;
+
+        return [$x, 210.0 - $dir - self::RECUO_BLOCO - $x];
+    }
+
     /** Aresta direita do QR na mesma coluna em que terminam os blocos. */
     private function qrX(): float
     {
-        [, , $dir] = $this->margens();
+        [$x, $largura] = $this->colunaConteudo();
 
-        return 210.0 - $dir - self::RECUO_BLOCO - self::QR_LADO;
+        return $x + $largura - self::QR_LADO;
     }
 
     private function qrY(): float
@@ -191,12 +210,16 @@ class PdfRenderer
             );
         }
 
-        $pdf = new \TCPDF('P', 'mm', 'A4', true, 'UTF-8');
+        $pdf = new DanfsePdf('P', 'mm', 'A4', true, 'UTF-8');
 
         [$esq, $topo, $dir] = $this->margens();
         $pdf->SetMargins($esq, $topo, $dir);
         $pdf->SetAutoPageBreak(true, $this->margem);
-        $pdf->setPrintHeader(false);
+        // Header() nao imprime nada; existe so para dar as paginas de
+        // continuacao a mesma folga que a moldura tem nas laterais.
+        $pdf->setPrintHeader(true);
+        $pdf->setHeaderFont([$this->fonte, '', self::TAMANHO]);
+        $pdf->definirMargemContinuacao($this->margem + self::FOLGA_MOLDURA);
         $pdf->setPrintFooter(false);
         $pdf->SetFont($this->fonte, '', self::TAMANHO);
         $pdf->setListIndentWidth(self::RECUO_TEXTO);
@@ -207,6 +230,7 @@ class PdfRenderer
         $pdf->writeHTML($html, true, false, true, false, '');
 
         $this->desenharMoldura($pdf);
+        $this->numerarPaginas($pdf, $meta);
         $this->desenharQr($pdf, $qrConteudo);
 
         // 'S' devolve a string; o DownloadController e quem escreve os headers.
@@ -224,11 +248,16 @@ class PdfRenderer
             return 0;
         }
 
-        $pdf = new \TCPDF('P', 'mm', 'A4', true, 'UTF-8');
+        $pdf = new DanfsePdf('P', 'mm', 'A4', true, 'UTF-8');
+
         [$esq, $topo, $dir] = $this->margens();
         $pdf->SetMargins($esq, $topo, $dir);
         $pdf->SetAutoPageBreak(true, $this->margem);
-        $pdf->setPrintHeader(false);
+        // Header() nao imprime nada; existe so para dar as paginas de
+        // continuacao a mesma folga que a moldura tem nas laterais.
+        $pdf->setPrintHeader(true);
+        $pdf->setHeaderFont([$this->fonte, '', self::TAMANHO]);
+        $pdf->definirMargemContinuacao($this->margem + self::FOLGA_MOLDURA);
         $pdf->setPrintFooter(false);
         $pdf->SetFont($this->fonte, '', self::TAMANHO);
         $pdf->setListIndentWidth(self::RECUO_TEXTO);
@@ -265,13 +294,21 @@ class PdfRenderer
      * O TCPDF nao implementa height:100% em tabela, entao ela e desenhada
      * por API: um retangulo da margem a margem, nos quatro lados. Como so
      * tem traco (sem preenchimento), pode ser desenhado depois do conteudo.
+     *
+     * Em TODAS as paginas: a moldura e o contorno do documento, nao do
+     * comeco dele. Uma segunda pagina sem moldura nao se parece com a
+     * primeira nem com um DANFS-e.
      */
     private function desenharMoldura(\TCPDF $pdf): void
     {
-        if ($pdf->getNumPages() > 1) {
-            $pdf->setPage(1);
+        for ($pagina = 1; $pagina <= $pdf->getNumPages(); $pagina++) {
+            $pdf->setPage($pagina);
+            $this->moldurar($pdf);
         }
+    }
 
+    private function moldurar(\TCPDF $pdf): void
+    {
         $pdf->Rect(
             $this->margem,
             $this->margem,
@@ -283,6 +320,51 @@ class PdfRenderer
                 'color' => self::MOLDURA_COR,
             ]]
         );
+    }
+
+    /**
+     * Identificacao e numero de pagina, no rodape de cada folha.
+     *
+     * So aparece quando o documento passa de uma pagina. O caso comum e uma
+     * folha, e ai a linha seria ruido. Nao ha teto de duas: o corte de 2000
+     * caracteres do xDescServ limita o texto, nao a altura — medido, 60
+     * itens de uma linha cada cabem nos 2000 caracteres e levam o documento
+     * a TRES paginas.
+     *
+     * Existe porque uma folha solta precisa se identificar: sem ela, a
+     * pagina 2 nao diz de que nota e, nem que existe uma pagina 1. Por isso
+     * repete numero e chave de acesso, e nao so "2 de 2".
+     *
+     * Fica no vao entre o fim do conteudo e o pe da moldura, entao nao
+     * disputa espaco com o documento.
+     */
+    private function numerarPaginas(\TCPDF $pdf, array $meta): void
+    {
+        $total = $pdf->getNumPages();
+
+        if ($total < 2) {
+            return;
+        }
+
+        [$x, $largura] = $this->colunaConteudo();
+        $y = 297.0 - $this->margem - self::RODAPE_RECUO;
+
+        $numero = trim((string) ($meta['numero'] ?? ''));
+        $chave  = Formato::chave($meta['chave'] ?? null, 4);
+
+        $identificacao = 'DANFS-e' . ($numero !== '' ? ' n° ' . $numero : '')
+            . ($chave !== Formato::TRACO ? '  ·  chave ' . $chave : '');
+
+        $pdf->SetFont($this->fonte, '', self::RODAPE_TAMANHO);
+        $pdf->SetTextColor(...self::RODAPE_COR);
+
+        for ($pagina = 1; $pagina <= $total; $pagina++) {
+            $pdf->setPage($pagina);
+            $pdf->SetXY($x, $y);
+            $pdf->Cell($largura, 0, $identificacao, 0, 0, 'L');
+            $pdf->SetXY($x, $y);
+            $pdf->Cell($largura, 0, 'Página ' . $pagina . ' de ' . $total, 0, 0, 'R');
+        }
     }
 
     /**

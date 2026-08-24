@@ -8,7 +8,8 @@ foreach (['NfseXml','Formato','Codigos','Uf','TokenMapper','TemplateRenderer'] a
 use GK2\NfseNacional\Danfse\{NfseXml, TokenMapper, TemplateRenderer};
 
 const XML = __DIR__ . '/fixtures/nfse-597.xml';
-const OUT = '/tmp/claude-1000/-home-ichiro-Documents-repos-nfsenacional/ccd372cc-3f30-43e6-833b-716edf93a125/scratchpad/render';
+const TPL = __DIR__ . '/../../templates/danfse/DANFSe-GK2.html';
+define('OUT', sys_get_temp_dir() . '/danfse-render');
 
 $pass=0; $fail=0; $falhas=[];
 function eq(string $w, $got, $want) {
@@ -86,6 +87,21 @@ ok('tag do usuario neutralizada',  !str_contains($r, '<script>'));
 ok('script escapado',               str_contains($r, '&lt;script&gt;'));
 ok('& virou &amp;',                 str_contains($r, 'A &amp; B &lt;LTDA&gt;'));
 ok('<b> do usuario nao virou markup', !str_contains($r, 'Plano <b>PRO</b>'));
+
+/* ── 4b. nobr nas secoes: quebra de pagina nao parte uma secao ────── */
+echo "\nQuebra de pagina\n";
+$tpl = file_get_contents(TPL);
+/* Cada <tr> filho direto da tabela container e uma secao inteira. Sem nobr o
+   TCPDF quebra no meio: medido no homolog, com 18 a 20 itens a pagina 2
+   abria com a faixa laranja do valor liquido, tendo deixado o rotulo dela na
+   pagina 1. Estas asserções sao estruturais — renderizar exige o TCPDF, que
+   so existe no servidor. */
+preg_match_all('/^  <tr( nobr="true")?>/m', $tpl, $linhas);
+eq('11 secoes na tabela container', count($linhas[0]), 11);
+eq('todas com nobr', count(array_filter($linhas[1])), 11);
+// a 12a linha e a do aviso, que nasce colada no token e nao no comeco da linha
+ok('condicional de homologacao tambem',
+   str_contains($tpl, '{{#se_homologacao}}<tr nobr="true">'));
 
 /* ── 5. Quebra de linha vira <br> DEPOIS do escape ────────────────── */
 $multi = $tokens; $multi['info_complementares'] = "linha 1 & cia\nlinha 2";

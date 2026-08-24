@@ -385,6 +385,32 @@ São **dois endereços diferentes**, ambos com um parâmetro chamado `chave`, co
 
 ---
 
+## DANFS-e em mais de uma página
+
+A discriminação é cortada em 2000 caracteres, mas isso limita o **texto**, não a altura: medido, 60 itens de uma linha cada cabem nos 2000 caracteres e levam o documento a **três** páginas. Multipágina não é hipotético.
+
+| Peça | Onde |
+|---|---|
+| Moldura em todas as páginas | `PdfRenderer::desenharMoldura()` percorre `getNumPages()` |
+| Seção não parte no meio | `nobr="true"` em cada `<tr>` da tabela container do template |
+| Margem de topo das páginas de continuação | `DanfsePdf::Header()` |
+| Identificação e `Página i de N` | `PdfRenderer::numerarPaginas()`, só quando há mais de uma |
+| QR sempre na página 1 | `PdfRenderer::desenharQr()` faz `setPage(1)` |
+
+- **`nobr`**: cada `<tr>` filho direto da tabela container é uma seção inteira. Sem `nobr` o TCPDF quebra no meio — medido, com 18 a 20 itens a página 2 abria com a faixa laranja do valor líquido, tendo deixado o rótulo dela na página 1. `tools/varrer-paginacao.py` varre tamanhos e confere que toda página de continuação abre com faixa de seção.
+- **`DanfsePdf`**: a margem de topo do TCPDF vale para o documento inteiro, e as duas páginas pedem coisas diferentes — a primeira abre com o cabeçalho (cujo logo já traz respiro), as seguintes com uma faixa de seção encostada na moldura (0,5 mm, contra 4,25 mm das laterais). O gancho é o `setHeader()` do TCPDF: ele chama `Header()` e **logo depois** põe o cursor em `(lMargin, tMargin)`, lendo `tMargin` naquele instante. Mexer em `tMargin` dentro de `Header()` é o único jeito de dar margem diferente às páginas de continuação sem empurrar a primeira. `Header()` não desenha nada — existe só por esse efeito colateral, e é por isso que `setPrintHeader(true)` não imprime cabeçalho nenhum.
+- **Identificação por página**: uma folha solta precisa se identificar. A linha traz número da NFS-e e chave de acesso, não só "2 de 2", e fica no vão entre o fim do conteúdo e o pé da moldura.
+
+### Ferramentas
+| Ferramenta | Uso |
+|---|---|
+| `tools/ciclo-danfse.sh [id]` | sobe o que mudou, gera o PDF de uma nota real e recorta a 600 dpi |
+| `tools/danfse-multipagina.php <n>` | **roda no servidor**; gera um DANFS-e com N itens para exercitar a quebra |
+| `tools/varrer-paginacao.py <a> <b>` | varre tamanhos e classifica o topo de cada página de continuação |
+| `tools/testes/rodar.sh` | as seis suítes (247 asserções), sem WHMCS nem rede |
+| `tools/ler-qr.py` | decodifica o QR de um DANFS-e |
+
+
 ## Template de Email
 
 ### Tipo correto: `general`, não `invoice`
