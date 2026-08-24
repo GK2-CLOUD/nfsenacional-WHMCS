@@ -2,6 +2,8 @@
 
 namespace GK2\NfseNacional\Admin;
 
+use GK2\NfseNacional\Domain\Enum\DanfseModelo;
+
 use WHMCS\Database\Capsule;
 
 /**
@@ -467,7 +469,7 @@ HTML;
         $configarray['fields']['danfse_modelo'] = [
             'FriendlyName' => $fn('Modelo do DANFS-e', true),
             'Type'         => 'dropdown',
-            'Options'      => '1-Oficial (governo),2-Local (gerado pelo módulo)',
+            'Options'      => DanfseModelo::opcoes(),   // fonte unica: o enum
             'Description'  => 'Qual PDF o cliente recebe ao clicar em "Ver DANFS-e".'
                 . $tip('Modelo do DANFS-e',
                     '"Oficial (governo)": baixa o documento do ADN a cada acesso — '
@@ -493,7 +495,9 @@ HTML;
                     'Aceita PNG, JPEG ou GIF gravado no servidor. '
                     . 'A imagem é encaixada numa caixa de 50 x 15,5 mm preservando a proporção, '
                     . 'então qualquer formato serve; para não sair serrilhada na impressão, '
-                    . 'use pelo menos 280 x 150 px. '
+                    . 'use pelo menos 280 x 150 px — e não muito mais que isso: o TCPDF embute o '
+                    . 'arquivo original no PDF, não a versão reduzida, então uma logo de 500 KB '
+                    . 'acrescenta 500 KB a cada DANFS-e gerado. '
                     . 'URL não é aceita: o TCPDF buscaria a imagem na rede a cada DANFS-e emitido, '
                     . 'o que é lento e quebra quando o site está fora do ar — copie o arquivo para o servidor. '
                     . 'Deixando em branco, o cabeçalho sai com a razão social do prestador '

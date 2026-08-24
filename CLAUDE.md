@@ -390,6 +390,19 @@ São **dois endereços diferentes**, ambos com um parâmetro chamado `chave`, co
 
 ---
 
+## Rótulos de dropdown
+
+O WHMCS grava em `tbladdonmodules` a **opção inteira** (`2-GK2`), não só o número. Renomear uma opção órfã o valor gravado: o formulário de configuração renderiza o dropdown sem nada selecionado e, ao salvar, escreve a **primeira** opção.
+
+Aconteceu de verdade ao renomear `2-GK2` para `2-Local (gerado pelo módulo)`: quem tinha o modelo local voltou para o oficial no primeiro save, e o DANFS-e passou a ser buscado no governo — que responde 404. `getDanfseModelo()` lê só o dígito e nunca se perdeu, mas isso protege a **leitura**, não o formulário.
+
+Duas travas:
+
+1. **Fonte única** — `DanfseModelo::opcoes()` monta o `Options` do campo; o rótulo não existe escrito à mão em lugar nenhum.
+2. **Migração** — `ModuleConfig::ensureDanfseModeloValido()` recoloca o valor gravado no rótulo atual. Roda em `nfsenacional_config()`, antes de montar os campos, então a tela já abre com a opção certa marcada. Idempotente, e registra um `logActivity` quando reescreve.
+
+Ao mexer em `Options` de qualquer outro dropdown, a mesma armadilha vale.
+
 ## Logo do DANFS-e
 
 O módulo não assume marca nenhuma. `danfse_logo` (vazio por padrão) recebe o **caminho de um arquivo no servidor**; sem ele o cabeçalho sai com a **razão social do prestador** no lugar da imagem.
@@ -397,7 +410,7 @@ O módulo não assume marca nenhuma. `danfse_logo` (vazio por padrão) recebe o 
 - Só arquivo local. URL é rejeitada de propósito: o TCPDF buscaria a imagem na rede a cada DANFS-e emitido — lento, quebra quando o host está fora, e transformaria um campo de configuração em requisição de saída do servidor.
 - Aceita PNG, JPEG e GIF (`getimagesize` + whitelist de `IMAGETYPE_*`). Diretório, arquivo ilegível ou que não seja imagem caem no mesmo lugar que "sem logo", **mas acusam**: `DanfseService::avisarLogoInvalida()` grava um `logActivity` com o caminho tentado, senão quem configurou não teria como saber por quê.
 - A imagem é encaixada numa caixa de **142 × 44 px** preservando a proporção — 50,1 × 15,5 mm, já que o TCPDF converte px a 72 dpi (medido: 0,3526 mm/px). Verificado com 1200×100 (limita pela largura) e 120×400 (limita pela altura); nenhum deforma o cabeçalho nem invade a coluna do QR.
-- Logo pequena é **ampliada** até a caixa, então o campo recomenda pelo menos 280 × 150 px para não serrilhar na impressão.
+- Logo pequena é **ampliada** até a caixa, então o campo recomenda pelo menos 280 × 150 px para não serrilhar na impressão. E não muito mais: o TCPDF embute o **arquivo original** no PDF, não a versão reduzida — medido, trocar uma logo de 22 KB por uma de 420 KB levou o DANFS-e de 89 KB para 430 KB.
 - `TemplateRenderer` decide sozinho os condicionais `se_logo` / `se_sem_logo` — só ele sabe se o arquivo resolveu, então valor vindo do chamador é ignorado.
 - `templates/danfse/gk2-logo.png` continua no repo, mas como **arquivo da GK2**, não como padrão: nada aponta para ele automaticamente.
 
