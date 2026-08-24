@@ -169,6 +169,9 @@ PRE + chaveAcesso(50) + codEvento(6) = 59 chars
 
 ## Campos de Configuração Importantes
 
+**Marcação nas descrições**: `Description` é renderizado como HTML pelo WHMCS — `<strong>`, `<code>` e `<br>` funcionam. O texto do `$tip()` **não**: ele vai escapado para o `data-content` do popover, que o Bootstrap insere como texto (o módulo não inicializa o popover, então vale o `html: false` padrão). Tag posta ali aparece crua na tela. Marcação vai no `Description`; o `$tip()` leva prosa. A exceção é `<IM>` na dica da Inscrição Municipal — ali é o nome do elemento XML, e mostrar literal é o que se quer.
+
+
 | Chave (tbladdonmodules) | Getter | Uso no XML |
 |-------------------------|--------|------------|
 | `cnpj_prestador` | `getCnpjPrestador()` | `<CNPJ>` no prestador, `CNPJAutor` no evento |

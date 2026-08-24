@@ -483,16 +483,20 @@ HTML;
             'FriendlyName' => $fn('Logo do DANFS-e', false),
             'Type'         => 'text',
             'Size'         => '60',
-            'Description'  => 'Caminho do arquivo da sua logo no servidor. Só vale para o modelo Local.'
+            'Description'  => 'Caminho absoluto do arquivo da sua logo no servidor. '
+                . 'Ex: <code>/home/usuario/public_html/assets/img/logo.png</code>. '
+                . '<strong>Deixe vazio</strong> para imprimir a razão social no lugar da imagem. '
+                . 'Só vale para o modelo Local.'
+                // Sem tags aqui: o popover recebe este texto por data-content e
+                // o mostra cru. Marcacao vai no Description, que o WHMCS renderiza.
                 . $tip('Logo do DANFS-e',
-                    'Caminho absoluto de um PNG, JPEG ou GIF no servidor — por exemplo '
-                    . '<code>/home/usuario/public_html/assets/img/logo.png</code>. '
-                    . 'A imagem é encaixada numa caixa de 50 x 15,5&nbsp;mm preservando a proporção, '
+                    'Aceita PNG, JPEG ou GIF gravado no servidor. '
+                    . 'A imagem é encaixada numa caixa de 50 x 15,5 mm preservando a proporção, '
                     . 'então qualquer formato serve; para não sair serrilhada na impressão, '
-                    . 'use pelo menos <strong>280 x 150&nbsp;px</strong>. '
+                    . 'use pelo menos 280 x 150 px. '
                     . 'URL não é aceita: o TCPDF buscaria a imagem na rede a cada DANFS-e emitido, '
                     . 'o que é lento e quebra quando o site está fora do ar — copie o arquivo para o servidor. '
-                    . 'Deixando <strong>em branco</strong>, o cabeçalho sai com a razão social do prestador '
+                    . 'Deixando em branco, o cabeçalho sai com a razão social do prestador '
                     . 'no lugar da imagem.'),
             'Default'      => '',
         ];
