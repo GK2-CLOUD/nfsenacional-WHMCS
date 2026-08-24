@@ -85,7 +85,7 @@ class CancelamentoService
             $eventoXml = $this->eventoBuilder->buildCancelamento(
                 $nfse->chaveAcesso,
                 EventoPayloadBuilder::MOTIVO_ERRO_EMISSAO,
-                $motivo
+                $motivo,
             );
 
             // 4. Enviar para API Nacional (provider travado no mesmo ambiente)

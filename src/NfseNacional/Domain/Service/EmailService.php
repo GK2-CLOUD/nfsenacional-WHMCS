@@ -51,7 +51,7 @@ class EmailService
                     'xml_url'     => $xmlUrl,
                     'link'        => $danfseUrl,
                     'xml'         => $xmlUrl,
-                    'chave_acesso'=> $nfse->chaveAcesso ?? '',
+                    'chave_acesso' => $nfse->chaveAcesso ?? '',
                 ])),
             ]);
 

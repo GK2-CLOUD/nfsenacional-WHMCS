@@ -20,7 +20,8 @@ class Dps
         public readonly array $valores,
         public readonly array $tributos,
         public readonly ?int $invoiceId = null,
-    ) {}
+    ) {
+    }
 
     /**
      * Cria uma DPS a partir de um array de dados.

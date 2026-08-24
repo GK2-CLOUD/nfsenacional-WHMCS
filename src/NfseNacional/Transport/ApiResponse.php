@@ -16,7 +16,8 @@ class ApiResponse
         public readonly array $errors,
         public readonly int $httpCode,
         public readonly string $rawBody,
-    ) {}
+    ) {
+    }
 
     /**
      * Cria um ApiResponse de sucesso.
