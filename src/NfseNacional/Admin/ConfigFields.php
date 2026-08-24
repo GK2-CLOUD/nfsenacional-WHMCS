@@ -2,8 +2,6 @@
 
 namespace GK2\NfseNacional\Admin;
 
-use GK2\NfseNacional\Domain\Enum\DanfseModelo;
-
 use WHMCS\Database\Capsule;
 
 /**
@@ -466,29 +464,13 @@ HTML;
             'Default'      => '1-Não Emitir',
         ];
 
-        $configarray['fields']['danfse_modelo'] = [
-            'FriendlyName' => $fn('Modelo do DANFS-e', true),
-            'Type'         => 'dropdown',
-            'Options'      => DanfseModelo::opcoes(),   // fonte unica: o enum
-            'Description'  => 'Qual PDF o cliente recebe ao clicar em "Ver DANFS-e".'
-                . $tip('Modelo do DANFS-e',
-                    '"Oficial (governo)": baixa o documento do ADN a cada acesso — '
-                    . 'depende do serviço do governo estar no ar. '
-                    . '"Local": gera o documento a partir do XML já guardado pelo módulo, '
-                    . 'com a sua identidade visual e sem chamada de API. '
-                    . 'Troque para Local somente após validar o resultado em homologação; '
-                    . 'voltar para o oficial é imediato e não exige atualização do módulo.'),
-            'Default'      => '1-Oficial (governo)',
-        ];
-
         $configarray['fields']['danfse_logo'] = [
             'FriendlyName' => $fn('Logo do DANFS-e', false),
             'Type'         => 'text',
             'Size'         => '60',
             'Description'  => 'Caminho absoluto do arquivo da sua logo no servidor. '
                 . 'Ex: <code>/home/usuario/public_html/assets/img/logo.png</code>. '
-                . '<strong>Deixe vazio</strong> para imprimir a razão social no lugar da imagem. '
-                . 'Só vale para o modelo Local.'
+                . '<strong>Deixe vazio</strong> para imprimir a razão social no lugar da imagem.'
                 // Sem tags aqui: o popover recebe este texto por data-content e
                 // o mostra cru. Marcacao vai no Description, que o WHMCS renderiza.
                 . $tip('Logo do DANFS-e',

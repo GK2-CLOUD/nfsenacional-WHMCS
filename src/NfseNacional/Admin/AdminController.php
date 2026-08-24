@@ -32,7 +32,6 @@ class AdminController
         'numero_nfse_nacional'  => 'Número NFS-e',
         'protocolo'            => 'Protocolo',
         'codigo_verificacao'   => 'Código de Verificação',
-        'danfse_url'           => 'Link DANFS-e',
         'xml_url'              => 'Link XML',
         'ambiente'             => 'Ambiente',
         'erro'                 => 'Mensagem de Erro',

@@ -3,7 +3,6 @@
 namespace GK2\NfseNacional\Config;
 
 use GK2\NfseNacional\Domain\Enum\Ambiente;
-use GK2\NfseNacional\Domain\Enum\DanfseModelo;
 use GK2\NfseNacional\Domain\Enum\EmissaoPolitica;
 use WHMCS\Database\Capsule;
 
@@ -306,58 +305,6 @@ class ModuleConfig
     }
 
     /**
-     * Modelo de DANFS-e entregue ao cliente (oficial do governo ou GK2 local).
-     *
-     * Qualquer valor desconhecido cai em OFICIAL — o comportamento atual do
-     * modulo. Config corrompida nunca deve promover o modelo novo sozinha.
-     */
-    public function getDanfseModelo(): DanfseModelo
-    {
-        $valor = $this->get('danfse_modelo', '1');
-        $numero = (int) preg_replace('/\D.*/', '', $valor);
-
-        return DanfseModelo::tryFrom($numero) ?? DanfseModelo::OFICIAL;
-    }
-
-    /**
-     * Recoloca danfse_modelo no rotulo atual do dropdown.
-     *
-     * O WHMCS grava a OPCAO INTEIRA em tbladdonmodules ("2-GK2"), nao so o
-     * numero. Quando o rotulo de uma opcao muda, o valor gravado deixa de
-     * casar com a lista: o formulario de configuracao renderiza o dropdown
-     * sem nada selecionado e, ao salvar, escreve a PRIMEIRA opcao. Foi o que
-     * aconteceu ao renomear "2-GK2" para "2-Local (gerado pelo modulo)" —
-     * quem tinha o modelo local voltou para o oficial no primeiro save, e o
-     * DANFS-e passou a ser buscado no governo.
-     *
-     * getDanfseModelo() le so o digito e nunca se perdeu, mas isso protege a
-     * leitura, nao o formulario. Esta migracao roda em nfsenacional_config(),
-     * antes de montar os campos, entao a tela ja abre com a opcao certa
-     * marcada. Idempotente.
-     */
-    public function ensureDanfseModeloValido(): void
-    {
-        $gravado = (string) $this->get('danfse_modelo', '');
-
-        if ($gravado === '') {
-            return;
-        }
-
-        $canonico = $this->getDanfseModelo()->rotuloConfig();
-
-        if ($gravado === $canonico) {
-            return;
-        }
-
-        $this->set('danfse_modelo', $canonico);
-
-        logActivity(
-            'NFS-e Nacional: rotulo de danfse_modelo atualizado de "' . $gravado
-            . '" para "' . $canonico . '" (o modelo escolhido nao mudou).'
-        );
-    }
-
-    /**
      * Caminho da logo impressa no DANFS-e local.
      *
      * Vazio e o padrao: o modulo nao assume marca nenhuma. Quem instala
@@ -383,7 +330,6 @@ class ModuleConfig
             'documento_cliente' => 'taxid',
             'optante_simples' => '1',
             'emissao_padrao' => '1-Nao Emitir',
-            'danfse_modelo' => DanfseModelo::OFICIAL->rotuloConfig(),
             'danfse_logo' => '',
             'email' => '0',
             'cancelar' => '0',

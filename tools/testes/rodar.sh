@@ -4,7 +4,7 @@
 set -uo pipefail
 cd "$(dirname "$0")"
 falhou=0
-for t in t1 t2 t3-codigos t4-qr t5-service t6-discriminacao t7-modelo; do
+for t in t1 t2 t3-codigos t4-qr t5-service t6-discriminacao; do
     linha=$(php "$t.php" 2>&1 | grep -E 'passaram' | tail -1)
     printf '  %-12s %s\n' "$t" "${linha:-SEM SAIDA}"
     case "$linha" in *' 0 falharam') ;; *) falhou=1 ;; esac

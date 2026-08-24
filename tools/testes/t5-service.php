@@ -11,7 +11,7 @@ $GLOBALS['logs'] = [];
 
 $M = __DIR__ . '/../../src/NfseNacional/';
 foreach ([
-    'Domain/Enum/Ambiente','Domain/Enum/NfseStatus','Domain/Enum/EmissaoPolitica','Domain/Enum/DanfseModelo',
+    'Domain/Enum/Ambiente','Domain/Enum/NfseStatus','Domain/Enum/EmissaoPolitica',
     'Domain/AmbienteMismatchException','Domain/AmbienteGuard','Domain/Entity/Nfse',
     'Domain/Service/CepIbgeCache','Config/ModuleConfig','Persistence/NfseRepository',
     'Fiscal/Mapper/TomadorMapper',

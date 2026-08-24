@@ -31,11 +31,6 @@ Bootstrap::boot();
  */
 function nfsenacional_config()
 {
-    /* Antes de montar os campos: se o rotulo de uma opcao de dropdown mudou
-       entre versoes, o valor gravado deixa de casar com a lista e o WHMCS
-       grava a primeira opcao no proximo save. Ver o metodo. */
-    (new ModuleConfig())->ensureDanfseModeloValido();
-
     return ConfigFields::build();
 }
 

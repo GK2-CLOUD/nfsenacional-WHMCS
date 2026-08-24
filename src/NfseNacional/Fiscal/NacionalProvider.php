@@ -128,20 +128,6 @@ class NacionalProvider implements ProviderInterface
     /**
      * {@inheritdoc}
      */
-    public function obterDanfse(string $chaveAcesso): ApiResponse
-    {
-        $endpoint = $this->endpoints->obterDanfse($this->ambiente, $chaveAcesso);
-
-        $response = $this->httpClient->get($endpoint);
-
-        $this->log('ObterDanfse', ['chave_acesso' => $chaveAcesso], $response);
-
-        return $response;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function obterXml(string $chaveAcesso): ApiResponse
     {
         $endpoint = $this->endpoints->consultarNfseSefin($this->ambiente, $chaveAcesso);

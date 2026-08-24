@@ -133,39 +133,36 @@ class DownloadController
     // ──────────────────────────────────────────────────────────────────────────
 
     /**
-     * Entrega o DANFS-e no modelo configurado.
+     * Gera e entrega o DANFS-e.
      *
-     * No modelo GK2 o PDF é gerado localmente. Qualquer falha na geração cai
-     * no documento oficial em vez de devolver erro ao cliente: um DANFS-e do
-     * governo é melhor que nenhum.
+     * O PDF sai daqui, do XML que o modulo ja guardou. Houve um modelo
+     * alternativo que baixava o documento pronto do ADN
+     * (adn.*.nfse.gov.br/danfse) e servia de fallback; foi retirado porque o
+     * endpoint cai com frequencia — o cliente esperava o timeout de quatro
+     * tentativas para receber um 404, e o DANFS-e local ja estava pronto.
+     *
+     * Sem fallback, uma falha aqui e uma falha de verdade e vira erro. Nao
+     * deve ser comum: o XML esta em tblnfsenacional.xml_retorno para toda
+     * nota autorizada, e quando falta o DanfseService o rebusca na SEFIN
+     * (outro endpoint, e ele mesmo se cura gravando o resultado).
      */
     private function serveDanfse(Nfse $nfse, string $certPath, string $certPass): void
     {
-        if ($this->config->getDanfseModelo()->isLocal()) {
-            try {
-                $service = new DanfseService(null, $this->config);
-                $pdf = $service->gerarPdf(
-                    $nfse,
-                    fn(string $url): string => $this->fetch($url, $certPath, $certPass, 'application/json')
-                );
+        $service = new DanfseService(null, $this->config);
 
-                $this->enviarPdf($pdf, $service->nomeArquivo($nfse));
-            } catch (\Throwable $e) {
-                logActivity('NFS-e Nacional [DANFS-e GK2]: falha ao gerar para a NFS-e ' . $nfse->id
-                    . ' — ' . $e->getMessage() . ' | Caindo no DANFS-e oficial.');
-            }
+        try {
+            $pdf = $service->gerarPdf(
+                $nfse,
+                fn(string $url): string => $this->fetch($url, $certPath, $certPass, 'application/json')
+            );
+        } catch (\Throwable $e) {
+            logActivity('NFS-e Nacional [DANFS-e]: falha ao gerar para a NFS-e ' . $nfse->id
+                . ' — ' . $e->getMessage());
+
+            $this->abort(502, 'Não foi possível gerar o DANFS-e desta nota.');
         }
 
-        $url = $nfse->danfseUrl ?? '';
-        if (empty($url)) {
-            $this->abort(404, 'URL do DANFS-e não disponível.');
-        }
-
-        $body = $this->fetch($url, $certPath, $certPass, 'application/pdf');
-
-        $chave = $nfse->chaveAcesso ?? (string) $nfse->id;
-
-        $this->enviarPdf($body, 'danfse-' . $chave . '.pdf');
+        $this->enviarPdf($pdf, $service->nomeArquivo($nfse));
     }
 
     private function enviarPdf(string $bytes, string $filename): void

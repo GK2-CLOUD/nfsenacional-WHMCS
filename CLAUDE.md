@@ -153,7 +153,6 @@ PRE + chaveAcesso(50) + codEvento(6) = 59 chars
 
 - **Homologação**: `sefin.producaorestrita.nfse.gov.br/SefinNacional`
 - **Produção**: `sefin.nfse.gov.br/SefinNacional` (+ domínio próprio configurável)
-- **DANFSE**: `adn.{dominio}/danfse/{chaveAcesso}`
 
 ### Formato de transporte
 - DPS: `{"dpsXmlGZipB64": "<gzip+base64 do XML>"}` — campo **dpsXmlGZipB64**
@@ -161,8 +160,8 @@ PRE + chaveAcesso(50) + codEvento(6) = 59 chars
 - Resposta sucesso: campo **nfseXmlGZipB64** (NFS-e autorizada)
 - Autenticação: mTLS obrigatório (certificado ICP-Brasil A1/A3)
 
-### mTLS — DANFSE e XML exigem certificado
-- **Ambos** os endpoints (`adn.*.nfse.gov.br/danfse/` e `sefin.*.nfse.gov.br/SefinNacional/nfse/`) retornam **HTTP 496** (No Certificate) sem mTLS.
+### mTLS — o XML exige certificado
+- `sefin.*.nfse.gov.br/SefinNacional/nfse/` retorna **HTTP 496** (No Certificate) sem mTLS.
 - No `DownloadController`, usar `CURLOPT_SSLCERTTYPE = 'P12'` + `CURLOPT_SSLCERT` + `CURLOPT_SSLCERTPASSWD` para P12/PFX direto (sem converter para PEM).
 
 ---
@@ -187,7 +186,6 @@ PRE + chaveAcesso(50) + codEvento(6) = 59 chars
 | `ibscbs_cind_op` | — | `<cIndOp>` no bloco IBSCBS (padrão `050101`) |
 | `ibscbs_cst` | — | `<CST>` no bloco IBSCBS (padrão `000`) |
 | `ibscbs_cclass_trib` | — | `<cClassTrib>` no bloco IBSCBS (padrão `000001`) |
-| `danfse_modelo` | `getDanfseModelo()` | `1-Oficial (governo)` ou `2-Local (gerado pelo módulo)` — qual PDF o cliente recebe |
 | `danfse_logo` | `getDanfseLogo()` | Caminho da logo no servidor; vazio imprime a razão social |
 | `ambiente` | `getAmbiente()` | `homologacao` ou `producao` |
 | `certificado_path` | `getCertificadoPath()` | Caminho do PFX/P12 ou PEM |
@@ -205,6 +203,7 @@ Os campos abaixo foram removidos intencionalmente para simplificar o módulo:
 | `excluir_latefee` | Base de cálculo é responsabilidade fiscal do operador; módulo não deve tomar essa decisão |
 | `desconto` | Idem — dedução de créditos deve ser configurada na fatura, não no módulo |
 | `addfunds` | Emissão por tipo de fatura é controlada pela política de emissão por cliente |
+| `danfse_modelo` | Só havia dois modelos e um deles saiu: o DANFS-e é sempre gerado pelo módulo. Ver "O DANFS-e não vem do governo" |
 
 ---
 
@@ -277,7 +276,7 @@ Os campos abaixo foram removidos intencionalmente para simplificar o módulo:
 
 ### Número e URLs da NFS-e
 - `numero_nfse_nacional` é extraído do XML de retorno via regex `/<nNFSe>(\w+)<\/nNFSe>/` após `gzdecode(base64_decode($nfseXmlGZipB64))`.
-- `danfse_url` e `xml_url` são construídos via `ApiEndpoints::obterDanfse()` e `consultarNfseSefin()` com a `chaveAcesso` — são URLs brutas do governo, **não usadas diretamente nos links**: ver seção Downloads abaixo.
+- `xml_url` é construído via `ApiEndpoints::consultarNfseSefin()` com a `chaveAcesso` — é URL bruta do governo, **não usada diretamente nos links**: ver seção Downloads abaixo. Não há `danfse_url`: o DANFS-e é gerado pelo módulo.
 
 ---
 
@@ -348,8 +347,14 @@ Os campos abaixo foram removidos intencionalmente para simplificar o módulo:
 
 ## Downloads de DANFS-e e XML
 
-### Por que não usar os links do governo diretamente
-Os endpoints `adn.*.nfse.gov.br/danfse/` e `sefin.*.nfse.gov.br/SefinNacional/nfse/` exigem **mTLS** (HTTP 496 sem certificado). Não é possível enviar esses links ao cliente.
+### O DANFS-e não vem do governo
+
+Existiu um modelo que baixava o PDF pronto do ADN (`adn.*.nfse.gov.br/danfse/`) e servia de fallback do local. **Foi retirado**: o endpoint cai com frequência, e o cliente esperava o timeout de quatro tentativas para receber um 404 — com o DANFS-e local já pronto para ser gerado. Hoje `serveDanfse()` só gera, e falha de verdade vira erro (502) em vez de virar chamada de rede.
+
+`DanfseModelo`, o campo `danfse_modelo`, `ApiEndpoints::obterDanfse()` e `NacionalProvider::obterDanfse()` foram removidos junto. Instalação que já existia mantém a linha `danfse_modelo` em `tbladdonmodules` e a coluna `danfse_url` — ninguém as lê; não há migração destrutiva.
+
+### Por que o XML não vai por link direto
+`sefin.*.nfse.gov.br/SefinNacional/nfse/` exige **mTLS** (HTTP 496 sem certificado). Não é possível enviar esse link ao cliente.
 
 ### Proxy interno
 Todos os links de DANFS-e e XML nos emails e na área do cliente passam pelo nosso endpoint proxy:
@@ -390,18 +395,13 @@ São **dois endereços diferentes**, ambos com um parâmetro chamado `chave`, co
 
 ---
 
-## Rótulos de dropdown
+## Rótulos de dropdown — não renomeie
 
-O WHMCS grava em `tbladdonmodules` a **opção inteira** (`2-GK2`), não só o número. Renomear uma opção órfã o valor gravado: o formulário de configuração renderiza o dropdown sem nada selecionado e, ao salvar, escreve a **primeira** opção.
+O WHMCS grava em `tbladdonmodules` a **opção inteira** (`2-GK2`), não só o número. Renomear uma opção órfã o valor gravado: o formulário renderiza o dropdown sem nada selecionado e, ao salvar, escreve a **primeira** opção — silenciosamente.
 
-Aconteceu de verdade ao renomear `2-GK2` para `2-Local (gerado pelo módulo)`: quem tinha o modelo local voltou para o oficial no primeiro save, e o DANFS-e passou a ser buscado no governo — que responde 404. `getDanfseModelo()` lê só o dígito e nunca se perdeu, mas isso protege a **leitura**, não o formulário.
+Aconteceu de verdade com `danfse_modelo` (renomeado de `2-GK2` para `2-Local`): quem tinha o modelo local voltou para o oficial no primeiro save da tela de configuração. Ler só o dígito protege o getter, **não o formulário**.
 
-Duas travas:
-
-1. **Fonte única** — `DanfseModelo::opcoes()` monta o `Options` do campo; o rótulo não existe escrito à mão em lugar nenhum.
-2. **Migração** — `ModuleConfig::ensureDanfseModeloValido()` recoloca o valor gravado no rótulo atual. Roda em `nfsenacional_config()`, antes de montar os campos, então a tela já abre com a opção certa marcada. Idempotente, e registra um `logActivity` quando reescreve.
-
-Ao mexer em `Options` de qualquer outro dropdown, a mesma armadilha vale.
+Ao mexer em `Options` de qualquer dropdown: ou mantenha o texto exato, ou normalize o valor gravado em `nfsenacional_config()` antes de montar os campos.
 
 ## Logo do DANFS-e
 
@@ -591,7 +591,7 @@ Os mapas de cor e ícone usam chaves **maiúsculas** (igual ao `NfseStatus` enum
 | `data_autorizacao` | datetime | |
 | `erro` | text | Mensagem de erro (status ERRO) |
 | `xml_retorno` | text | nfseXmlGZipB64 da resposta |
-| `danfse_url` | varchar | URL bruta do DANFS-e no governo (não usar diretamente em links) |
+| `danfse_url` | varchar | **Vestígio.** Instalação antiga ainda tem a coluna; nada a lê nem a escreve |
 | `xml_url` | varchar | URL bruta do XML no governo (não usar diretamente em links) |
 
 **`mod_nfsenacional_grupo`** — códigos fiscais por grupo de produto:
