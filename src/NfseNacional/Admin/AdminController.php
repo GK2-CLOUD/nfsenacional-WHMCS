@@ -32,7 +32,6 @@ class AdminController
         'numero_nfse_nacional'  => 'Número NFS-e',
         'protocolo'            => 'Protocolo',
         'codigo_verificacao'   => 'Código de Verificação',
-        'danfse_url'           => 'Link DANFS-e',
         'xml_url'              => 'Link XML',
         'ambiente'             => 'Ambiente',
         'erro'                 => 'Mensagem de Erro',
@@ -521,9 +520,9 @@ JS;
             $dlService = new DownloadUrlService();
             echo '<div class="nfse-detail-section">';
             echo '<div class="nfse-detail-section-title">Documentos</div>';
-            echo '<a href="' . htmlspecialchars($dlService->danfseUrl($nfse, ENT_QUOTES, 'UTF-8')) . '" target="_blank" class="nfse-doc-btn">'
+            echo '<a href="' . htmlspecialchars($dlService->danfseUrl($nfse), ENT_QUOTES, 'UTF-8') . '" target="_blank" class="nfse-doc-btn">'
                 . '<i class="fas fa-file-pdf"></i> Ver DANFS-e</a>';
-            echo '<a href="' . htmlspecialchars($dlService->xmlUrl($nfse, ENT_QUOTES, 'UTF-8')) . '" target="_blank" class="nfse-doc-btn secondary">'
+            echo '<a href="' . htmlspecialchars($dlService->xmlUrl($nfse), ENT_QUOTES, 'UTF-8') . '" target="_blank" class="nfse-doc-btn secondary">'
                 . '<i class="fas fa-code"></i> Baixar XML</a>';
             echo '</div>';
         }

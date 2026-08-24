@@ -10,6 +10,12 @@ parameters:
     # Persistence + Mapper dependem pesadamente de Capsule — excluir por enquanto
     - src/NfseNacional/Persistence/*
     - src/NfseNacional/Fiscal/Mapper/*
+    # Danfse/: o TCPDF vem do WHMCS (vendor/tecnickcom/tcpdf), nao deste modulo,
+    # entao o PHPStan nao ve a classe base. "extends unknown class" e um erro
+    # nao-ignoravel — a propria ferramenta manda usar excludePaths. Restringido
+    # aos dois arquivos que tocam o TCPDF; o resto de Danfse/ continua analisado.
+    - src/NfseNacional/Danfse/DanfsePdf.php
+    - src/NfseNacional/Danfse/PdfRenderer.php
   ignoreErrors:
     # Funções globais do WHMCS (logModuleCall, localAPI, logActivity)
     - identifier: function.notFound

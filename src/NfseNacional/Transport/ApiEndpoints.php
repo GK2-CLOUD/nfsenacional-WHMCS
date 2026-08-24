@@ -35,7 +35,6 @@ class ApiEndpoints
     private const SERVICOS = [
         'sefin'          => ['subdominio' => 'sefin',  'path' => '/SefinNacional'],
         'contribuintes'  => ['subdominio' => 'adn',    'path' => '/contribuintes'],
-        'danfse'         => ['subdominio' => 'adn',    'path' => '/danfse'],
         'parametrizacao' => ['subdominio' => 'adn',    'path' => '/parametrizacao'],
         'cnc'            => ['subdominio' => 'adn',    'path' => '/cnc'],
     ];
@@ -147,14 +146,6 @@ class ApiEndpoints
     public function consultarNfseEventos(Ambiente $ambiente, string $chaveAcesso): string
     {
         return $this->baseUrl('contribuintes', $ambiente) . '/NFSe/' . urlencode($chaveAcesso) . '/Eventos';
-    }
-
-    // ═══ Endpoints ADN DANFSE ══════════════════════════════════════
-
-    /** GET /{chaveAcesso} - Obtencao do DANFS-e (PDF) via API dedicada. */
-    public function obterDanfse(Ambiente $ambiente, string $chaveAcesso): string
-    {
-        return $this->baseUrl('danfse', $ambiente) . '/' . urlencode($chaveAcesso);
     }
 
     // ═══ Endpoints ADN Parametrizacao Municipal ════════════════════

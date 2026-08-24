@@ -508,6 +508,31 @@ HTML;
             'Default'      => '1-Não Emitir',
         ];
 
+        $configarray['fields']['danfse_logo'] = [
+            'FriendlyName' => $fn('Logo do DANFS-e', false),
+            'Type'         => 'text',
+            'Size'         => '60',
+            'Description'  => 'Caminho absoluto do arquivo da sua logo no servidor. '
+                . 'Ex: <code>/home/usuario/public_html/assets/img/logo.png</code>. '
+                . '<strong>Deixe vazio</strong> para imprimir a razão social no lugar da imagem.'
+                // Sem tags aqui: o popover recebe este texto por data-content e
+                // o mostra cru. Marcacao vai no Description, que o WHMCS renderiza.
+                . $tip(
+                    'Logo do DANFS-e',
+                    'Aceita PNG, JPEG ou GIF gravado no servidor. '
+                    . 'A imagem é encaixada numa caixa de 50 x 15,5 mm preservando a proporção, '
+                    . 'então qualquer formato serve; para não sair serrilhada na impressão, '
+                    . 'use pelo menos 280 x 150 px — e não muito mais que isso: o TCPDF embute o '
+                    . 'arquivo original no PDF, não a versão reduzida, então uma logo de 500 KB '
+                    . 'acrescenta 500 KB a cada DANFS-e gerado. '
+                    . 'URL não é aceita: o TCPDF buscaria a imagem na rede a cada DANFS-e emitido, '
+                    . 'o que é lento e quebra quando o site está fora do ar — copie o arquivo para o servidor. '
+                    . 'Deixando em branco, o cabeçalho sai com a razão social do prestador '
+                    . 'no lugar da imagem.',
+                ),
+            'Default'      => '',
+        ];
+
         $emailFriendlyName = $fn('Enviar NFS-e por E-mail', false);
         if ($linkEmailTemplate) {
             $emailFriendlyName .= ' &nbsp;<a target="_blank" href="' . $linkEmailTemplate . '">'
@@ -573,7 +598,7 @@ HTML;
                 ),
         ];
 
-        $configarray['fields']['perfis_manuais'] = [
+        $configarray['fields']['access'] = [
             'FriendlyName' => $fn('Perfis com Permissão Manual de NFS-e', true),
             'Type'         => 'text',
             'Size'         => '40',

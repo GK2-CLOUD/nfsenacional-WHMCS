@@ -73,6 +73,37 @@ class NfseRepository
     }
 
     /**
+     * XML da NFS-e (nfseXmlGZipB64) de um registro.
+     *
+     * Metodo dedicado, em vez de campo na entidade Nfse: e um longText que
+     * so o DANFS-e local precisa, e carrega-lo na entidade o levaria junto
+     * em toda listagem e em todo toArray().
+     */
+    public function xmlRetorno(int $id): ?string
+    {
+        $valor = Capsule::table(self::TABLE)->where('id', $id)->value('xml_retorno');
+
+        return ($valor === null || trim((string) $valor) === '') ? null : (string) $valor;
+    }
+
+    /**
+     * Grava o XML de uma nota que ainda nao o tinha.
+     *
+     * Auto-cura para notas emitidas antes da coluna existir: na primeira
+     * vez que alguem baixa o DANFS-e, o XML fica salvo e os downloads
+     * seguintes nao tocam mais a rede.
+     */
+    public function salvarXmlRetorno(int $id, string $b64): bool
+    {
+        return Capsule::table(self::TABLE)
+            ->where('id', $id)
+            ->update([
+                'xml_retorno' => $b64,
+                'updated_at'  => date('Y-m-d H:i:s'),
+            ]) > 0;
+    }
+
+    /**
      * Retorna todas as NFS-e com status PROCESSANDO DO AMBIENTE ATIVO.
      *
      * @return array Array de stdClass (registros brutos)

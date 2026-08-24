@@ -64,7 +64,7 @@ class DpsPayloadBuilder
         );
 
         $competencia = $this->getCompetencia($invoice, $origem);
-        $cnpj = preg_replace('/\D/', '', $this->config->getCnpjPrestador());
+        $cnpj = $this->config->getCnpjPrestador(); // já normalizado (preserva letras)
         $codMun = $this->config->getCodigoMunicipioPrestador();
         // tpInscFed: 1=CPF, 2=CNPJ (padrão NFSe Nacional XSD v1.01)
         $tipoInsc = strlen($cnpj) === 14 ? '2' : '1';
@@ -129,7 +129,7 @@ class DpsPayloadBuilder
         // Agora que todos os campos obrigatórios foram adicionados, recalcular e aplicar o Id
         // Usar valores realmente colocados nos elementos para evitar divergência
         // (usar o CNPJ do prestador mapeado para formar a inscrição federal)
-        $prestCnpj = preg_replace('/\D/', '', $prestador['cnpj'] ?? '');
+        $prestCnpj = preg_replace('/[.\\/\-\s]+/', '', strtoupper((string)($prestador['cnpj'] ?? '')));
         $tipoInscFinal = strlen($prestCnpj) === 14 ? '2' : '1';
         $inscFederalFinal = str_pad($prestCnpj, 14, '0', STR_PAD_LEFT);
         // Garantir que numId usado no Id seja corretamente zero-padded para 15 dígitos
@@ -155,7 +155,7 @@ class DpsPayloadBuilder
         $el = $dom->createElement('prest');
         $parent->appendChild($el);
 
-        $cnpj = preg_replace('/\D/', '', $prest['cnpj'] ?? '');
+        $cnpj = preg_replace('/[.\\/\-\s]+/', '', strtoupper((string)($prest['cnpj'] ?? '')));
         if (strlen($cnpj) === 14) {
             $this->addElement($dom, $el, 'CNPJ', $cnpj);
         } else {
@@ -190,7 +190,7 @@ class DpsPayloadBuilder
         $el = $dom->createElement('toma');
         $parent->appendChild($el);
 
-        $doc = preg_replace('/\D/', '', $toma['documento'] ?? '');
+        $doc = preg_replace('/[.\\/\-\s]+/', '', strtoupper((string)($toma['documento'] ?? '')));
         if (strlen($doc) === 14) {
             $this->addElement($dom, $el, 'CNPJ', $doc);
         } elseif (strlen($doc) === 11) {

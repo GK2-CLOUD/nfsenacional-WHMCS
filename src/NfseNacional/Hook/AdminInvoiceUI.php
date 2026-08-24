@@ -147,7 +147,7 @@ class AdminInvoiceUI
     {
         $access = Capsule::table('tbladdonmodules')
             ->where('module', 'nfsenacional')
-            ->where('setting', 'perfis_manuais')
+            ->where('setting', 'access')
             ->value('value');
 
         if (empty($access)) {
