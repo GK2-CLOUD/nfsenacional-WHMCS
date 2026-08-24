@@ -25,6 +25,60 @@ class Formato
     }
 
     /**
+     * Separadores da discriminacao. Duplicados de Fiscal\Mapper\ServicoMapper
+     * de proposito: importar de la arrastaria o ModuleConfig, e com ele o
+     * WHMCS, para dentro da camada de DANFS-e. Ha um teste que compara os
+     * dois arquivos para os valores nao se separarem.
+     */
+    private const SEP_ITEM  = ' • ';
+    private const SEP_LINHA = ' | ';
+
+    /** Recuo das linhas de detalhe. Espaco duro: o HTML colapsa o comum. */
+    private const RECUO = "\u{00A0}\u{00A0}\u{00A0}\u{00A0}";
+
+    /**
+     * Remonta os dois niveis da discriminacao para exibicao.
+     *
+     * O xDescServ e uma linha so (o layout nao aceita "\n"), com os itens da
+     * fatura separados por SEP_ITEM e as linhas de cada item por SEP_LINHA.
+     * Aqui isso volta a ser uma lista: um marcador por item, e as linhas de
+     * detalhe recuadas embaixo.
+     *
+     * Notas emitidas antes dos dois niveis nao tem SEP_ITEM — tudo nelas esta
+     * no mesmo nivel, e nao ha como adivinhar onde um item acabava. Essas caem
+     * no formato antigo: uma linha por pedaco, sem marcador, que e exatamente
+     * a informacao que existe. Nao inventar hierarquia que a nota nao tem.
+     *
+     * O texto sai cru; quem escapa e o TemplateRenderer, que depois troca as
+     * quebras por <br>.
+     */
+    public static function discriminacao(?string $v): string
+    {
+        $v = $v === null ? '' : trim($v);
+
+        if ($v === '') {
+            return self::TRACO;
+        }
+
+        if (!str_contains($v, self::SEP_ITEM)) {
+            return implode("\n", array_map('trim', explode(self::SEP_LINHA, $v)));
+        }
+
+        $saida = [];
+
+        foreach (explode(self::SEP_ITEM, $v) as $item) {
+            $linhas = array_map('trim', explode(self::SEP_LINHA, $item));
+            $saida[] = '• ' . array_shift($linhas);
+
+            foreach ($linhas as $detalhe) {
+                $saida[] = self::RECUO . $detalhe;
+            }
+        }
+
+        return implode("\n", $saida);
+    }
+
+    /**
      * Junta partes com um separador, trocando as vazias por travessao.
      * Se TODAS forem vazias, devolve um unico travessao.
      */

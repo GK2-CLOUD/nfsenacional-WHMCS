@@ -26,6 +26,29 @@ class ServicoMapper
     }
 
     /**
+     * Separador entre itens da fatura na discriminacao.
+     *
+     * O xDescServ nao aceita quebra de linha (E999), entao a discriminacao
+     * inteira e uma linha so. Mas ela tem DOIS niveis: os itens da fatura, e
+     * as linhas que o WHMCS ja poe dentro da descricao de cada item (opcoes
+     * configuraveis, sobretudo). Antes os dois usavam "\n" e viravam o mesmo
+     * " | ", achatando a hierarquia — a opcao configuravel aparecia no mesmo
+     * nivel do produto, sem como distinguir depois.
+     *
+     * Com dois separadores o DANFS-e GK2 remonta os niveis, e o DANFS-e do
+     * governo, que mostra a linha crua, tambem fica legivel.
+     *
+     * Danfse\Formato::discriminacao() precisa dos mesmos dois valores para
+     * desfazer isto — nao ha como importar daqui sem arrastar o WHMCS para
+     * dentro da camada de DANFS-e, entao eles estao duplicados la e ha um
+     * teste que compara os dois arquivos.
+     */
+    private const SEP_ITEM = ' • ';
+
+    /** Separador entre as linhas de um mesmo item. */
+    private const SEP_LINHA = ' | ';
+
+    /**
      * Tipos de item sempre excluídos da NFS-e (independente de configuração).
      */
     private const TIPOS_SEMPRE_EXCLUIDOS = [
@@ -66,10 +89,11 @@ class ServicoMapper
             }
 
             $valorTotal += $valor;
-            $descricao = trim($item['description'] ?? '');
 
-            if (!empty($descricao)) {
-                $descricaoPartes[] = $descricao;
+            $parte = $this->discriminarItem((string) ($item['description'] ?? ''), $valor);
+
+            if ($parte !== '') {
+                $descricaoPartes[] = $parte;
             }
         }
 
@@ -94,7 +118,7 @@ class ServicoMapper
         // Obter codigos fiscais globais
         $codigosFiscais = $this->getCodigosFiscais($items);
 
-        $discriminacao = implode("\n", $descricaoPartes);
+        $discriminacao = implode(self::SEP_ITEM, $descricaoPartes);
         if (empty($discriminacao)) {
             $discriminacao = 'Servicos de tecnologia - Fatura #' . ($invoice['invoiceid'] ?? '');
         }
@@ -124,6 +148,27 @@ class ServicoMapper
     }
 
     /**
+     * Monta a discriminacao de um item: a descricao do WHMCS com o valor do
+     * item colado na primeira linha, e as demais linhas atras de SEP_LINHA.
+     *
+     * O valor vai na primeira linha porque e ela que nomeia o produto; as
+     * seguintes sao detalhe dele.
+     */
+    private function discriminarItem(string $descricao, float $valor): string
+    {
+        $linhas = preg_split('/\r\n|\r|\n/', strip_tags($descricao)) ?: [];
+        $linhas = array_values(array_filter(array_map('trim', $linhas), static fn($l) => $l !== ''));
+
+        if ($linhas === []) {
+            return '';
+        }
+
+        $linhas[0] .= ' - R$ ' . number_format($valor, 2, ',', '.');
+
+        return implode(self::SEP_LINHA, $linhas);
+    }
+
+    /**
      * Sanitiza a discriminacao do servico para o campo fiscal.
      */
     private function sanitizeDiscriminacao(string $text): string
@@ -131,8 +176,9 @@ class ServicoMapper
         // Remover tags HTML
         $text = strip_tags($text);
 
-        // Substituir quebras de linha por separador visual (APIs fiscais rejeitam \n em xDescServ)
-        $text = str_replace(["\r\n", "\r", "\n"], ' | ', $text);
+        // Rede de seguranca: discriminarItem() ja tirou as quebras de linha.
+        // Se sobrar alguma, ela e limite de linha DENTRO de um item.
+        $text = str_replace(["\r\n", "\r", "\n"], self::SEP_LINHA, $text);
 
         // Remover caracteres de controle
         $text = preg_replace('/[\x00-\x1F\x7F]/', '', $text);

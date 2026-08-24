@@ -236,9 +236,20 @@ Os campos abaixo foram removidos intencionalmente para simplificar o módulo:
 - Para evitar E0120: deixar o campo `inscricao_municipal` **vazio** nas configurações do addon.
 
 ### Discriminação do serviço (`xDescServ`)
-- Não pode conter quebras de linha (`\n`, `\r`) → erro **E999**.
-- `ServicoMapper::sanitizeDiscriminacao()` substitui `\n` por ` | ` (separador visual legível na nota).
-- Itens da fatura são concatenados com `\n` antes do sanitize, resultando em: `Item A | Item B | Item C`.
+- Não pode conter quebras de linha (`\n`, `\r`) → erro **E999**. É uma linha só.
+- Mas a informação tem **dois níveis**: os itens da fatura, e as linhas que o WHMCS já põe dentro da descrição de cada item (opções configuráveis, sobretudo). Dois separadores diferentes preservam essa hierarquia numa linha só:
+
+| Separador | Constante | Separa |
+|---|---|---|
+| ` • ` | `ServicoMapper::SEP_ITEM` | um item da fatura do próximo |
+| ` \| ` | `ServicoMapper::SEP_LINHA` | as linhas de um mesmo item |
+
+- `ServicoMapper::discriminarItem()` monta cada item: cola ` - R$ X,XX` na **primeira** linha (a que nomeia o produto) e junta as demais com `SEP_LINHA`. Os itens são unidos com `SEP_ITEM`.
+- Resultado: `Hosting 20GB - x.com.br (24/08 - 23/09) - R$ 199,00 | opção: 0 x algo R$ 10,00 • Thunder 1GB - ...`
+- `sanitizeDiscriminacao()` continua trocando `\n` residual por `SEP_LINHA` — rede de segurança, não o caminho normal.
+- **Do lado do DANFS-e**: `Danfse\Formato::discriminacao()` desfaz os dois níveis numa lista (marcador `•` por item, linhas de detalhe recuadas com espaço duro `U+00A0`, porque o HTML colapsa o espaço comum).
+- Os dois separadores estão **duplicados** em `Formato` — importar de `ServicoMapper` arrastaria o `ModuleConfig`, e com ele o WHMCS, para dentro da camada de DANFS-e. `tools/testes/t6-discriminacao.php` lê os dois arquivos e compara.
+- **Notas emitidas antes disso** não têm `SEP_ITEM`: tudo nelas está no mesmo nível e não há como adivinhar onde um item acabava. `Formato::discriminacao()` detecta a ausência e cai no formato antigo — uma linha por pedaço, sem marcador. Não inventar hierarquia que a nota não tem.
 - Itens dos tipos abaixo são excluídos da discriminação **e do valor total** — não representam serviços prestados:
 
 | Tipo (`tblinvoiceitems.type`) | Descrição |

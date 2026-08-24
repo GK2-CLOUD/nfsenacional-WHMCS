@@ -161,7 +161,7 @@ class TokenMapper
                 null // Pais: so preenchido em prestacao no exterior
             ),
             'descricao_tributacao_nacional' => Formato::texto($x->v(NfseXml::INF_NFSE . '/n:xTribNac')),
-            'discriminacao' => Formato::texto($x->v($cServ . '/n:xDescServ')),
+            'discriminacao' => Formato::discriminacao($x->v($cServ . '/n:xDescServ')),
         ];
     }
 
