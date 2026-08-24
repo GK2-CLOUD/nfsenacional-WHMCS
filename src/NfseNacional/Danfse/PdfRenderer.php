@@ -335,6 +335,10 @@ class PdfRenderer
      * pagina 2 nao diz de que nota e, nem que existe uma pagina 1. Por isso
      * repete numero e chave de acesso, e nao so "2 de 2".
      *
+     * A PARTIR DA SEGUNDA. A primeira ja se identifica sozinha — tem o
+     * cabecalho com o numero e o bloco da chave de acesso — e a linha so
+     * repetia o que estava logo acima.
+     *
      * Fica no vao entre o fim do conteudo e o pe da moldura, entao nao
      * disputa espaco com o documento.
      */
@@ -358,7 +362,7 @@ class PdfRenderer
         $pdf->SetFont($this->fonte, '', self::RODAPE_TAMANHO);
         $pdf->SetTextColor(...self::RODAPE_COR);
 
-        for ($pagina = 1; $pagina <= $total; $pagina++) {
+        for ($pagina = 2; $pagina <= $total; $pagina++) {
             $pdf->setPage($pagina);
             $pdf->SetXY($x, $y);
             $pdf->Cell($largura, 0, $identificacao, 0, 0, 'L');
