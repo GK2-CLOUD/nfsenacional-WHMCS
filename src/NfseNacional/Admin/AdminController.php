@@ -2,8 +2,8 @@
 
 namespace GK2\NfseNacional\Admin;
 
-use GK2\NfseNacional\Admin\Action\EmitirAction;
 use GK2\NfseNacional\Admin\Action\CancelarAction;
+use GK2\NfseNacional\Admin\Action\EmitirAction;
 use GK2\NfseNacional\Admin\Action\ExcluirAction;
 use GK2\NfseNacional\Admin\Action\ReenviarEmailAction;
 use GK2\NfseNacional\Domain\Entity\Nfse;
@@ -156,8 +156,8 @@ class AdminController
         $canceladas  = array_column(array_values($statsMes), 'canceladas');
         $erros       = array_column(array_values($statsMes), 'erros');
 
-        $mesesPt = ['01'=>'Jan','02'=>'Fev','03'=>'Mar','04'=>'Abr','05'=>'Mai','06'=>'Jun',
-                    '07'=>'Jul','08'=>'Ago','09'=>'Set','10'=>'Out','11'=>'Nov','12'=>'Dez'];
+        $mesesPt = ['01' => 'Jan','02' => 'Fev','03' => 'Mar','04' => 'Abr','05' => 'Mai','06' => 'Jun',
+                    '07' => 'Jul','08' => 'Ago','09' => 'Set','10' => 'Out','11' => 'Nov','12' => 'Dez'];
         $labelsFormatados = array_map(function ($m) use ($mesesPt) {
             [$ano, $mes] = explode('-', $m);
             return ($mesesPt[$mes] ?? $mes) . '/' . substr($ano, 2);
@@ -266,11 +266,21 @@ JS;
 
         // ── Filtros ativos ──
         $filters = [];
-        if (!empty($_GET['filter_status']))     $filters['status']      = $_GET['filter_status'];
-        if (!empty($_GET['filter_invoice']))    $filters['id_invoice']  = $_GET['filter_invoice'];
-        if (!empty($_GET['filter_client']))     $filters['client_name'] = $_GET['filter_client'];
-        if (!empty($_GET['filter_date_start'])) $filters['data_inicio'] = $_GET['filter_date_start'];
-        if (!empty($_GET['filter_date_end']))   $filters['data_fim']    = $_GET['filter_date_end'];
+        if (!empty($_GET['filter_status'])) {
+            $filters['status']      = $_GET['filter_status'];
+        }
+        if (!empty($_GET['filter_invoice'])) {
+            $filters['id_invoice']  = $_GET['filter_invoice'];
+        }
+        if (!empty($_GET['filter_client'])) {
+            $filters['client_name'] = $_GET['filter_client'];
+        }
+        if (!empty($_GET['filter_date_start'])) {
+            $filters['data_inicio'] = $_GET['filter_date_start'];
+        }
+        if (!empty($_GET['filter_date_end'])) {
+            $filters['data_fim']    = $_GET['filter_date_end'];
+        }
 
         $page   = max(1, (int) ($_GET['page'] ?? 1));
         $limit  = 25;
@@ -394,11 +404,11 @@ JS;
         $totalPages = (int) ceil($total / $limit);
         if ($totalPages > 1) {
             $baseUrl = $baseListUrl
-                . (isset($_GET['filter_status'])     ? '&filter_status='     . urlencode($_GET['filter_status'])     : '')
-                . (isset($_GET['filter_invoice'])    ? '&filter_invoice='    . urlencode($_GET['filter_invoice'])    : '')
-                . (isset($_GET['filter_client'])     ? '&filter_client='     . urlencode($_GET['filter_client'])     : '')
+                . (isset($_GET['filter_status']) ? '&filter_status='     . urlencode($_GET['filter_status']) : '')
+                . (isset($_GET['filter_invoice']) ? '&filter_invoice='    . urlencode($_GET['filter_invoice']) : '')
+                . (isset($_GET['filter_client']) ? '&filter_client='     . urlencode($_GET['filter_client']) : '')
                 . (isset($_GET['filter_date_start']) ? '&filter_date_start=' . urlencode($_GET['filter_date_start']) : '')
-                . (isset($_GET['filter_date_end'])   ? '&filter_date_end='   . urlencode($_GET['filter_date_end'])   : '');
+                . (isset($_GET['filter_date_end']) ? '&filter_date_end='   . urlencode($_GET['filter_date_end']) : '');
 
             echo '<div class="nfse-pagination">';
 
@@ -566,7 +576,9 @@ JS;
 
     private function renderAmbienteBadge(?string $ambiente, string $size = ''): string
     {
-        if (empty($ambiente)) return '<span class="nfse-muted">—</span>';
+        if (empty($ambiente)) {
+            return '<span class="nfse-muted">—</span>';
+        }
         $isProd = strtolower($ambiente) === 'producao';
         $color  = $isProd ? '#2e7d32' : '#1565c0';
         $label  = $isProd ? 'Produção' : 'Homologação';
@@ -636,13 +648,17 @@ JS;
 
     private function formatMoney(?float $value): string
     {
-        if ($value === null) return '—';
+        if ($value === null) {
+            return '—';
+        }
         return 'R$&nbsp;' . number_format($value, 2, ',', '.');
     }
 
     private function formatDate(?string $date): string
     {
-        if (empty($date) || $date === '0000-00-00 00:00:00') return '—';
+        if (empty($date) || $date === '0000-00-00 00:00:00') {
+            return '—';
+        }
         // YYYY-MM-DD HH:MM:SS → DD/MM/YY HH:MM
         if (preg_match('/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})/', $date, $m)) {
             return $m[3] . '/' . $m[2] . '/' . substr($m[1], 2) . ' ' . $m[4] . ':' . $m[5];

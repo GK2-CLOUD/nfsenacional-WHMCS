@@ -1,0 +1,49 @@
+name: CI — Validate PR
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: PHP 8.3 — PHPStan + CS + Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: dom, openssl, zlib, curl, json, xml, zip
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install dependencies
+        run: composer install --no-interaction
+
+      # --- Análise estática ---
+      - name: PHPStan
+        run: composer phpstan
+
+      # --- Estilo de código ---
+      - name: PHP CS Fixer
+        run: composer cs-check
+
+      # --- Auditoria de vulnerabilidades ---
+      - name: Composer Audit
+        run: composer audit

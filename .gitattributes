@@ -1,0 +1,15 @@
+# Arquivos de desenvolvimento — excluídos do zip de release
+/.github/          export-ignore
+/tests/            export-ignore
+/spec/             export-ignore
+/phpstan.neon      export-ignore
+/phpunit.xml       export-ignore
+/.php-cs-fixer.php export-ignore
+/AGENTS.md         export-ignore
+/REASONIX.md       export-ignore
+/CHANGELOG.md      export-ignore
+/.gitignore        export-ignore
+/.gitattributes    export-ignore
+
+# Arquivos de configuração local
+/.nfse_enc_key     export-ignore
