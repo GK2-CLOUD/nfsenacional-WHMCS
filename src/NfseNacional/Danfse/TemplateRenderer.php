@@ -85,7 +85,7 @@ class TemplateRenderer
         $restantes = self::tokensRestantes($html);
         if ($restantes !== []) {
             throw new \RuntimeException(
-                'Template do DANFS-e com token nao substituido: ' . implode(', ', $restantes)
+                'Template do DANFS-e com token nao substituido: ' . implode(', ', $restantes),
             );
         }
 
@@ -104,7 +104,7 @@ class TemplateRenderer
     {
         $re = '/\{\{#' . preg_quote($tag, '/') . '\}\}(.*?)\{\{\/' . preg_quote($tag, '/') . '\}\}/s';
 
-        return preg_replace_callback($re, fn($m) => $mostrar ? $m[1] : '', $html);
+        return preg_replace_callback($re, fn ($m) => $mostrar ? $m[1] : '', $html);
     }
 
     /**
@@ -186,7 +186,7 @@ class TemplateRenderer
         return str_replace(
             [self::PLACEHOLDER_LOGO, self::PLACEHOLDER_LARG, self::PLACEHOLDER_ALT],
             [htmlspecialchars($logo['src'], ENT_QUOTES, 'UTF-8'), (string) $logo['w'], (string) $logo['h']],
-            $html
+            $html,
         );
     }
 

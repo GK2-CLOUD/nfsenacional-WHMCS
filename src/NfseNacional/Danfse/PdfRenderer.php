@@ -206,7 +206,7 @@ class PdfRenderer
     {
         if (!class_exists('\TCPDF')) {
             throw new \RuntimeException(
-                'TCPDF nao encontrado. O DANFS-e GK2 depende do TCPDF que acompanha o WHMCS.'
+                'TCPDF nao encontrado. O DANFS-e GK2 depende do TCPDF que acompanha o WHMCS.',
             );
         }
 
@@ -318,7 +318,7 @@ class PdfRenderer
             ['all' => [
                 'width' => self::MOLDURA_ESPESSURA,
                 'color' => self::MOLDURA_COR,
-            ]]
+            ]],
         );
     }
 
@@ -407,7 +407,7 @@ class PdfRenderer
             self::QR_LADO,
             self::QR_LADO,
             $estilo,
-            'N'
+            'N',
         );
     }
 }

@@ -153,7 +153,7 @@ class DownloadController
         try {
             $pdf = $service->gerarPdf(
                 $nfse,
-                fn(string $url): string => $this->fetch($url, $certPath, $certPass, 'application/json')
+                fn (string $url): string => $this->fetch($url, $certPath, $certPass, 'application/json'),
             );
         } catch (\Throwable $e) {
             logActivity('NFS-e Nacional [DANFS-e]: falha ao gerar para a NFS-e ' . $nfse->id

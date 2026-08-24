@@ -64,7 +64,7 @@ class TokenMapper
             'municipio_emissor' => Formato::juntar(
                 ' - ',
                 $x->v(NfseXml::INF_NFSE . '/n:xLocEmi'),
-                $x->v(NfseXml::EMIT . '/n:enderNac/n:UF')
+                $x->v(NfseXml::EMIT . '/n:enderNac/n:UF'),
             ),
             'numero_nfse'        => Formato::texto($x->v(NfseXml::INF_NFSE . '/n:nNFSe')),
             'competencia'        => Formato::data($x->v(NfseXml::INF_DPS . '/n:dCompet')),
@@ -96,7 +96,7 @@ class TokenMapper
         return [
             'prestador_razao_social' => Formato::texto($x->v(NfseXml::EMIT . '/n:xNome')),
             'prestador_cnpj'         => Formato::documento(
-                $x->first(NfseXml::EMIT . '/n:CNPJ', NfseXml::EMIT . '/n:CPF', NfseXml::EMIT . '/n:NIF')
+                $x->first(NfseXml::EMIT . '/n:CNPJ', NfseXml::EMIT . '/n:CPF', NfseXml::EMIT . '/n:NIF'),
             ),
             'prestador_im'        => Formato::texto($im),
             'prestador_telefone'  => Formato::telefone($x->v(NfseXml::EMIT . '/n:fone')),
@@ -104,7 +104,7 @@ class TokenMapper
                 $x->v($end . '/n:xLgr'),
                 $x->v($end . '/n:nro'),
                 $x->v($end . '/n:xCpl'),
-                $x->v($end . '/n:xBairro')
+                $x->v($end . '/n:xBairro'),
             ),
             'prestador_municipio' => Formato::texto($x->v(NfseXml::INF_NFSE . '/n:xLocEmi')),
             'prestador_uf'        => Formato::texto($x->v($end . '/n:UF')),
@@ -112,7 +112,7 @@ class TokenMapper
             'prestador_cep'       => Formato::cep($x->v($end . '/n:CEP')),
             'prestador_email'     => Formato::texto($x->v(NfseXml::EMIT . '/n:email')),
             'prestador_simples'   => Formato::texto(
-                Codigos::simplesNacional($x->v(NfseXml::PREST . '/n:regTrib/n:opSimpNac'))
+                Codigos::simplesNacional($x->v(NfseXml::PREST . '/n:regTrib/n:opSimpNac')),
             ),
             'prestador_regime'    => Formato::texto($regime),
         ];
@@ -129,7 +129,7 @@ class TokenMapper
                 $t['logradouro'] ?? null,
                 $t['numero'] ?? null,
                 $t['complemento'] ?? null,
-                $t['bairro'] ?? null
+                $t['bairro'] ?? null,
             ),
             'tomador_municipio'    => Formato::texto($t['municipio'] ?? null),
             'tomador_uf'           => Formato::texto(Uf::sigla($t['uf'] ?? null)),
@@ -151,14 +151,14 @@ class TokenMapper
             'cod_tributacao_nacional' => Formato::juntar(
                 ' / ',
                 Formato::cTribNac($x->v($cServ . '/n:cTribNac')),
-                $x->v($cServ . '/n:cTribMun')
+                $x->v($cServ . '/n:cTribMun'),
             ),
             'cod_nbs'         => Formato::cNBS($x->v($cServ . '/n:cNBS')),
             'local_prestacao' => Formato::juntar(
                 ' / ',
                 $x->v(NfseXml::INF_NFSE . '/n:xLocPrestacao'),
                 $this->ufDoMunicipio($x, $x->v(NfseXml::SERV . '/n:locPrest/n:cLocPrestacao')),
-                null // Pais: so preenchido em prestacao no exterior
+                null, // Pais: so preenchido em prestacao no exterior
             ),
             'descricao_tributacao_nacional' => Formato::texto($x->v(NfseXml::INF_NFSE . '/n:xTribNac')),
             'discriminacao' => Formato::discriminacao($x->v($cServ . '/n:xDescServ')),
@@ -174,7 +174,7 @@ class TokenMapper
             'issqn_municipio' => Formato::juntar(
                 ' / ',
                 $x->v(NfseXml::INF_NFSE . '/n:xLocIncid'),
-                $this->ufDoMunicipio($x, $x->v(NfseXml::INF_NFSE . '/n:cLocIncid'))
+                $this->ufDoMunicipio($x, $x->v(NfseXml::INF_NFSE . '/n:cLocIncid')),
             ),
             // Optante do Simples nao destaca ISS: o XML nao traz BC, aliquota
             // nem valor apurado, e o DANFS-e oficial imprime travessao nos tres.
@@ -208,7 +208,7 @@ class TokenMapper
             'ibs_cst' => Formato::juntar(
                 ' / ',
                 $x->v($gib . '/n:CST'),
-                $x->v($gib . '/n:cClassTrib')
+                $x->v($gib . '/n:cClassTrib'),
             ),
             'ibs_indicador' => Formato::juntar(
                 ' / ',
@@ -219,16 +219,16 @@ class TokenMapper
                     Formato::juntar(
                         '/',
                         $x->v(NfseXml::IBSCBS . '/n:xLocalidadeIncid'),
-                        $this->ufDoMunicipio($x, $x->v(NfseXml::IBSCBS . '/n:cLocalidadeIncid'))
-                    )
-                )
+                        $this->ufDoMunicipio($x, $x->v(NfseXml::IBSCBS . '/n:cLocalidadeIncid')),
+                    ),
+                ),
             ),
             'ibs_exclusoes' => Formato::moeda($x->v($val . '/n:vCalcReeRepRes')),
             'ibs_bc'        => Formato::moeda($x->v($val . '/n:vBC')),
             'ibs_aliquotas' => Formato::juntar(
                 ' / ',
                 Formato::percentual($x->v($val . '/n:uf/n:pIBSUF')),
-                Formato::percentual($x->v($val . '/n:mun/n:pIBSMun'))
+                Formato::percentual($x->v($val . '/n:mun/n:pIBSMun')),
             ),
             'cbs_aliquota'  => Formato::percentual($x->v($val . '/n:fed/n:pCBS')),
             'ibs_estadual'  => Formato::moeda($x->v($tot . '/n:gIBS/n:gIBSUFTot/n:vIBSUF')),
@@ -269,7 +269,7 @@ class TokenMapper
                 : Formato::juntar(
                     ' / ',
                     Formato::moeda($x->v($vsp . '/n:vDescIncond')),
-                    Formato::moeda($x->v($vsp . '/n:vDescCond'))
+                    Formato::moeda($x->v($vsp . '/n:vDescCond')),
                 ),
             'retencoes'     => Formato::moeda($retencoes),
             'ibs_cbs_total' => Formato::moeda($ibsCbs),
@@ -287,8 +287,8 @@ class TokenMapper
     private function endereco(?string ...$partes): string
     {
         $limpo = array_values(array_filter(
-            array_map(fn($p) => trim((string) $p), $partes),
-            fn($p) => $p !== ''
+            array_map(fn ($p) => trim((string) $p), $partes),
+            fn ($p) => $p !== '',
         ));
 
         if ($limpo === []) {
@@ -339,7 +339,7 @@ class TokenMapper
             'Totais aproximados dos Tributos cfe. Lei n° 12.741/2012: Federais: %s; Estaduais: %s; Municipais: %s;',
             Formato::moeda($x->v($t . '/n:vTotTribFed')),
             Formato::moeda($x->v($t . '/n:vTotTribEst')),
-            Formato::moeda($x->v($t . '/n:vTotTribMun'))
+            Formato::moeda($x->v($t . '/n:vTotTribMun')),
         )];
 
         $extra = $x->v(NfseXml::SERV . '/n:infoCompl/n:xInfComp');

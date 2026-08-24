@@ -31,7 +31,7 @@ class PrestadorMapper
         $opSimpNac = $this->getOpSimpNac();
         return [
             // Normaliza CNPJ do prestador: remove apenas pontuação, preserva letras se alfanumérico
-            'cnpj' => (function($v) {
+            'cnpj' => (function ($v) {
                 $norm = strtoupper(trim(preg_replace('/[.\\/\-\s]+/', '', (string) $v)));
                 return preg_match('/[A-Z]/', $norm) ? $norm : preg_replace('/\D/', '', $v);
             })($this->config->getCnpjPrestador()),

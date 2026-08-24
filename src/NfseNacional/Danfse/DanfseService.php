@@ -64,7 +64,7 @@ class DanfseService
         return $this->pdf->render(
             $html,
             ConsultaPublica::url($xml->chaveAcesso()),
-            ['numero' => $tokens['numero_nfse'], 'chave' => $xml->chaveAcesso()]
+            ['numero' => $tokens['numero_nfse'], 'chave' => $xml->chaveAcesso()],
         );
     }
 
@@ -83,7 +83,7 @@ class DanfseService
             'NFS-e Nacional [DANFS-e]: a logo configurada nao pode ser usada ('
             . $this->config->getDanfseLogo()
             . '). Confira se o caminho existe, e legivel e aponta para um PNG, JPEG ou GIF. '
-            . 'O documento saiu com a razao social no lugar da imagem.'
+            . 'O documento saiu com a razao social no lugar da imagem.',
         );
     }
 
@@ -118,7 +118,7 @@ class DanfseService
 
         if ($buscarXml === null || empty($nfse->xmlUrl)) {
             throw new \RuntimeException(
-                'NFS-e ' . $nfse->id . ' sem xml_retorno e sem forma de buscar o XML.'
+                'NFS-e ' . $nfse->id . ' sem xml_retorno e sem forma de buscar o XML.',
             );
         }
 

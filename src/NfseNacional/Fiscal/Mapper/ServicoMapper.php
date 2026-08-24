@@ -157,7 +157,7 @@ class ServicoMapper
     private function discriminarItem(string $descricao, float $valor): string
     {
         $linhas = preg_split('/\r\n|\r|\n/', strip_tags($descricao)) ?: [];
-        $linhas = array_values(array_filter(array_map('trim', $linhas), static fn($l) => $l !== ''));
+        $linhas = array_values(array_filter(array_map('trim', $linhas), static fn ($l) => $l !== ''));
 
         if ($linhas === []) {
             return '';

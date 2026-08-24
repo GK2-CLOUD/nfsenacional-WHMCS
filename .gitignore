@@ -1,1 +1,3 @@
 .nfse_enc_key
+# cache do php-cs-fixer
+.php-cs-fixer.cache
