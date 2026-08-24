@@ -517,7 +517,8 @@ HTML;
                 . '<strong>Deixe vazio</strong> para imprimir a razão social no lugar da imagem.'
                 // Sem tags aqui: o popover recebe este texto por data-content e
                 // o mostra cru. Marcacao vai no Description, que o WHMCS renderiza.
-                . $tip('Logo do DANFS-e',
+                . $tip(
+                    'Logo do DANFS-e',
                     'Aceita PNG, JPEG ou GIF gravado no servidor. '
                     . 'A imagem é encaixada numa caixa de 50 x 15,5 mm preservando a proporção, '
                     . 'então qualquer formato serve; para não sair serrilhada na impressão, '
@@ -527,7 +528,8 @@ HTML;
                     . 'URL não é aceita: o TCPDF buscaria a imagem na rede a cada DANFS-e emitido, '
                     . 'o que é lento e quebra quando o site está fora do ar — copie o arquivo para o servidor. '
                     . 'Deixando em branco, o cabeçalho sai com a razão social do prestador '
-                    . 'no lugar da imagem.'),
+                    . 'no lugar da imagem.',
+                ),
             'Default'      => '',
         ];
 
