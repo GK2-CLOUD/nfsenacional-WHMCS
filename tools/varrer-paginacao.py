@@ -17,15 +17,17 @@ TCPDF), traz o PDF e mede. Saida esperada: "faixa de secao" em todas.
 import subprocess, sys, glob, os
 from PIL import Image
 import numpy as np
-REMOTO='homolog@homolog.gk2.cloud'
-GERADOR='/home/homolog/public_html/modules/addons/nfsenacional/tools/danfse-multipagina.php'
-PDF_REMOTO='/home/homolog/danfse-multipagina.pdf'
+# Destino, porta e caminho do WHMCS vem do ambiente — ver ciclo-danfse.sh.
+REMOTO = os.environ['DANFSE_REMOTO']
+PORTA = os.environ.get('DANFSE_PORTA', '22')
+GERADOR = os.environ['DANFSE_WHMCS'] + '/modules/addons/nfsenacional/tools/danfse-multipagina.php'
+PDF_REMOTO = '/tmp/danfse-multipagina.pdf'
 S=os.environ.get('VARREDURA_SAIDA', os.path.join(os.environ.get('TMPDIR','/tmp'), 'varredura-danfse'))
 os.makedirs(S, exist_ok=True); px=25.4/300
 def topo_da_pagina(n):
-    subprocess.run(['ssh','-p','2200',REMOTO,
+    subprocess.run(['ssh','-p',PORTA,REMOTO,
                     f'php {GERADOR} {n} 43 {PDF_REMOTO}'],capture_output=True)
-    subprocess.run(['scp','-q','-P','2200',f'{REMOTO}:{PDF_REMOTO}',f'{S}/sw.pdf'])
+    subprocess.run(['scp','-q','-P',PORTA,f'{REMOTO}:{PDF_REMOTO}',f'{S}/sw.pdf'])
     for f in glob.glob(f'{S}/sw-*.png'): os.remove(f)
     subprocess.run(['pdftoppm','-r','300','-png',f'{S}/sw.pdf',f'{S}/sw'],capture_output=True)
     pgs=sorted(glob.glob(f'{S}/sw-*.png'))

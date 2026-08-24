@@ -2,25 +2,31 @@
 # Ciclo de calibracao do DANFS-e GK2.
 #
 # O TCPDF vive no WHMCS, nao aqui — entao renderizar exige o servidor. Este
-# script sobe o que mudou para o homolog, gera o PDF de uma nota real, traz
+# script sobe o que mudou para o servidor, gera o PDF de uma nota real, traz
 # de volta e recorta cabecalho/corpo/rodape a 600dpi para inspecao visual.
 #
-#   tools/ciclo-danfse.sh [id_da_nfse]     (padrao: 43)
+#   DANFSE_REMOTO=usuario@host DANFSE_WHMCS=/caminho/do/whmcs \
+#       tools/ciclo-danfse.sh [id_da_nfse]     (padrao: 43)
+#
+# O destino e a porta SSH vem do ambiente — cada instalacao tem os seus, e
+# nao ha por que fixar os de uma delas aqui.
 set -euo pipefail
 
 ID="${1:-43}"
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
-REMOTO=homolog@homolog.gk2.cloud
-DESTINO=/home/homolog/public_html/modules/addons/nfsenacional
+REMOTO="${DANFSE_REMOTO:?defina DANFSE_REMOTO=usuario@host}"
+PORTA="${DANFSE_PORTA:-22}"
+WHMCS="${DANFSE_WHMCS:?defina DANFSE_WHMCS=/caminho/do/whmcs}"
+DESTINO="$WHMCS/modules/addons/nfsenacional"
 SAIDA="${CICLO_SAIDA:-${TMPDIR:-/tmp}/ciclo-danfse}"
 mkdir -p "$SAIDA"
 
-scp -q -P 2200 "$REPO/templates/danfse/DANFSe-GK2.html" \
+scp -q -P "$PORTA" "$REPO/templates/danfse/DANFSe-GK2.html" \
     "$REMOTO:$DESTINO/templates/danfse/DANFSe-GK2.html"
-scp -q -P 2200 "$REPO"/src/NfseNacional/Danfse/*.php "$REMOTO:$DESTINO/src/NfseNacional/Danfse/"
+scp -q -P "$PORTA" "$REPO"/src/NfseNacional/Danfse/*.php "$REMOTO:$DESTINO/src/NfseNacional/Danfse/"
 
-ssh -p 2200 "$REMOTO" "php /home/homolog/teste-real.php $ID" | tail -1
-scp -q -P 2200 "$REMOTO:/home/homolog/danfse-real-$ID.pdf" "$SAIDA/atual.pdf"
+ssh -p "$PORTA" "$REMOTO" "php $DESTINO/tools/danfse-render.php $ID /tmp/danfse-$ID.pdf" | tail -1
+scp -q -P "$PORTA" "$REMOTO:/tmp/danfse-$ID.pdf" "$SAIDA/atual.pdf"
 
 pdftoppm -r 600 -f 1 -l 1 -png "$SAIDA/atual.pdf" "$SAIDA/pg" 2>/dev/null
 python3 - "$SAIDA" <<'PY'

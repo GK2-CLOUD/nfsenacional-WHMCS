@@ -29,18 +29,18 @@ $xml = NfseXml::fromXml(file_get_contents(XML));
    Valores conferidos contra o DANFS-e oficial. 'uf' proposital em texto
    livre, para exercitar a normalizacao. */
 $tomador = [
-    'razaoSocial'        => 'DENTAL PRESS ENSINO E PESQUISA LTDA',
-    'documento'          => '80898828000148',
+    'razaoSocial'        => 'CLIENTE EXEMPLO COMERCIO LTDA',
+    'documento'          => '11222333000181',
     'inscricaoMunicipal' => '',
-    'telefone'           => '4430339816',
-    'logradouro'         => 'AV DR LUIZ TEIXEIRA MENDES',
-    'numero'             => 'S/N',
+    'telefone'           => '4430000000',
+    'logradouro'         => 'RUA DAS FLORES',
+    'numero'             => '1000',
     'complemento'        => '',
-    'bairro'             => 'ZONA 05',
+    'bairro'             => 'CENTRO',
     'municipio'          => 'Maringá',
     'uf'                 => 'Paraná',
-    'cep'                => '87015001',
-    'email'              => 'webmaster@dentalpress.com.br',
+    'cep'                => '87010000',
+    'email'              => 'contato@exemplo.com.br',
 ];
 
 $t = (new TokenMapper())->map($xml, $tomador);
@@ -89,16 +89,16 @@ $esperado = [
     'prestador_simples'      => 'Optante - Microempresa ou Empresa de Pequeno Porte',
     'prestador_regime'       => 'Regime de apuração dos tributos federais e municipal pelo Simples Nacional',
 
-    'tomador_razao_social' => 'DENTAL PRESS ENSINO E PESQUISA LTDA',
-    'tomador_documento'    => '80.898.828/0001-48',
+    'tomador_razao_social' => 'CLIENTE EXEMPLO COMERCIO LTDA',
+    'tomador_documento'    => '11.222.333/0001-81',
     'tomador_im'           => '—',
-    'tomador_telefone'     => '(44) 3033-9816',
-    'tomador_endereco'     => 'AV DR LUIZ TEIXEIRA MENDES, S/N — ZONA 05',
+    'tomador_telefone'     => '(44) 3000-0000',
+    'tomador_endereco'     => 'RUA DAS FLORES, 1000 — CENTRO',
     'tomador_municipio'    => 'Maringá',
     'tomador_uf'           => 'PR',
     'tomador_ibge'         => '4115200',
-    'tomador_cep'          => '87015-001',
-    'tomador_email'        => 'webmaster@dentalpress.com.br',
+    'tomador_cep'          => '87010-000',
+    'tomador_email'        => 'contato@exemplo.com.br',
     'intermediario_info'   => 'INTERMEDIÁRIO DA OPERAÇÃO NÃO IDENTIFICADO NA NFS-e',
 
     'cod_tributacao_nacional' => '01.03.02 / —',

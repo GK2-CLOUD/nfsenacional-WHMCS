@@ -435,10 +435,22 @@ A discriminação é cortada em 2000 caracteres, mas isso limita o **texto**, n�
 | Ferramenta | Uso |
 |---|---|
 | `tools/ciclo-danfse.sh [id]` | sobe o que mudou, gera o PDF de uma nota real e recorta a 600 dpi |
+| `tools/danfse-render.php <id>` | **roda no servidor**; gera o DANFS-e de uma NFS-e real |
 | `tools/danfse-multipagina.php <n>` | **roda no servidor**; gera um DANFS-e com N itens para exercitar a quebra |
 | `tools/varrer-paginacao.py <a> <b>` | varre tamanhos e classifica o topo de cada página de continuação |
-| `tools/testes/rodar.sh` | as seis suítes (247 asserções), sem WHMCS nem rede |
+| `tools/testes/rodar.sh` | as seis suítes (271 asserções), sem WHMCS nem rede |
 | `tools/ler-qr.py` | decodifica o QR de um DANFS-e |
+
+As duas primeiras falam com um servidor WHMCS, que vem do ambiente — não há host embutido no repositório:
+
+```sh
+export DANFSE_REMOTO=usuario@host
+export DANFSE_PORTA=2200            # opcional, padrão 22
+export DANFSE_WHMCS=/caminho/do/whmcs
+tools/ciclo-danfse.sh 43
+```
+
+A fixture `tools/testes/fixtures/nfse-597.xml` é uma NFS-e real da GK2 **com o tomador trocado por dados fictícios** — o repositório é público. Ao trocar a fixture, anonimize o bloco `<toma>` de novo.
 
 
 ## Template de Email

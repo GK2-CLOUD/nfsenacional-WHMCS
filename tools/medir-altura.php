@@ -28,10 +28,10 @@ if (!$xmlPath || !is_readable($xmlPath)) { fwrite(STDERR, "uso: php tools/medir-
 use GK2\NfseNacional\Danfse\{NfseXml, TokenMapper, TemplateRenderer};
 
 $xml = NfseXml::fromXml(file_get_contents($xmlPath));
-$tomador = ['razaoSocial'=>'DENTAL PRESS ENSINO E PESQUISA LTDA','documento'=>'80898828000148',
-  'inscricaoMunicipal'=>'','telefone'=>'4430339816','logradouro'=>'AV DR LUIZ TEIXEIRA MENDES',
-  'numero'=>'S/N','complemento'=>'','bairro'=>'ZONA 05','municipio'=>'Maringá','uf'=>'Paraná',
-  'cep'=>'87015001','email'=>'webmaster@dentalpress.com.br'];
+$tomador = ['razaoSocial'=>'CLIENTE EXEMPLO COMERCIO LTDA','documento'=>'11222333000181',
+  'inscricaoMunicipal'=>'','telefone'=>'4430000000','logradouro'=>'RUA DAS FLORES',
+  'numero'=>'1000','complemento'=>'','bairro'=>'CENTRO','municipio'=>'Maringá','uf'=>'Paraná',
+  'cep'=>'87010000','email'=>'contato@exemplo.com.br'];
 $tokens = (new TokenMapper())->map($xml, $tomador);
 $html = (new TemplateRenderer())->render($tokens, ['se_homologacao'=>false]);
 

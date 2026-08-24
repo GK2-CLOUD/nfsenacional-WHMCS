@@ -54,9 +54,9 @@ class TomadorStub extends TomadorMapper {
     public function mapParaExibicao(int $id): array {
         $this->chamadas++;
         if ($this->explode) throw new \RuntimeException('cliente sumiu');
-        return ['razaoSocial'=>'DENTAL PRESS','documento'=>'80898828000148','inscricaoMunicipal'=>'',
-                'telefone'=>'4430339816','logradouro'=>'AV X','numero'=>'1','complemento'=>'',
-                'bairro'=>'ZONA 05','municipio'=>'Maringá','uf'=>'Paraná','cep'=>'87015001',
+        return ['razaoSocial'=>'CLIENTE EXEMPLO','documento'=>'11222333000181','inscricaoMunicipal'=>'',
+                'telefone'=>'4430000000','logradouro'=>'AV X','numero'=>'1','complemento'=>'',
+                'bairro'=>'CENTRO','municipio'=>'Maringá','uf'=>'Paraná','cep'=>'87010000',
                 'email'=>'a@b.c'];
     }
 }
@@ -94,7 +94,7 @@ ok('nao regravou o xml',        $r->gravado === []);
 eq('QR com a URL de consulta',  $p->ultimoQr,
    'https://www.nfse.gov.br/ConsultaPublica?tpc=1&chave=41152002214322136000122000000000059726082129342319');
 ok('html sem token sobrando',   !str_contains($p->ultimoHtml, '{{'));
-ok('tomador veio do WHMCS',     str_contains($p->ultimoHtml, 'DENTAL PRESS'));
+ok('tomador veio do WHMCS',     str_contains($p->ultimoHtml, 'CLIENTE EXEMPLO'));
 
 echo "\n  xml_retorno gravado SEM gzip (versao antiga)\n";
 $r2 = new RepoStub(); $r2->xml = base64_encode($XML); $p2 = new PdfStub();
