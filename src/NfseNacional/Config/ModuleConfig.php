@@ -319,6 +319,18 @@ class ModuleConfig
         return DanfseModelo::tryFrom($numero) ?? DanfseModelo::OFICIAL;
     }
 
+    /**
+     * Caminho da logo impressa no DANFS-e local.
+     *
+     * Vazio e o padrao: o modulo nao assume marca nenhuma. Quem instala
+     * aponta a sua; sem isso o cabecalho sai com a razao social do
+     * prestador no lugar da imagem.
+     */
+    public function getDanfseLogo(): string
+    {
+        return trim((string) $this->get('danfse_logo', ''));
+    }
+
     // ─── Setup (ativacao) ──────────────────────────────────────────
 
     /**
@@ -334,6 +346,7 @@ class ModuleConfig
             'optante_simples' => '1',
             'emissao_padrao' => '1-Nao Emitir',
             'danfse_modelo' => '1-Oficial (governo)',
+            'danfse_logo' => '',
             'email' => '0',
             'cancelar' => '0',
             'debug' => '0',

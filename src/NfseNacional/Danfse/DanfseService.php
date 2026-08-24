@@ -33,7 +33,7 @@ class DanfseService
         $this->repository = $repository ?? new NfseRepository();
         $this->config     = $config ?? new ModuleConfig();
         $this->tomador    = $tomador ?? new TomadorMapper($this->config);
-        $this->template   = $template ?? new TemplateRenderer();
+        $this->template   = $template ?? new TemplateRenderer(null, $this->config->getDanfseLogo());
         $this->pdf        = $pdf ?? new PdfRenderer();
     }
 
@@ -59,10 +59,31 @@ class DanfseService
             'se_homologacao' => $mapper->isHomologacao($xml),
         ]);
 
+        $this->avisarLogoInvalida();
+
         return $this->pdf->render(
             $html,
             ConsultaPublica::url($xml->chaveAcesso()),
             ['numero' => $tokens['numero_nfse'], 'chave' => $xml->chaveAcesso()]
+        );
+    }
+
+    /**
+     * Logo configurada que nao serve nao pode falhar em silencio: o DANFS-e
+     * sai com a razao social no lugar da imagem e quem configurou nao tem
+     * como saber por que. Um aviso no log da o caminho que foi tentado.
+     */
+    private function avisarLogoInvalida(): void
+    {
+        if (!$this->template->logoConfiguradaInvalida()) {
+            return;
+        }
+
+        logActivity(
+            'NFS-e Nacional [DANFS-e]: a logo configurada nao pode ser usada ('
+            . $this->config->getDanfseLogo()
+            . '). Confira se o caminho existe, e legivel e aponta para um PNG, JPEG ou GIF. '
+            . 'O documento saiu com a razao social no lugar da imagem.'
         );
     }
 

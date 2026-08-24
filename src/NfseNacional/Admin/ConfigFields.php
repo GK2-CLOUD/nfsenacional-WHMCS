@@ -467,16 +467,34 @@ HTML;
         $configarray['fields']['danfse_modelo'] = [
             'FriendlyName' => $fn('Modelo do DANFS-e', true),
             'Type'         => 'dropdown',
-            'Options'      => '1-Oficial (governo),2-GK2',
+            'Options'      => '1-Oficial (governo),2-Local (gerado pelo módulo)',
             'Description'  => 'Qual PDF o cliente recebe ao clicar em "Ver DANFS-e".'
                 . $tip('Modelo do DANFS-e',
                     '"Oficial (governo)": baixa o documento do ADN a cada acesso — '
                     . 'depende do serviço do governo estar no ar. '
-                    . '"GK2": gera o documento localmente a partir do XML já guardado pelo módulo, '
-                    . 'com a identidade visual da GK2 e sem chamada de API. '
-                    . 'Troque para GK2 somente após validar o resultado em homologação; '
+                    . '"Local": gera o documento a partir do XML já guardado pelo módulo, '
+                    . 'com a sua identidade visual e sem chamada de API. '
+                    . 'Troque para Local somente após validar o resultado em homologação; '
                     . 'voltar para o oficial é imediato e não exige atualização do módulo.'),
             'Default'      => '1-Oficial (governo)',
+        ];
+
+        $configarray['fields']['danfse_logo'] = [
+            'FriendlyName' => $fn('Logo do DANFS-e', false),
+            'Type'         => 'text',
+            'Size'         => '60',
+            'Description'  => 'Caminho do arquivo da sua logo no servidor. Só vale para o modelo Local.'
+                . $tip('Logo do DANFS-e',
+                    'Caminho absoluto de um PNG, JPEG ou GIF no servidor — por exemplo '
+                    . '<code>/home/usuario/public_html/assets/img/logo.png</code>. '
+                    . 'A imagem é encaixada numa caixa de 50 x 15,5&nbsp;mm preservando a proporção, '
+                    . 'então qualquer formato serve; para não sair serrilhada na impressão, '
+                    . 'use pelo menos <strong>280 x 150&nbsp;px</strong>. '
+                    . 'URL não é aceita: o TCPDF buscaria a imagem na rede a cada DANFS-e emitido, '
+                    . 'o que é lento e quebra quando o site está fora do ar — copie o arquivo para o servidor. '
+                    . 'Deixando <strong>em branco</strong>, o cabeçalho sai com a razão social do prestador '
+                    . 'no lugar da imagem.'),
+            'Default'      => '',
         ];
 
         $emailFriendlyName = $fn('Enviar NFS-e por E-mail', false);

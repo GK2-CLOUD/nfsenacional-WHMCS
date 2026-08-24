@@ -28,9 +28,13 @@ $tomador = [
     'cep'=>'87015001','email'=>'webmaster@dentalpress.com.br',
 ];
 
+const LOGO = __DIR__ . '/../../templates/danfse/gk2-logo.png';
+
 $mapper   = new TokenMapper();
 $tokens   = $mapper->map($xml, $tomador);
-$renderer = new TemplateRenderer();
+// A logo e configuravel e o padrao e NAO ter — quem instala o modulo poe a
+// sua. Este e o renderer "com logo"; o sem vem na secao 1b.
+$renderer = new TemplateRenderer(null, LOGO);
 
 /* ── 1. Producao: sem tarja, sem token sobrando ───────────────────── */
 echo "RENDER — PRODUÇÃO (tpAmb=1)\n";
@@ -60,7 +64,45 @@ foreach ([
     ok("producao mantem: $oque", str_contains($prod, $marca));
 }
 ok('placeholder da logo resolvido',    !str_contains($prod, '__LOGO__'));
-ok('logo aponta p/ arquivo existente', is_readable($renderer->caminhoLogo()));
+ok('sem marcador de largura sobrando', !str_contains($prod, '__LOGO_W__'));
+ok('sem marcador de altura sobrando',  !str_contains($prod, '__LOGO_H__'));
+
+/* ── 1b. Logo configuravel ────────────────────────────────────────── */
+echo "\nLOGO\n";
+$logo = $renderer->logo();
+eq('logo resolvida', $logo['src'] ?? null, LOGO);
+// 280x150 na caixa de 142x44: a altura e quem limita (44/150 < 142/280)
+eq('altura encaixa na caixa',  $logo['h'], 44);
+eq('largura pela proporcao',   $logo['w'], 82);
+ok('proporcao preservada', abs($logo['w'] / $logo['h'] - 280 / 150) < 0.02);
+ok('nao acusa configuracao invalida', !$renderer->logoConfiguradaInvalida());
+ok('img sai com as duas dimensoes',
+   str_contains($prod, 'width="82" height="44"'));
+
+$semLogo = new TemplateRenderer();
+$semHtml = $semLogo->render($tokens, ['se_homologacao' => false]);
+eq('padrao: nenhuma logo',       $semLogo->logo(), null);
+ok('padrao nao e configuracao invalida', !$semLogo->logoConfiguradaInvalida());
+ok('sem <img> no cabecalho',     !str_contains($semHtml, '<img'));
+ok('razao social no lugar dela',  str_contains($semHtml, 'GK2 CLOUD LTDA'));
+eq('zero token sobrando sem logo', TemplateRenderer::tokensRestantes($semHtml), []);
+
+/* Caminhos que nao servem caem no mesmo lugar, mas ACUSAM — quem configurou
+   precisa saber por que a imagem nao apareceu. */
+foreach ([
+    'arquivo inexistente' => '/tmp/nao-existe-' . md5('x') . '.png',
+    'URL remota'          => 'https://exemplo.com/logo.png',
+    'URL local'           => 'file:///etc/hostname',
+    'diretorio'           => __DIR__,
+    'nao e imagem'        => __FILE__,
+] as $caso => $caminho) {
+    $r = new TemplateRenderer(null, $caminho);
+    eq("rejeita: $caso", $r->logo(), null);
+    ok("acusa invalida: $caso", $r->logoConfiguradaInvalida());
+}
+$vazio = new TemplateRenderer(null, '   ');
+eq('so espaco = sem logo', $vazio->logo(), null);
+ok('so espaco nao acusa', !$vazio->logoConfiguradaInvalida());
 
 /* ── 2. A armadilha do guia §4: comentario vazando ────────────────── */
 echo "\nBLOCO CONDICIONAL — vazamento de comentário\n";
