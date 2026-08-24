@@ -8,18 +8,61 @@ namespace GK2\NfseNacional\Danfse;
  * O TCPDF vem com o WHMCS (vendor/tecnickcom/tcpdf) — o modulo nao
  * empacota o seu. Versao verificada em homologacao: 6.10.0.
  *
- * Geometria (decisao registrada no plano §1): A4 retrato, margens de
- * 10 mm nos quatro lados, area util de 190 mm. O guia TCPDF §2 fala em
- * 3,5 mm; esta desatualizado.
+ * Geometria: A4 retrato, margens de 3,5 mm nos quatro lados, area util de
+ * 203 mm — os mesmos 3,5 mm do padding de .sheet no mockup, que e onde
+ * assenta a moldura do documento.
  */
 class PdfRenderer
 {
-    private const MARGEM_PADRAO = 10.0;
+    private const MARGEM_PADRAO = 3.5;
+
+    /**
+     * Deriva horizontal do HTML, em mm.
+     *
+     * O TCPDF assenta a tabela externa 2,90mm a direita da margem esquerda,
+     * mas encosta a direita dela na margem direita — o conteudo inteiro
+     * nasce descentrado no papel. Medido a 600dpi com margem de 10mm e de
+     * 3,5mm: o centro do conteudo deu 106,46mm nas duas, contra 105mm de
+     * centro da folha. A deriva e constante, nao proporcional.
+     *
+     * Enquanto a moldura era a borda dessa mesma tabela, ela derivava junto
+     * e nada aparecia. Desenhada no papel, a folga saia 6,4mm de um lado e
+     * 3,5mm do outro.
+     *
+     * Nao adianta so encurtar a margem esquerda: a tabela e width=100%,
+     * entao ela ALARGA em vez de andar. Para transladar, a margem direita
+     * cresce o mesmo tanto — e por isso as margens do TCPDF sao assimetricas
+     * enquanto a moldura e o conteudo ficam centrados no papel.
+     */
+    private const DERIVA_HTML = 2.90;
+
+    /**
+     * Quanto o HTML afasta os blocos da margem, em mm.
+     *
+     * 2,12mm de cellpadding do .wrap mais 1,41mm de cellspacing da tabela
+     * container. Entra na conta das margens e na do QR, que precisa fechar
+     * na mesma coluna dos blocos.
+     */
+    private const RECUO_BLOCO = 3.53;
+
+    /**
+     * Folga entre a moldura e os blocos, em mm.
+     *
+     * Unico numero de gosto nesta geometria; os outros sao medidos. 4,24mm
+     * e a media da folga que o documento tinha antes da moldura passar a
+     * ser desenhada no papel (4,97mm de um lado, 3,51mm do outro), entao a
+     * largura util nao muda e nada reflui.
+     */
+    private const FOLGA_MOLDURA = 4.24;
+
+    /** Traco e cor da moldura — os mesmos que .wrap tinha no HTML. */
+    private const MOLDURA_ESPESSURA = 0.4;
+    private const MOLDURA_COR = [154, 154, 154];   // #9a9a9a
 
     /**
      * Lado do QR Code, em mm.
      *
-     * 22,85mm — a ALTURA DA COLUNA DE TEXTO do cabecalho, medida no PDF.
+     * 23,05mm — a ALTURA DA COLUNA DE TEXTO do cabecalho, medida no PDF.
      *
      * Tres restricoes se cruzam aqui, e o valor e o unico ponto onde as
      * tres fecham:
@@ -37,7 +80,7 @@ class PdfRenderer
      *
      * Mexer na altura do cabecalho exige remedir e ajustar este valor.
      */
-    private const QR_LADO = 22.85;
+    private const QR_LADO = 23.05;
 
     /**
      * Nivel de correcao de erro.
@@ -50,21 +93,12 @@ class PdfRenderer
     private const QR_CORRECAO = 'QRCODE,H';
 
     /**
-     * Recuo horizontal do QR em relacao a margem da pagina, em mm.
-     *
-     * 3,9mm poe a aresta direita do QR em 196mm — onde terminam
-     * as faixas de secao e os blocos do corpo. Medido no PDF; mexer aqui
-     * desalinha o QR da coluna do documento.
-     */
-    private const QR_RECUO_X = 3.9;
-
-    /**
      * Topo do QR, em mm a partir da borda da pagina.
      *
-     * 14,55mm e o topo da coluna de texto do cabecalho. Com QR_LADO igual
+     * 8,15mm e o topo da coluna de texto do cabecalho. Com QR_LADO igual
      * a altura dessa coluna, topo e base coincidem com ela.
      */
-    private const QR_Y = 14.55;
+    private const QR_Y = 8.15;
 
     /**
      * Fonte base do documento.
@@ -104,6 +138,19 @@ class PdfRenderer
     private string $fonte;
 
     /**
+     * Margens do TCPDF: [esquerda, topo, direita].
+     *
+     * Assimetricas de proposito — ver DERIVA_HTML. O que fica simetrico e o
+     * que se ve: a moldura e a folga dela para os blocos.
+     */
+    private function margens(): array
+    {
+        $esq = $this->margem + self::FOLGA_MOLDURA - self::DERIVA_HTML - self::RECUO_BLOCO;
+
+        return [$esq, $this->margem, $esq + self::DERIVA_HTML];
+    }
+
+    /**
      * Margem e fonte sao parametrizaveis para a calibracao — nao para uso
      * corrente. Os padroes sao os valores decididos; mudar em producao
      * desalinha o QR e pode empurrar o documento para a segunda pagina.
@@ -114,10 +161,12 @@ class PdfRenderer
         $this->fonte  = $fonte  ?? self::FONTE_PADRAO;
     }
 
-    /** Aresta direita do QR alinhada a coluna do documento (196mm). */
+    /** Aresta direita do QR na mesma coluna em que terminam os blocos. */
     private function qrX(): float
     {
-        return 210.0 - $this->margem - self::QR_RECUO_X - self::QR_LADO;
+        [, , $dir] = $this->margens();
+
+        return 210.0 - $dir - self::RECUO_BLOCO - self::QR_LADO;
     }
 
     private function qrY(): float
@@ -144,7 +193,8 @@ class PdfRenderer
 
         $pdf = new \TCPDF('P', 'mm', 'A4', true, 'UTF-8');
 
-        $pdf->SetMargins($this->margem, $this->margem, $this->margem);
+        [$esq, $topo, $dir] = $this->margens();
+        $pdf->SetMargins($esq, $topo, $dir);
         $pdf->SetAutoPageBreak(true, $this->margem);
         $pdf->setPrintHeader(false);
         $pdf->setPrintFooter(false);
@@ -156,6 +206,7 @@ class PdfRenderer
         $pdf->AddPage();
         $pdf->writeHTML($html, true, false, true, false, '');
 
+        $this->desenharMoldura($pdf);
         $this->desenharQr($pdf, $qrConteudo);
 
         // 'S' devolve a string; o DownloadController e quem escreve os headers.
@@ -174,7 +225,8 @@ class PdfRenderer
         }
 
         $pdf = new \TCPDF('P', 'mm', 'A4', true, 'UTF-8');
-        $pdf->SetMargins($this->margem, $this->margem, $this->margem);
+        [$esq, $topo, $dir] = $this->margens();
+        $pdf->SetMargins($esq, $topo, $dir);
         $pdf->SetAutoPageBreak(true, $this->margem);
         $pdf->setPrintHeader(false);
         $pdf->setPrintFooter(false);
@@ -200,6 +252,37 @@ class PdfRenderer
         if (!empty($meta['chave'])) {
             $pdf->SetKeywords('NFS-e, DANFS-e, ' . $meta['chave']);
         }
+    }
+
+    /**
+     * Moldura externa do documento.
+     *
+     * Vinha da borda de .wrap, no HTML. Uma borda de tabela termina onde o
+     * conteudo termina — a moldura fechava logo abaixo do rodape e sobrava
+     * um palmo de papel branco fora dela. No mockup a .wrap tem
+     * height="100%", entao a moldura desce ate o pe da folha.
+     *
+     * O TCPDF nao implementa height:100% em tabela, entao ela e desenhada
+     * por API: um retangulo da margem a margem, nos quatro lados. Como so
+     * tem traco (sem preenchimento), pode ser desenhado depois do conteudo.
+     */
+    private function desenharMoldura(\TCPDF $pdf): void
+    {
+        if ($pdf->getNumPages() > 1) {
+            $pdf->setPage(1);
+        }
+
+        $pdf->Rect(
+            $this->margem,
+            $this->margem,
+            210.0 - 2 * $this->margem,
+            297.0 - 2 * $this->margem,
+            'D',
+            ['all' => [
+                'width' => self::MOLDURA_ESPESSURA,
+                'color' => self::MOLDURA_COR,
+            ]]
+        );
     }
 
     /**

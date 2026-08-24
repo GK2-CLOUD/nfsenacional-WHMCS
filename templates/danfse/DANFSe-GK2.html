@@ -28,7 +28,10 @@
 <style>
   body { margin:0; padding:0; font-family: helvetica, sans-serif; font-size:7.5pt; color:#1a1a1a; }
   table { border-collapse:collapse; }
-  .wrap { width:100%; border:0.4mm solid #9a9a9a; }
+  /* Sem borda: a moldura e desenhada por PdfRenderer::desenharMoldura(),
+     porque como borda de tabela ela pararia junto com o conteudo, em vez
+     de descer ate o pe da pagina como no mockup (.wrap height=100%). */
+  .wrap { width:100%; }
   .pad  { padding:2mm; }
 
   .lbl  { font-size:5.8pt; letter-spacing:0.5pt; text-transform:uppercase; color:#6b6b6b; font-weight:bold; }
