@@ -120,7 +120,7 @@ HTML;
             'fa-calculator',
             'Tributação e Serviços',
             '#1a7abf',
-            'Códigos fiscais e alíquotas utilizados na geração do XML da DPS.'
+            'Códigos fiscais e alíquotas utilizados na geração do XML da DPS.',
         );
         $configarray['fields']['bloco-tributacao']['Description'] =
             $initScript . ($configarray['fields']['bloco-tributacao']['Description'] ?? '');
@@ -130,10 +130,12 @@ HTML;
             'Type'         => 'text',
             'Size'         => '12',
             'Description'  => 'Código CNAE da atividade principal. Ex: 6209100'
-                . $tip('CNAE',
+                . $tip(
+                    'CNAE',
                     'Classificação Nacional de Atividades Econômicas da sua empresa. '
                     . 'Informe o código CNAE da atividade principal. '
-                    . 'Ex: 6209100 para Suporte Técnico em Infraestrutura de TI.'),
+                    . 'Ex: 6209100 para Suporte Técnico em Infraestrutura de TI.',
+                ),
             'Default'      => '',
         ];
 
@@ -142,12 +144,14 @@ HTML;
             'Type'         => 'text',
             'Size'         => '12',
             'Description'  => '6 dígitos numéricos conforme LC 116/2003. Ex: <strong>010700</strong> (item 1.07).'
-                . $tip('Código de Serviço LC 116 (cTribNac)',
+                . $tip(
+                    'Código de Serviço LC 116 (cTribNac)',
                     'Código do item da lista de serviços conforme Lei Complementar 116/2003, '
                     . 'com 6 dígitos numéricos (item + subitem + desdobro nacional). '
                     . 'Este valor é enviado como cTribNac no XML da DPS. '
                     . 'Ex: 010700 para Suporte Técnico em Informática (item 1.07 da LC 116). '
-                    . 'Consulte a tabela de códigos nacionais em nfse.gov.br.'),
+                    . 'Consulte a tabela de códigos nacionais em nfse.gov.br.',
+                ),
             'Default'      => '',
         ];
 
@@ -156,11 +160,13 @@ HTML;
             'Type'         => 'text',
             'Size'         => '15',
             'Description'  => '9 dígitos NBS. <strong>Opcional</strong> — deixe vazio se não utilizar (evita erro E0316).'
-                . $tip('Código de Serviço NBS',
+                . $tip(
+                    'Código de Serviço NBS',
                     'Código NBS — Nomenclatura Brasileira de Serviços (9 dígitos). '
                     . 'Campo opcional no XSD. Deixe vazio se não souber ou se o município não exigir. '
                     . 'Não confunda com o código LC 116. '
-                    . 'Um código NBS inválido gera o erro E0316.'),
+                    . 'Um código NBS inválido gera o erro E0316.',
+                ),
             'Default'      => '',
         ];
 
@@ -171,13 +177,15 @@ HTML;
             'Description'  => '<strong>Exatamente 3 dígitos</strong> conforme lista da prefeitura. '
                 . 'Código incorreto → erro <strong>E0314</strong>. '
                 . '<strong>Deixe vazio se o município não exigir.</strong>'
-                . $tip('Código de Tributação Municipal (cTribMun)',
+                . $tip(
+                    'Código de Tributação Municipal (cTribMun)',
                     'Código de tributação municipal do ISSQN definido pela prefeitura do município do prestador. '
                     . 'Deve ter EXATAMENTE 3 dígitos numéricos conforme o cadastro da prefeitura (ex: 107). '
                     . 'Atenção: cada município possui sua própria lista de códigos válidos — '
                     . 'um código inválido gera o erro E0314. '
                     . 'Consulte o portal de NFS-e da sua prefeitura para obter o código correto. '
-                    . 'Deixe vazio se o município não exigir este campo.'),
+                    . 'Deixe vazio se o município não exigir este campo.',
+                ),
             'Default'      => '',
         ];
 
@@ -186,13 +194,15 @@ HTML;
             'Type'         => 'dropdown',
             'Options'      => '1-Exigível,2-Não Incidência,3-Isenção,4-Exportação,5-Imunidade,6-Suspensa por Decisão Judicial,7-Suspensa por Processo Administrativo',
             'Description'  => 'Situação de exigibilidade do ISS enviada no XML. Para operações normais: <strong>1-Exigível</strong>.'
-                . $tip('Exigibilidade do ISS',
+                . $tip(
+                    'Exigibilidade do ISS',
                     'Define a situação de exigibilidade do ISS no XML da DPS. '
                     . 'Use "1-Exigível" para operações normais tributadas. '
                     . 'Outros valores: 2=Não Incidência, 3=Isenção (verificar legislação municipal), '
                     . '4=Exportação, 5=Imunidade, '
                     . '6=Suspensa por Decisão Judicial, 7=Suspensa por Processo Administrativo. '
-                    . 'Consulte seu contador ou a legislação do seu município.'),
+                    . 'Consulte seu contador ou a legislação do seu município.',
+                ),
             'Default'      => '1-Exigível',
         ];
 
@@ -201,10 +211,12 @@ HTML;
             'Type'         => 'text',
             'Size'         => '10',
             'Description'  => 'Percentual do ISS. Ex: <strong>2.00</strong> para 2%. Use ponto como separador decimal.'
-                . $tip('Alíquota ISS (%)',
+                . $tip(
+                    'Alíquota ISS (%)',
                     'Alíquota do ISS aplicada sobre o valor dos serviços. '
                     . 'Informe em percentual com ponto decimal. Ex: 2.00 para 2%. '
-                    . 'Consulte a legislação do seu município.'),
+                    . 'Consulte a legislação do seu município.',
+                ),
             'Default'      => '',
         ];
 
@@ -213,10 +225,12 @@ HTML;
             'Type'         => 'text',
             'Size'         => '10',
             'Description'  => 'Percentual de retenção do ISS. Deixe vazio se não houver retenção na fonte.'
-                . $tip('Retenção ISS (%)',
+                . $tip(
+                    'Retenção ISS (%)',
                     'Percentual de retenção do ISS quando o tomador é responsável pelo recolhimento na fonte. '
                     . 'Informe o mesmo valor da alíquota ISS se houver retenção integral. '
-                    . 'Deixe vazio se não houver retenção.'),
+                    . 'Deixe vazio se não houver retenção.',
+                ),
             'Default'      => '',
         ];
 
@@ -227,7 +241,7 @@ HTML;
             'fa-building',
             'Dados da Empresa (Prestador)',
             '#27896a',
-            'Informações da empresa emissora da NFS-e: CNPJ, inscrição municipal, município e regime tributário.'
+            'Informações da empresa emissora da NFS-e: CNPJ, inscrição municipal, município e regime tributário.',
         );
 
         $configarray['fields']['cnpj_prestador'] = [
@@ -235,9 +249,11 @@ HTML;
             'Type'         => 'text',
             'Size'         => '20',
             'Description'  => 'Somente números. Ex: 12345678000195. Deve coincidir com o CNPJ do certificado A1.'
-                . $tip('CNPJ do Prestador',
+                . $tip(
+                    'CNPJ do Prestador',
                     'CNPJ da empresa emissora da NFS-e, sem pontuação. '
-                    . 'Deve ser idêntico ao CNPJ do certificado digital A1 utilizado para assinar os documentos XML.'),
+                    . 'Deve ser idêntico ao CNPJ do certificado digital A1 utilizado para assinar os documentos XML.',
+                ),
             'Default'      => '',
         ];
 
@@ -247,11 +263,13 @@ HTML;
             'Size'         => '20',
             'Description'  => 'Se preenchida, é enviada no XML. '
                 . '<strong>Deixe vazio</strong> se o município rejeitar (evita erro E0120).'
-                . $tip('Inscrição Municipal (IM)',
+                . $tip(
+                    'Inscrição Municipal (IM)',
                     'Inscrição Municipal da empresa na prefeitura. '
                     . 'Se preenchida, será incluída no XML da DPS como campo <IM>. '
                     . 'Deixe vazio para omitir o campo — alguns municípios não aceitam o campo IM '
-                    . 'e retornam erro E0120.'),
+                    . 'e retornam erro E0120.',
+                ),
             'Default'      => '',
         ];
 
@@ -260,10 +278,12 @@ HTML;
             'Type'         => 'text',
             'Size'         => '12',
             'Description'  => '7 dígitos IBGE do município do prestador. Ex: 3550308 (São Paulo/SP).'
-                . $tip('Código IBGE do Município',
+                . $tip(
+                    'Código IBGE do Município',
                     'Código IBGE de 7 dígitos do município onde a empresa está estabelecida. '
                     . 'Consulte a tabela de códigos em ibge.gov.br ou sidra.ibge.gov.br. '
-                    . 'Ex: 4115200 para Maringá/PR, 3550308 para São Paulo/SP, 3304557 para Rio de Janeiro/RJ.'),
+                    . 'Ex: 4115200 para Maringá/PR, 3550308 para São Paulo/SP, 3304557 para Rio de Janeiro/RJ.',
+                ),
             'Default'      => '',
         ];
 
@@ -272,10 +292,12 @@ HTML;
             'Type'         => 'dropdown',
             'Options'      => '1-Simples Nacional,2-Simples Nacional Excesso,3-Regime Normal,4-MEI',
             'Description'  => 'Define o enquadramento tributário. Use em conjunto com "Optante pelo Simples Nacional" abaixo.'
-                . $tip('Regime Tributário',
+                . $tip(
+                    'Regime Tributário',
                     'Regime tributário da empresa. Afeta o campo opSimpNac no XML. '
                     . 'Use em conjunto com "Optante pelo Simples Nacional": '
-                    . 'Simples + optante = ME/EPP; MEI = MEI; Normal = não optante.'),
+                    . 'Simples + optante = ME/EPP; MEI = MEI; Normal = não optante.',
+                ),
             'Default'      => '1-Simples Nacional',
         ];
 
@@ -283,9 +305,11 @@ HTML;
             'FriendlyName' => $fn('Optante pelo Simples Nacional', true),
             'Type'         => 'yesno',
             'Description'  => 'Marque se a empresa é ME ou EPP optante do Simples Nacional.'
-                . $tip('Optante pelo Simples Nacional',
+                . $tip(
+                    'Optante pelo Simples Nacional',
                     'Marque se a empresa é optante pelo Simples Nacional (ME ou EPP). '
-                    . 'Combinado com o Regime Tributário, determina o código opSimpNac correto no XML da DPS.'),
+                    . 'Combinado com o Regime Tributário, determina o código opSimpNac correto no XML da DPS.',
+                ),
             'Default'      => '1',
         ];
 
@@ -294,11 +318,13 @@ HTML;
             'Type'         => 'dropdown',
             'Options'      => '1-Competência,2-Caixa',
             'Description'  => 'Regime de apuração dos tributos. Obrigatório para ME/EPP e MEI (erro E0166 se ausente).'
-                . $tip('Apuração Simples Nacional',
+                . $tip(
+                    'Apuração Simples Nacional',
                     'Define se os tributos do Simples Nacional são apurados por Competência ou por Caixa. '
                     . 'Enviado apenas para optantes do Simples Nacional (ME/EPP e MEI). '
                     . 'Ignorado para regime normal. '
-                    . 'A ausência deste campo para optantes gera o erro E0166.'),
+                    . 'A ausência deste campo para optantes gera o erro E0166.',
+                ),
             'Default'      => '1-Competência',
         ];
 
@@ -307,12 +333,14 @@ HTML;
             'Type'         => 'dropdown',
             'Options'      => '0-Nenhum,1-Estimativa Anual,2-Profissional Autônomo,3-Sociedade de Profissionais,4-Cooperativa,5-MEI,6-ME-EPP Simples Nacional',
             'Description'  => 'Regime especial de tributação do ISS. Para a maioria das empresas: <strong>0-Nenhum</strong>. Consulte seu contador.'
-                . $tip('Regime Especial de Tributação (regEspTrib)',
+                . $tip(
+                    'Regime Especial de Tributação (regEspTrib)',
                     'Código do regime especial de tributação do ISS, conforme legislação municipal. '
                     . 'Use "0-Nenhum" para empresas sem regime especial (maioria dos casos). '
                     . 'Outros valores: 1=Estimativa Anual, 2=Profissional Autônomo, '
                     . '3=Sociedade de Profissionais, 4=Cooperativa, 5=MEI, 6=ME-EPP Simples Nacional. '
-                    . 'Consulte seu contador ou a legislação do seu município.'),
+                    . 'Consulte seu contador ou a legislação do seu município.',
+                ),
             'Default'      => '0-Nenhum',
         ];
 
@@ -323,7 +351,7 @@ HTML;
             'fa-certificate',
             'Certificado Digital A1',
             '#b06a00',
-            'Certificado ICP-Brasil A1 (.pfx) utilizado para assinar o XML das DPS enviadas à API Nacional.'
+            'Certificado ICP-Brasil A1 (.pfx) utilizado para assinar o XML das DPS enviadas à API Nacional.',
         );
 
         $configarray['fields']['certificado_path'] = [
@@ -331,10 +359,12 @@ HTML;
             'Type'         => 'text',
             'Size'         => '60',
             'Description'  => 'Caminho absoluto para o arquivo <code>.pfx</code> no servidor. Ex: /var/www/certs/empresa.pfx'
-                . $tip('Caminho do Certificado A1',
+                . $tip(
+                    'Caminho do Certificado A1',
                     'Caminho absoluto no servidor para o arquivo .pfx do certificado digital A1. '
                     . 'O processo do servidor web (Apache/Nginx) precisa ter permissão de leitura nesse arquivo. '
-                    . 'Ex: /var/www/certs/empresa.pfx'),
+                    . 'Ex: /var/www/certs/empresa.pfx',
+                ),
             'Default'      => '',
         ];
 
@@ -343,9 +373,11 @@ HTML;
             'Type'         => 'password',
             'Size'         => '20',
             'Description'  => 'Senha do arquivo <code>.pfx</code> do certificado digital A1.'
-                . $tip('Senha do Certificado A1',
+                . $tip(
+                    'Senha do Certificado A1',
                     'Senha de proteção do arquivo .pfx do certificado digital. '
-                    . 'Armazenada no banco de dados e usada somente no momento da assinatura dos documentos XML.'),
+                    . 'Armazenada no banco de dados e usada somente no momento da assinatura dos documentos XML.',
+                ),
             'Default'      => '',
         ];
 
@@ -356,7 +388,7 @@ HTML;
             'fa-cloud',
             'API NFS-e Nacional',
             '#2e7d32',
-            'Configurações de conexão com a API SEFIN/ADN do governo federal (sefin.nfse.gov.br).'
+            'Configurações de conexão com a API SEFIN/ADN do governo federal (sefin.nfse.gov.br).',
         );
 
         $configarray['fields']['ambiente'] = [
@@ -365,11 +397,13 @@ HTML;
             'Options'      => 'homologacao,producao',
             'Description'  => '<strong>homologacao</strong> para testes (sem validade fiscal) &nbsp;|&nbsp; '
                 . '<strong>producao</strong> para emissão real com valor legal.'
-                . $tip('Ambiente',
+                . $tip(
+                    'Ambiente',
                     'Selecione "homologacao" para realizar testes sem valor fiscal, '
                     . 'ou "producao" para emissão real. '
                     . 'Atenção: notas emitidas em homologação não têm validade legal '
-                    . 'e não podem ser convertidas para produção.'),
+                    . 'e não podem ser convertidas para produção.',
+                ),
             'Default'      => 'homologacao',
         ];
 
@@ -378,10 +412,12 @@ HTML;
             'Type'         => 'text',
             'Size'         => '8',
             'Description'  => 'Até 5 caracteres alfanuméricos. Ex: 1. Alterar a série reinicia a sequência numérica.'
-                . $tip('Série da DPS',
+                . $tip(
+                    'Série da DPS',
                     'Série identificadora do documento. Até 5 caracteres alfanuméricos (ex: 1, A, DPS). '
                     . 'Alterar a série inicia uma nova sequência numérica independente. '
-                    . 'Use "1" para a série padrão.'),
+                    . 'Use "1" para a série padrão.',
+                ),
             'Default'      => '1',
         ];
 
@@ -390,10 +426,12 @@ HTML;
             'Type'         => 'text',
             'Size'         => '25',
             'Description'  => 'Identificador da aplicação emissora que aparece na NFS-e. Máximo 20 caracteres.'
-                . $tip('verAplic',
+                . $tip(
+                    'verAplic',
                     'Campo verAplic do XML da DPS (XSD TSVerAplic, máximo 20 caracteres). '
                     . 'Aparece na NFS-e como identificação do software emissor. '
-                    . 'Padrão: WHMCS-NfseNac-1.0'),
+                    . 'Padrão: WHMCS-NfseNac-1.0',
+                ),
             'Default'      => 'WHMCS-NfseNac-1.0',
         ];
 
@@ -407,7 +445,7 @@ HTML;
                             ->where('setting', 'serie_dps')
                             ->value('value');
         $dpsAmbiente   = $dpsAmbiente ?: 'homologacao';
-        $dpsSerie      = $dpsSerie    ?: '1';
+        $dpsSerie      = $dpsSerie ?: '1';
         $dpsSettingKey = 'dps_proximo_' . $dpsAmbiente . '_' . $dpsSerie;
 
         $configarray['fields'][$dpsSettingKey] = [
@@ -419,12 +457,14 @@ HTML;
                 . 'Série: <strong>' . htmlspecialchars($dpsSerie, ENT_QUOTES, 'UTF-8') . '</strong>. '
                 . 'Chave: <code>' . htmlspecialchars($dpsSettingKey, ENT_QUOTES, 'UTF-8') . '</code>. '
                 . '<strong>Atenção:</strong> altere somente se necessário — numerar abaixo do último emitido causa rejeição pela SEFIN.'
-                . $tip('Próximo Número DPS',
+                . $tip(
+                    'Próximo Número DPS',
                     'Número sequencial que será usado na próxima DPS emitida para o ambiente e série atuais. '
                     . 'O módulo incrementa automaticamente a cada emissão. '
                     . 'Use este campo somente para corrigir a sequência após uma falha ou migração. '
                     . 'Nunca utilize um número já enviado à SEFIN — isso causa rejeição. '
-                    . 'Alterar a série reinicia a contagem em uma nova chave independente.'),
+                    . 'Alterar a série reinicia a contagem em uma nova chave independente.',
+                ),
             'Default'      => '1',
         ];
 
@@ -435,7 +475,7 @@ HTML;
             'fa-cogs',
             'Configurações Operacionais',
             '#555',
-            'Comportamento do módulo: emissão automática, e-mail, cancelamento e controles de acesso.'
+            'Comportamento do módulo: emissão automática, e-mail, cancelamento e controles de acesso.',
         );
 
         $configarray['fields']['documento_cliente'] = [
@@ -444,10 +484,12 @@ HTML;
             'Options'      => $docOptions,
             'Description'  => '"taxid" usa o Tax ID padrão do WHMCS. '
                 . 'Ou selecione o campo personalizado que armazena o CPF/CNPJ do cliente.'
-                . $tip('Campo CPF/CNPJ do Cliente',
+                . $tip(
+                    'Campo CPF/CNPJ do Cliente',
                     'Escolha o campo do WHMCS que contém o CPF ou CNPJ do tomador do serviço. '
                     . '"taxid" usa o campo Tax ID padrão do WHMCS. '
-                    . 'Selecione um campo personalizado se o CPF/CNPJ estiver em outro campo.'),
+                    . 'Selecione um campo personalizado se o CPF/CNPJ estiver em outro campo.',
+                ),
             'Default'      => 'taxid',
         ];
 
@@ -456,11 +498,13 @@ HTML;
             'Type'         => 'dropdown',
             'Options'      => '1-Não Emitir,2-Fatura Gerada,3-Fatura Paga',
             'Description'  => 'Comportamento padrão de emissão. Pode ser sobrescrito individualmente por cliente.'
-                . $tip('Emissão Automática de NFS-e',
+                . $tip(
+                    'Emissão Automática de NFS-e',
                     'Define o comportamento padrão de emissão para clientes sem configuração específica. '
                     . '"Não Emitir": desativa a emissão automática. '
                     . '"Fatura Gerada": emite ao criar a fatura. '
-                    . '"Fatura Paga": emite somente após pagamento confirmado.'),
+                    . '"Fatura Paga": emite somente após pagamento confirmado.',
+                ),
             'Default'      => '1-Não Emitir',
         ];
 
@@ -474,49 +518,59 @@ HTML;
             'Type'         => 'yesno',
             'Description'  => 'Envia DANFS-e e XML por e-mail ao cliente após autorização. '
                 . 'Clique em "Editar Template" para personalizar o conteúdo.'
-                . $tip('Enviar NFS-e por E-mail',
+                . $tip(
+                    'Enviar NFS-e por E-mail',
                     'Se habilitado, envia automaticamente ao cliente o link do DANFS-e '
-                    . 'e o arquivo XML após a autorização da nota fiscal.'),
+                    . 'e o arquivo XML após a autorização da nota fiscal.',
+                ),
         ];
 
         $configarray['fields']['excluir_latefee'] = [
             'FriendlyName' => $fn('Excluir Late Fee da Base de Cálculo', false),
             'Type'         => 'yesno',
             'Description'  => 'Exclui multas por atraso (Late Fee) do valor e da discriminação da NFS-e.'
-                . $tip('Excluir Late Fee da Base de Cálculo',
+                . $tip(
+                    'Excluir Late Fee da Base de Cálculo',
                     'Quando marcado, multas por atraso geradas pelo WHMCS (Late Fee) são removidas '
                     . 'do valor total e da discriminação enviados à SEFIN. '
-                    . 'Quando desmarcado, Late Fee integra a base de cálculo da nota.'),
+                    . 'Quando desmarcado, Late Fee integra a base de cálculo da nota.',
+                ),
         ];
 
         $configarray['fields']['faturas_desconto'] = [
             'FriendlyName' => $fn('Faturas (Descontos)', false),
             'Type'         => 'yesno',
             'Description'  => 'Desconta o valor de desconto da fatura do valor total da NFS-e.'
-                . $tip('Faturas (Descontos)',
+                . $tip(
+                    'Faturas (Descontos)',
                     'Quando marcado, o desconto aplicado na fatura (campo discount) é subtraído '
                     . 'do valor de serviços enviado à SEFIN. '
-                    . 'Use quando o desconto representa uma redução real no valor do serviço prestado.'),
+                    . 'Use quando o desconto representa uma redução real no valor do serviço prestado.',
+                ),
         ];
 
         $configarray['fields']['faturas_credito'] = [
             'FriendlyName' => $fn('Faturas (Fundos/Crédito)', false),
             'Type'         => 'yesno',
             'Description'  => 'Desconta o crédito de conta aplicado na fatura do valor total da NFS-e.'
-                . $tip('Faturas (Fundos/Crédito)',
+                . $tip(
+                    'Faturas (Fundos/Crédito)',
                     'Quando marcado, o crédito de conta (saldo do cliente) aplicado na fatura '
                     . 'é subtraído do valor de serviços enviado à SEFIN. '
-                    . 'Use quando o crédito representa um pagamento antecipado pelo mesmo serviço.'),
+                    . 'Use quando o crédito representa um pagamento antecipado pelo mesmo serviço.',
+                ),
         ];
 
         $configarray['fields']['cancelar'] = [
             'FriendlyName' => $fn('Cancelar NFS-e ao Cancelar Fatura', false),
             'Type'         => 'yesno',
             'Description'  => 'Cancela automaticamente a NFS-e ao cancelar a fatura no WHMCS.'
-                . $tip('Cancelar NFS-e ao Cancelar Fatura',
+                . $tip(
+                    'Cancelar NFS-e ao Cancelar Fatura',
                     'Se habilitado, ao cancelar uma fatura no WHMCS que tenha NFS-e emitida, '
                     . 'o cancelamento da nota será enviado automaticamente à API Nacional '
-                    . 'com motivo "Erro na emissão".'),
+                    . 'com motivo "Erro na emissão".',
+                ),
         ];
 
         $configarray['fields']['perfis_manuais'] = [
@@ -524,10 +578,12 @@ HTML;
             'Type'         => 'text',
             'Size'         => '40',
             'Description'  => 'IDs dos perfis de admin autorizados (separados por vírgula). Vazio = todos os admins.'
-                . $tip('Perfis com Permissão Manual de NFS-e',
+                . $tip(
+                    'Perfis com Permissão Manual de NFS-e',
                     'IDs dos perfis de administrador autorizados a emitir ou cancelar NFS-e '
                     . 'manualmente pelo painel. Informe os IDs separados por vírgula. '
-                    . 'Deixe vazio para permitir a todos os administradores.'),
+                    . 'Deixe vazio para permitir a todos os administradores.',
+                ),
             'Default'      => '',
         ];
 
@@ -536,10 +592,12 @@ HTML;
             'Type'         => 'yesno',
             'Description'  => 'Ativa log detalhado das chamadas à API Nacional. '
                 . '<strong>Use somente para diagnóstico</strong> — desative em produção.'
-                . $tip('Modo Debug',
+                . $tip(
+                    'Modo Debug',
                     'Ativa log detalhado de todas as requisições e respostas da API Nacional '
                     . 'no Module Log do WHMCS. '
-                    . 'Use somente para diagnosticar erros. Mantenha desativado em produção.'),
+                    . 'Use somente para diagnosticar erros. Mantenha desativado em produção.',
+                ),
         ];
 
         // ══════════════════════════════════════════════════════════════
@@ -549,7 +607,7 @@ HTML;
             'fa-balance-scale',
             'IBS/CBS — Reforma Tributária',
             '#7b1fa2',
-            'Campos obrigatórios a partir de 2026 no XSD v1.01 — LC 214/2024 (IBS e CBS).'
+            'Campos obrigatórios a partir de 2026 no XSD v1.01 — LC 214/2024 (IBS e CBS).',
         );
 
         $configarray['fields']['ibscbs_cind_op'] = [
@@ -557,10 +615,12 @@ HTML;
             'Type'         => 'text',
             'Size'         => '10',
             'Description'  => 'Código <code>cIndOp</code> para IBS/CBS. Ex: <strong>050101</strong> para TI. Consulte a tabela RFB.'
-                . $tip('Indicador de Operação IBS/CBS (cIndOp)',
+                . $tip(
+                    'Indicador de Operação IBS/CBS (cIndOp)',
                     'Código do indicador de operação para IBS e CBS, previsto na Reforma Tributária (LC 214/2024). '
                     . 'Ex: 050101 para serviços de tecnologia da informação. '
-                    . 'Consulte a tabela de códigos da RFB.'),
+                    . 'Consulte a tabela de códigos da RFB.',
+                ),
             'Default'      => '050101',
         ];
 
@@ -569,10 +629,12 @@ HTML;
             'Type'         => 'text',
             'Size'         => '5',
             'Description'  => 'Código de Situação Tributária do IBS/CBS. Ex: <strong>000</strong> (tributação plena).'
-                . $tip('CST IBS/CBS',
+                . $tip(
+                    'CST IBS/CBS',
                     'Código de Situação Tributária para IBS e CBS (Reforma Tributária). '
                     . 'Ex: 000 para tributação plena. '
-                    . 'Consulte a tabela de CST da Reforma Tributária.'),
+                    . 'Consulte a tabela de CST da Reforma Tributária.',
+                ),
             'Default'      => '000',
         ];
 
@@ -581,10 +643,12 @@ HTML;
             'Type'         => 'text',
             'Size'         => '10',
             'Description'  => 'Código de classificação tributária IBS/CBS. Ex: <strong>000001</strong>. Consulte tabela RFB.'
-                . $tip('Classificação Tributária IBS/CBS (cClassTrib)',
+                . $tip(
+                    'Classificação Tributária IBS/CBS (cClassTrib)',
                     'Código de classificação tributária IBS/CBS conforme tabela da Reforma Tributária. '
                     . 'Ex: 000001. Consulte a documentação técnica da RFB para o código correspondente '
-                    . 'ao seu tipo de serviço.'),
+                    . 'ao seu tipo de serviço.',
+                ),
             'Default'      => '000001',
         ];
 

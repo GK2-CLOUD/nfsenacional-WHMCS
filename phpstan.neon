@@ -1,0 +1,27 @@
+parameters:
+  level: 5
+  paths:
+    - src/
+  excludePaths:
+    # WHMCS runtime não disponível — analisar apenas Domain, Fiscal, Transport, Security, Config
+    - src/NfseNacional/Hook/*
+    - src/NfseNacional/Admin/*
+    - src/NfseNacional/ClientArea/*
+    # Persistence + Mapper dependem pesadamente de Capsule — excluir por enquanto
+    - src/NfseNacional/Persistence/*
+    - src/NfseNacional/Fiscal/Mapper/*
+  ignoreErrors:
+    # Funções globais do WHMCS (logModuleCall, localAPI, logActivity)
+    - identifier: function.notFound
+    # Classes WHMCS (Capsule) em Config/ e Domain/Service/
+    - identifier: class.notFound
+    # --- Falsos positivos conhecidos ---
+    # xmlseclibs aceita DOMElement em addReference() apesar do type-hint
+    - message: '#expects DOMDocument, DOMElement given#'
+      path: src/NfseNacional/Fiscal/Signer/XmlSigner.php
+    # DpsPayloadBuilder: expressão de validação com && sempre true (inofensivo)
+    - identifier: booleanAnd.rightAlwaysTrue
+      path: src/NfseNacional/Fiscal/Payload/DpsPayloadBuilder.php
+  bootstrapFiles:
+    # Stubs para classes WHMCS quando necessário
+    # - tests/stubs/whmcs.php

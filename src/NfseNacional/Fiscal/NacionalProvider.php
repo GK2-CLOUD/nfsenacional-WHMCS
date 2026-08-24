@@ -5,9 +5,9 @@ namespace GK2\NfseNacional\Fiscal;
 use GK2\NfseNacional\Config\ModuleConfig;
 use GK2\NfseNacional\Domain\AmbienteGuard;
 use GK2\NfseNacional\Domain\Enum\Ambiente;
-use GK2\NfseNacional\Transport\HttpClient;
 use GK2\NfseNacional\Transport\ApiEndpoints;
 use GK2\NfseNacional\Transport\ApiResponse;
+use GK2\NfseNacional\Transport\HttpClient;
 
 /**
  * Implementacao do provedor fiscal para a API NFS-e Nacional (ADN).
@@ -167,7 +167,7 @@ class NacionalProvider implements ProviderInterface
                 $prefix,
                 $request,
                 $response->rawBody,
-                json_encode($response->data)
+                json_encode($response->data),
             );
         }
     }

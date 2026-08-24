@@ -70,14 +70,14 @@ class XmlSigner
             \RobRichards\XMLSecLibs\XMLSecurityDSig::SHA256,
             [
                 'http://www.w3.org/2000/09/xmldsig#enveloped-signature',
-                \RobRichards\XMLSecLibs\XMLSecurityDSig::C14N
+                \RobRichards\XMLSecLibs\XMLSecurityDSig::C14N,
             ],
-            ['overwrite' => false]
+            ['overwrite' => false],
         );
 
         $key = new \RobRichards\XMLSecLibs\XMLSecurityKey(
             \RobRichards\XMLSecLibs\XMLSecurityKey::RSA_SHA256,
-            ['type' => 'private']
+            ['type' => 'private'],
         );
         $key->passphrase = $certPassword;
 

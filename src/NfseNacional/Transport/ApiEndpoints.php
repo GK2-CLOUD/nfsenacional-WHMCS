@@ -121,7 +121,7 @@ class ApiEndpoints
         Ambiente $ambiente,
         string $chaveAcesso,
         int $tipoEvento,
-        int $numSeqEvento
+        int $numSeqEvento,
     ): string {
         return $this->baseUrl('sefin', $ambiente)
             . '/nfse/' . urlencode($chaveAcesso)
@@ -167,7 +167,7 @@ class ApiEndpoints
         Ambiente $ambiente,
         int $codigoMunicipio,
         string $codigoServico,
-        string $competencia
+        string $competencia,
     ): string {
         return $this->baseUrl('parametrizacao', $ambiente)
             . '/' . $codigoMunicipio
@@ -183,7 +183,7 @@ class ApiEndpoints
     public function consultarHistoricoAliquotas(
         Ambiente $ambiente,
         int $codigoMunicipio,
-        string $codigoServico
+        string $codigoServico,
     ): string {
         return $this->baseUrl('parametrizacao', $ambiente)
             . '/' . $codigoMunicipio
@@ -207,7 +207,7 @@ class ApiEndpoints
     public function consultarRetencoes(
         Ambiente $ambiente,
         int $codigoMunicipio,
-        string $competencia
+        string $competencia,
     ): string {
         return $this->baseUrl('parametrizacao', $ambiente)
             . '/' . $codigoMunicipio
@@ -223,7 +223,7 @@ class ApiEndpoints
         Ambiente $ambiente,
         int $codigoMunicipio,
         string $codigoServico,
-        string $competencia
+        string $competencia,
     ): string {
         return $this->baseUrl('parametrizacao', $ambiente)
             . '/' . $codigoMunicipio

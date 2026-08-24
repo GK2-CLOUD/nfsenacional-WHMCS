@@ -3,8 +3,8 @@
 namespace GK2\NfseNacional\Domain\Entity;
 
 use GK2\NfseNacional\Domain\AmbienteGuard;
-use GK2\NfseNacional\Domain\Enum\NfseStatus;
 use GK2\NfseNacional\Domain\Enum\Ambiente;
+use GK2\NfseNacional\Domain\Enum\NfseStatus;
 
 /**
  * Entidade que representa uma NFS-e Nacional persistida no banco.
@@ -36,7 +36,8 @@ class Nfse
         public readonly ?string $dataAutorizacao,
         public readonly ?string $createdAt,
         public readonly ?string $updatedAt,
-    ) {}
+    ) {
+    }
 
     /**
      * Cria uma instancia a partir de um registro do banco (stdClass).

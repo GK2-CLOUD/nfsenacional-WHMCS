@@ -108,7 +108,7 @@ class AmbienteGuard
             throw new AmbienteMismatchException(
                 "Operacao bloqueada: nota emitida em [{$ambienteRegistro}] "
                 . "mas o ambiente ativo e [{$this->ambiente->value}]. "
-                . "Altere o ambiente do modulo ou opere sobre notas do ambiente correto."
+                . 'Altere o ambiente do modulo ou opere sobre notas do ambiente correto.',
             );
         }
     }
@@ -125,7 +125,7 @@ class AmbienteGuard
     {
         if ($esperado !== $this->ambiente) {
             throw new AmbienteMismatchException(
-                "Ambiente esperado [{$esperado->value}] difere do ativo [{$this->ambiente->value}]."
+                "Ambiente esperado [{$esperado->value}] difere do ativo [{$this->ambiente->value}].",
             );
         }
     }
