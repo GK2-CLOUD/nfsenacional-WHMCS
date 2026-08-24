@@ -34,7 +34,6 @@ class Migration
                     $table->string('numero_nfse_nacional', 30)->nullable();
                     $table->string('protocolo', 60)->nullable();
                     $table->string('codigo_verificacao', 60)->nullable();
-                    $table->string('danfse_url', 500)->nullable();
                     $table->string('xml_url', 500)->nullable();
                     $table->string('ambiente', 15)->nullable()->index();
                     $table->text('erro')->nullable();

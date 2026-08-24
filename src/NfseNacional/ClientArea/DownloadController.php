@@ -3,28 +3,43 @@
 namespace GK2\NfseNacional\ClientArea;
 
 use GK2\NfseNacional\Config\ModuleConfig;
+use GK2\NfseNacional\Danfse\DanfseService;
+use GK2\NfseNacional\Domain\AmbienteGuard;
 use GK2\NfseNacional\Domain\Entity\Nfse;
 use GK2\NfseNacional\Persistence\NfseRepository;
 use GK2\NfseNacional\Security\TokenSigner;
 
 /**
- * Proxy seguro para download de DANFS-e e XML da NFS-e Nacional.
+ * Proxy de download de DANFS-e e XML da NFS-e Nacional.
  *
- * Ambos os endpoints do governo (ADN e SEFIN) exigem mTLS com certificado
- * digital. Este controller autentica o acesso via token HMAC, busca o arquivo
- * usando o certificado configurado no addon e repassa ao cliente.
+ * Os endpoints do governo (ADN e SEFIN) exigem mTLS com certificado digital,
+ * então o cliente nunca acessa o governo direto: este controller busca o
+ * arquivo com o certificado do addon e repassa.
  *
- * Controle de acesso:
- * - Token HMAC obrigatório (impede adivinhação de IDs)
- * - Se cliente logado: verifica que a nota pertence a ele
- * - Se não logado (link de email): token HMAC é suficiente
+ * CONTROLE DE ACESSO — difere por ambiente, por decisão do operador:
+ *
+ *   PRODUÇÃO     token HMAC obrigatório + verificação de propriedade quando
+ *                há cliente logado. Sem isso o `id` é sequencial e bastaria
+ *                iterar ?id=1,2,3 para enumerar as NFS-e de todos os
+ *                clientes, com CNPJ/CPF, endereço e valores.
+ *
+ *   HOMOLOGAÇÃO  aberto, para facilitar teste. Cada acesso sem token válido
+ *                é registrado em logActivity — se aparecer log desses em
+ *                produção, é porque o ambiente está configurado errado.
+ *
+ * A regra segue o ambiente do addon, não uma flag separada: não há como
+ * esquecer de "voltar a ligar" a verificação ao ir para produção.
  */
 class DownloadController
 {
     private NfseRepository $repository;
+    private ModuleConfig $config;
+    private AmbienteGuard $guard;
 
-    public function __construct()
+    public function __construct(?ModuleConfig $config = null)
     {
+        $this->config     = $config ?? new ModuleConfig();
+        $this->guard      = AmbienteGuard::getInstance($this->config);
         $this->repository = new NfseRepository();
     }
 
@@ -39,12 +54,13 @@ class DownloadController
             $this->abort(400, 'Tipo inválido.');
         }
 
-        $id    = (int) ($_GET['id'] ?? 0);
-        $token = trim($_GET['token'] ?? '');
+        $id = (int) ($_GET['id'] ?? 0);
 
-        if ($id <= 0 || !TokenSigner::verify($id . ':' . $type, $token)) {
-            $this->abort(403, 'Acesso negado.');
+        if ($id <= 0) {
+            $this->abort(400, 'ID inválido.');
         }
+
+        $this->autorizarToken($id, $type);
 
         $nfse = null;
         try {
@@ -57,15 +73,10 @@ class DownloadController
             $this->abort(404, 'NFS-e não encontrada.');
         }
 
-        // Se cliente logado, garante que a nota é dele
-        $clientId = (int) ($_SESSION['uid'] ?? 0);
-        if ($clientId > 0 && (int) $nfse->clientId !== $clientId) {
-            $this->abort(403, 'Acesso negado.');
-        }
+        $this->autorizarProprietario($nfse);
 
-        $config   = new ModuleConfig();
-        $certPath = $config->getCertificadoPath();
-        $certPass = $config->getCertificadoSenha();
+        $certPath = $this->config->getCertificadoPath();
+        $certPass = $this->config->getCertificadoSenha();
 
         if ($type === 'danfse') {
             $this->serveDanfse($nfse, $certPath, $certPass);
@@ -74,24 +85,93 @@ class DownloadController
         }
     }
 
-    // ──────────────────────────────────────────────────────────────────────────
+    // ─── Controle de acesso ───────────────────────────────────────────────────
 
-    private function serveDanfse(Nfse $nfse, string $certPath, string $certPass): void
+    /**
+     * Token HMAC. Em homologação, ausência ou invalidez é registrada e o
+     * acesso segue; em produção, é 403.
+     */
+    private function autorizarToken(int $id, string $type): void
     {
-        $url = $nfse->danfseUrl ?? '';
-        if (empty($url)) {
-            $this->abort(404, 'URL do DANFS-e não disponível.');
+        $token = trim($_GET['token'] ?? '');
+
+        if (TokenSigner::verify($id . ':' . $type, $token)) {
+            return;
         }
 
-        $body = $this->fetch($url, $certPath, $certPass, 'application/pdf,text/html,*/*');
+        if (!$this->guard->isHomologacao()) {
+            $this->abort(403, 'Acesso negado.');
+        }
 
-        $chave    = $nfse->chaveAcesso ?? (string) $nfse->id;
-        $filename = 'danfse-' . $chave . '.pdf';
+        logActivity('NFS-e Nacional [DownloadController]: acesso sem token válido permitido'
+            . ' — ambiente de HOMOLOGAÇÃO. id=' . $id . ' tipo=' . $type
+            . ' ip=' . ($_SERVER['REMOTE_ADDR'] ?? '?')
+            . ' | Em produção este acesso seria negado.');
+    }
 
+    /**
+     * Cliente logado só acessa a própria nota. Sem sessão (link de e-mail),
+     * o token já respondeu pela autorização.
+     */
+    private function autorizarProprietario(Nfse $nfse): void
+    {
+        $clientId = (int) ($_SESSION['uid'] ?? 0);
+
+        if ($clientId <= 0 || (int) $nfse->clientId === $clientId) {
+            return;
+        }
+
+        if (!$this->guard->isHomologacao()) {
+            $this->abort(403, 'Acesso negado.');
+        }
+
+        logActivity('NFS-e Nacional [DownloadController]: cliente ' . $clientId
+            . ' acessou NFS-e ' . $nfse->id . ' do cliente ' . $nfse->clientId
+            . ' — permitido por ser HOMOLOGAÇÃO. Em produção seria negado.');
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Gera e entrega o DANFS-e.
+     *
+     * O PDF sai daqui, do XML que o modulo ja guardou. Houve um modelo
+     * alternativo que baixava o documento pronto do ADN
+     * (adn.*.nfse.gov.br/danfse) e servia de fallback; foi retirado porque o
+     * endpoint cai com frequencia — o cliente esperava o timeout de quatro
+     * tentativas para receber um 404, e o DANFS-e local ja estava pronto.
+     *
+     * Sem fallback, uma falha aqui e uma falha de verdade e vira erro. Nao
+     * deve ser comum: o XML esta em tblnfsenacional.xml_retorno para toda
+     * nota autorizada, e quando falta o DanfseService o rebusca na SEFIN
+     * (outro endpoint, e ele mesmo se cura gravando o resultado).
+     */
+    private function serveDanfse(Nfse $nfse, string $certPath, string $certPass): void
+    {
+        $service = new DanfseService(null, $this->config);
+
+        try {
+            $pdf = $service->gerarPdf(
+                $nfse,
+                fn (string $url): string => $this->fetch($url, $certPath, $certPass, 'application/json'),
+            );
+        } catch (\Throwable $e) {
+            logActivity('NFS-e Nacional [DANFS-e]: falha ao gerar para a NFS-e ' . $nfse->id
+                . ' — ' . $e->getMessage());
+
+            $this->abort(502, 'Não foi possível gerar o DANFS-e desta nota.');
+        }
+
+        $this->enviarPdf($pdf, $service->nomeArquivo($nfse));
+    }
+
+    private function enviarPdf(string $bytes, string $filename): void
+    {
         header('Content-Type: application/pdf');
         header('Content-Disposition: inline; filename="' . $filename . '"');
+        header('Content-Length: ' . strlen($bytes));
         header('Cache-Control: private, no-store');
-        echo $body;
+        echo $bytes;
         exit;
     }
 
@@ -131,53 +211,87 @@ class DownloadController
      * Realiza fetch com mTLS usando o certificado digital do addon.
      * Ambos os endpoints do governo (ADN/SEFIN) exigem autenticação mTLS.
      *
+     * O Ingress do governo tem instabilidade conhecida — entrega 502 Bad Gateway
+     * intermitentemente em até 50% dos requests, mesmo com mTLS válido. Por isso
+     * fazemos até MAX_ATTEMPTS tentativas com backoff curto antes de desistir.
+     *
      * @return string Corpo da resposta
      */
     private function fetch(string $url, string $certPath, string $certPass, string $accept): string
     {
-        $ch   = curl_init($url);
-        $opts = [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_TIMEOUT        => 30,
-            CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_HTTPHEADER     => ['Accept: ' . $accept],
-        ];
+        $maxAttempts  = 4;
+        $backoffMs    = 400;
+        $lastCode     = 0;
+        $lastErr      = '';
+        $lastBody     = '';
 
-        if (!empty($certPath) && file_exists($certPath)) {
-            $ext = strtolower(pathinfo($certPath, PATHINFO_EXTENSION));
+        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+            $ch   = curl_init($url);
+            $opts = [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_TIMEOUT        => 30,
+                CURLOPT_CONNECTTIMEOUT => 10,
+                CURLOPT_SSL_VERIFYPEER => true,
+                CURLOPT_HTTPHEADER     => ['Accept: ' . $accept],
+            ];
 
-            if (in_array($ext, ['pfx', 'p12'], true)) {
-                // cURL aceita P12 diretamente via CURLOPT_SSLCERTTYPE
-                $opts[CURLOPT_SSLCERTTYPE] = 'P12';
-                $opts[CURLOPT_SSLCERT]     = $certPath;
-                $opts[CURLOPT_SSLCERTPASSWD] = $certPass;
-            } else {
-                // PEM separado (cert + key no mesmo arquivo ou dois arquivos)
-                $opts[CURLOPT_SSLCERT]       = $certPath;
-                $opts[CURLOPT_SSLCERTPASSWD] = $certPass;
+            if (!empty($certPath) && file_exists($certPath)) {
+                $ext = strtolower(pathinfo($certPath, PATHINFO_EXTENSION));
+
+                if (in_array($ext, ['pfx', 'p12'], true)) {
+                    $opts[CURLOPT_SSLCERTTYPE]   = 'P12';
+                    $opts[CURLOPT_SSLCERT]       = $certPath;
+                    $opts[CURLOPT_SSLCERTPASSWD] = $certPass;
+                } else {
+                    $opts[CURLOPT_SSLCERT]       = $certPath;
+                    $opts[CURLOPT_SSLCERTPASSWD] = $certPass;
+                }
             }
+
+            curl_setopt_array($ch, $opts);
+            $body = curl_exec($ch);
+            $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $err  = curl_error($ch);
+            curl_close($ch);
+
+            if ($body !== false && $code >= 200 && $code < 300) {
+                if ($attempt > 1) {
+                    logActivity('NFS-e Nacional [DownloadController]: documento obtido na tentativa '
+                        . $attempt . '/' . $maxAttempts . ' (URL=' . $url . ')');
+                }
+                return $body;
+            }
+
+            $lastCode = $code;
+            $lastErr  = $err;
+            $lastBody = is_string($body) ? $body : '';
+
+            // 4xx (exceto 408/429) não vale retry — é erro permanente
+            $isTransient = $body === false
+                || $code === 0
+                || $code === 408
+                || $code === 429
+                || $code >= 500;
+
+            if (!$isTransient || $attempt === $maxAttempts) {
+                break;
+            }
+
+            usleep($backoffMs * 1000);
+            $backoffMs *= 2;
         }
 
-        curl_setopt_array($ch, $opts);
-        $body = curl_exec($ch);
-        $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $err  = curl_error($ch);
-        curl_close($ch);
-
-        if ($body === false || $code < 200 || $code >= 300) {
-            $detail  = $err ?: ('HTTP ' . $code);
-            $preview = is_string($body) ? mb_substr(strip_tags($body), 0, 300) : '(sem corpo)';
-            logActivity('NFS-e Nacional [DownloadController]: falha ao buscar documento.'
-                . ' URL=' . $url
-                . ' | Code=' . $code
-                . ' | cURLErr=' . ($err ?: 'nenhum')
-                . ' | CertPath=' . ($certPath ?: 'vazio')
-                . ' | Body=' . $preview);
-            $this->abort(502, 'Erro ao obter documento do governo: ' . $detail);
-        }
-
-        return $body;
+        $detail  = $lastErr ?: ('HTTP ' . $lastCode);
+        $preview = mb_substr(strip_tags($lastBody), 0, 300);
+        logActivity('NFS-e Nacional [DownloadController]: falha ao buscar documento após '
+            . $maxAttempts . ' tentativas.'
+            . ' URL=' . $url
+            . ' | Code=' . $lastCode
+            . ' | cURLErr=' . ($lastErr ?: 'nenhum')
+            . ' | CertPath=' . ($certPath ?: 'vazio')
+            . ' | Body=' . ($preview !== '' ? $preview : '(sem corpo)'));
+        $this->abort(502, 'Erro ao obter documento do governo: ' . $detail);
     }
 
     private function abort(int $code, string $msg): void

@@ -47,14 +47,6 @@ interface ProviderInterface
     public function cancelar(string $chaveAcesso, string $eventoXml): ApiResponse;
 
     /**
-     * Obtem o DANFS-e (documento auxiliar) de uma NFS-e.
-     *
-     * @param string $chaveAcesso Chave de acesso da NFS-e
-     * @return ApiResponse Resposta com URL ou conteudo do DANFS-e
-     */
-    public function obterDanfse(string $chaveAcesso): ApiResponse;
-
-    /**
      * Obtem o XML autorizado de uma NFS-e.
      *
      * @param string $chaveAcesso Chave de acesso da NFS-e

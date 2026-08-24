@@ -130,10 +130,9 @@ class EmissaoService
                 if (!empty($chaveAcesso)) {
                     $updateData['chave_acesso'] = $chaveAcesso;
 
-                    // URLs derivadas da chave de acesso
-                    $endpoints = new ApiEndpoints();
-                    $updateData['danfse_url'] = $endpoints->obterDanfse($ambiente, $chaveAcesso);
-                    $updateData['xml_url']    = $endpoints->consultarNfseSefin($ambiente, $chaveAcesso);
+                    // URL do XML na SEFIN. A do DANFS-e no ADN nao e mais
+                    // gravada: o documento e gerado pelo modulo.
+                    $updateData['xml_url'] = (new ApiEndpoints())->consultarNfseSefin($ambiente, $chaveAcesso);
                 }
                 if (!empty($response->data['idDps'])) {
                     $updateData['protocolo'] = $response->data['idDps'];

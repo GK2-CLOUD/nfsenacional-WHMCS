@@ -83,7 +83,7 @@ class ModuleConfig
 
     public function getCnpjPrestador(): string
     {
-        return preg_replace('/\D/', '', $this->get('cnpj_prestador'));
+        return preg_replace('/[.\\/\-\s]+/', '', strtoupper(trim($this->get('cnpj_prestador'))));
     }
 
     public function getInscricaoMunicipal(): string
@@ -304,6 +304,18 @@ class ModuleConfig
         return $this->get('documento_cliente', 'taxid');
     }
 
+    /**
+     * Caminho da logo impressa no DANFS-e local.
+     *
+     * Vazio e o padrao: o modulo nao assume marca nenhuma. Quem instala
+     * aponta a sua; sem isso o cabecalho sai com a razao social do
+     * prestador no lugar da imagem.
+     */
+    public function getDanfseLogo(): string
+    {
+        return trim((string) $this->get('danfse_logo', ''));
+    }
+
     // ─── Setup (ativacao) ──────────────────────────────────────────
 
     /**
@@ -318,6 +330,7 @@ class ModuleConfig
             'documento_cliente' => 'taxid',
             'optante_simples' => '1',
             'emissao_padrao' => '1-Nao Emitir',
+            'danfse_logo' => '',
             'email' => '0',
             'cancelar' => '0',
             'debug' => '0',
@@ -366,6 +379,8 @@ class ModuleConfig
         $message = '<p>Prezado {$client_name},</p>'
             . "\r\n"
             . '<p>Estamos enviando a nota fiscal eletronica de numero <strong>{$idNFS}</strong>, emitida em <strong>{$autorizacao}</strong>.</p>'
+            . "\r\n"
+            . '<p>Chave de Acesso: <strong>{$chave_acesso}</strong></p>'
             . "\r\n"
             . '<p><a href="{$danfse_url}" target="_blank" rel="noopener"><strong>Ver DANFS-e</strong></a></p>'
             . "\r\n"

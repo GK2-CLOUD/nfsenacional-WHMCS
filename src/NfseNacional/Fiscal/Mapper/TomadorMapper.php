@@ -40,7 +40,17 @@ class TomadorMapper
         $client = $this->getClientData($userId);
 
         $documento = $this->getDocumento($userId, $client);
-        $documento = preg_replace('/\D/', '', $documento);
+        // Normaliza removendo apenas pontuação (não letras) para suporte a CNPJ alfanumérico
+        $documentoNorm = strtoupper(trim(preg_replace('/[.\\/\-\s]+/', '', (string) $documento)));
+        $digitsOnly = preg_replace('/[^0-9]/', '', $documentoNorm);
+
+        // Se CNPJ alfanumérico: NFS-e nacional não homologado para este formato ainda
+        if (preg_match('/[A-Z]/', $documentoNorm) && strlen($documentoNorm) === 14) {
+            logActivity('[nfsenacional] CNPJ alfanumérico detectado — NFS-e Nacional pendente de homologação. Documento preservado mas emissão bloqueada.');
+            $documento = $documentoNorm; // preserva sem corromper
+        } else {
+            $documento = $digitsOnly;
+        }
 
         $tomador = [
             'documento' => $documento,
@@ -61,6 +71,47 @@ class TomadorMapper
         }
 
         return $tomador;
+    }
+
+    /**
+     * Dados do tomador para EXIBICAO no DANFS-e.
+     *
+     * Reaproveita a mesma leitura de cliente que map() usa na emissao, de
+     * modo que o documento impresso e a DPS nunca discordem sobre quem e o
+     * cliente — em especial no CPF/CNPJ, que respeita a config
+     * `documento_cliente` e pode vir de um campo personalizado.
+     *
+     * Difere de map() por devolver tambem municipio e UF, que a DPS nao
+     * envia (o XSD manda so cMun + CEP) e que o XML da NFS-e, portanto,
+     * nao tem como devolver.
+     *
+     * NAO altera map(): aquele metodo esta no caminho critico da emissao.
+     */
+    public function mapParaExibicao(int $clientId): array
+    {
+        $client = $this->getClientData($clientId);
+
+        $logradouro = trim($client['address1'] ?? '');
+        $numero = 'S/N';
+        if (preg_match('/[,\s]+(\d+)\s*$/', $logradouro, $m)) {
+            $numero = $m[1];
+            $logradouro = preg_replace('/[,\s]+\d+\s*$/', '', $logradouro);
+        }
+
+        return [
+            'razaoSocial'        => $this->getRazaoSocial($client),
+            'documento'          => preg_replace('/\D/', '', $this->getDocumento($clientId, $client)),
+            'inscricaoMunicipal' => '', // o WHMCS nao tem campo de IM
+            'telefone'           => preg_replace('/\D/', '', $client['phonenumber'] ?? ''),
+            'logradouro'         => $this->sanitizeText($logradouro),
+            'numero'             => $numero,
+            'complemento'        => '',
+            'bairro'             => $this->sanitizeText(trim($client['address2'] ?? '')),
+            'municipio'          => $this->sanitizeText(trim($client['city'] ?? '')),
+            'uf'                 => trim($client['state'] ?? ''),
+            'cep'                => preg_replace('/\D/', '', $client['postcode'] ?? ''),
+            'email'              => trim($client['email'] ?? ''),
+        ];
     }
 
     /**

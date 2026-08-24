@@ -29,7 +29,7 @@ Resumo rápido:
 
 - Emite a DPS (Declaração de Prestação de Serviço) a partir de uma fatura paga/gerada no WHMCS e obtém a NFS-e autorizada pelo SEFIN Nacional.
 - Consulta, cancela e reenvia por e-mail notas já emitidas.
-- Disponibiliza download de DANFS-e (PDF) e XML tanto na área do cliente quanto no admin.
+- Gera o DANFS-e (PDF) a partir do XML autorizado, sem depender do endpoint do governo, e disponibiliza junto do XML na área do cliente e no admin.
 - Mantém histórico completo por fatura (status, protocolo, chave de acesso, valores de ISS) em tabela própria do banco.
 
 ## Arquitetura
@@ -48,7 +48,7 @@ src/NfseNacional/
 │   └── Action/                Ações disparadas do admin (Emitir, Cancelar, Excluir, Reenviar e-mail)
 ├── ClientArea/                 Área do cliente (listagem de notas do usuário logado)
 │   ├── ClientAreaController.php
-│   └── DownloadController.php  Proxy de download (DANFS-e / XML)
+│   └── DownloadController.php  Download do DANFS-e (gerado aqui) e proxy do XML
 ├── Config/
 │   └── ModuleConfig.php        Leitura/escrita das configurações do addon (inclui
 │                                criptografia AES-256-CBC da senha do certificado)
@@ -92,8 +92,10 @@ src/NfseNacional/
 5. A resposta é persistida via `NfseRepository`, e-mail é disparado se habilitado
    (`EmailService`), e o resultado é exibido no admin/área do cliente.
 
-Consulta, cancelamento e obtenção de DANFS-e/XML seguem o mesmo padrão através de
-`ConsultaService` e `CancelamentoService`.
+Consulta, cancelamento e obtenção do XML seguem o mesmo padrão, através de
+`ConsultaService` e `CancelamentoService`. O **DANFS-e não**: ele é gerado pelo
+próprio módulo (`Danfse/`), em TCPDF, a partir do XML já guardado — o endpoint
+`adn.*.nfse.gov.br/danfse` era instável demais para ficar no caminho do cliente.
 
 ## Requisitos
 

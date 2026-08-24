@@ -78,7 +78,7 @@ class EventoPayloadBuilder
         $codEvento = '101101';
         $preId     = 'PRE' . $chaveAcesso . $codEvento; // 3 + 50 + 6 = 59 chars
         $tpAmb     = $this->config->getAmbiente()->isProducao() ? '1' : '2';
-        $cnpj      = preg_replace('/\D/', '', $this->config->getCnpjPrestador());
+        $cnpj      = $this->config->getCnpjPrestador(); // já normalizado (preserva letras)
         $dhEvento  = date('Y-m-d\TH:i:sP');
 
         $dom = new \DOMDocument('1.0', 'UTF-8');
