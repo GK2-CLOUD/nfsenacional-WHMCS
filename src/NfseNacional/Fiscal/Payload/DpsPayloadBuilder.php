@@ -100,7 +100,7 @@ class DpsPayloadBuilder
         // Campos obrigatorios da TCInfDPS
         $this->addElement($dom, $infDPS, 'tpAmb', $this->config->getAmbiente()->isProducao() ? '1' : '2');
         // dhEmi: 30s de buffer para evitar E0008 (clock skew servidor vs Sefin)
-$this->addElement($dom, $infDPS, 'dhEmi', date('Y-m-d\TH:i:sP', time() - 30));
+        $this->addElement($dom, $infDPS, 'dhEmi', date('Y-m-d\TH:i:sP', time() - 30));
         $this->addElement($dom, $infDPS, 'verAplic', $this->config->getVerAplic());
         // Série deve ser numérica conforme XSD (usar serieId gerada: 5 dígitos numéricos)
         $this->addElement($dom, $infDPS, 'serie', $serieId);
