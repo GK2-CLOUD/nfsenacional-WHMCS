@@ -130,7 +130,7 @@ class NfseRepository
         int $offset = 0,
         string $search = '',
         string $orderBy = 'id',
-        string $direction = 'desc'
+        string $direction = 'desc',
     ): array {
         $allowed = ['id', 'numero_nfse_nacional', 'id_invoice', 'data_autorizacao', 'total', 'status'];
         if (!in_array($orderBy, $allowed, true)) {
@@ -151,7 +151,7 @@ class NfseRepository
 
         $rows = $query->orderBy($orderBy, $direction)->offset($offset)->limit($limit)->get();
 
-        return array_map(fn($row) => Nfse::fromRow($row), $rows->all());
+        return array_map(fn ($row) => Nfse::fromRow($row), $rows->all());
     }
 
     /**
@@ -255,7 +255,7 @@ class NfseRepository
                 Capsule::raw('SUM(total) as total_faturado'),
                 Capsule::raw('SUM(valor_iss) as total_iss'),
                 Capsule::raw('SUM(CASE WHEN retido_iss = 1 THEN valor_iss ELSE 0 END) as retido'),
-                Capsule::raw('SUM(CASE WHEN retido_iss = 0 OR retido_iss IS NULL THEN valor_iss ELSE 0 END) as proprio')
+                Capsule::raw('SUM(CASE WHEN retido_iss = 0 OR retido_iss IS NULL THEN valor_iss ELSE 0 END) as proprio'),
             )
             ->where('ambiente', $this->guard->value())
             ->where('status', NfseStatus::AUTORIZADA->value)
@@ -297,7 +297,7 @@ class NfseRepository
         $rows = Capsule::table(self::TABLE)
             ->select(
                 Capsule::raw('TRIM(SUBSTRING_INDEX(erro, ":", 2)) as codigo_erro'),
-                Capsule::raw('COUNT(*) as total')
+                Capsule::raw('COUNT(*) as total'),
             )
             ->where('ambiente', $this->guard->value())
             ->where('status', NfseStatus::ERRO->value)
@@ -308,7 +308,7 @@ class NfseRepository
             ->limit($limit)
             ->get();
 
-        return array_map(fn($r) => [
+        return array_map(fn ($r) => [
             'erro'  => $r->codigo_erro ?? '—',
             'total' => (int) $r->total,
         ], $rows->all());
@@ -347,7 +347,7 @@ class NfseRepository
             ->select(
                 Capsule::raw("DATE_FORMAT(updated_at, '%Y-%m') as mes"),
                 'status',
-                Capsule::raw('COUNT(*) as total')
+                Capsule::raw('COUNT(*) as total'),
             )
             ->where('ambiente', $this->guard->value())
             ->where('updated_at', '>=', $inicio . ' 00:00:00')
@@ -424,7 +424,7 @@ class NfseRepository
 
         return [
             'total' => $total,
-            'data' => array_map(fn($row) => Nfse::fromRow($row), $rows->all()),
+            'data' => array_map(fn ($row) => Nfse::fromRow($row), $rows->all()),
         ];
     }
 

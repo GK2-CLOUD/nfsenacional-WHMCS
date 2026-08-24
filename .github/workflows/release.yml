@@ -1,0 +1,147 @@
+name: Release on PR Merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # --- Extrai versão do docblock do módulo ---
+      - name: Extract module version
+        id: version
+        run: |
+          VERSION=$(grep -oP '@version\s+\K[0-9]+\.[0-9]+\.[0-9]+' nfsenacional.php | head -1)
+          if [ -z "$VERSION" ]; then
+            echo "::error::Não foi possível extrair a versão do nfsenacional.php"
+            exit 1
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Module version: $VERSION"
+
+      # --- Verifica se tag já existe (evita duplicata) ---
+      - name: Check existing tag
+        id: check-tag
+        run: |
+          if git rev-parse "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "::warning::Tag v${{ steps.version.outputs.version }} já existe — release ignorado."
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      # --- Setup PHP ---
+      - name: Setup PHP
+        if: steps.check-tag.outputs.exists == 'false'
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: dom, openssl, zlib, curl, json, xml, zip
+
+      # --- Composer install (raiz do repo = raiz do módulo) ---
+      - name: Composer install
+        if: steps.check-tag.outputs.exists == 'false'
+        run: |
+          composer install --no-dev --optimize-autoloader --no-interaction
+          # Remove arquivos desnecessários do vendor
+          rm -rf vendor/**/.github vendor/**/tests vendor/**/test
+
+      # --- Extrai changelog da versão ---
+      - name: Extract changelog
+        id: changelog
+        if: steps.check-tag.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          SECTION=$(awk -v ver="$VERSION" '
+            $0 ~ "^## \\[" ver "\\]" { found=1; print; next }
+            found && $0 ~ "^## \\[" { exit }
+            found { print }
+          ' CHANGELOG.md)
+
+          if [ -z "$SECTION" ]; then
+            SECTION="*(nenhuma entrada no changelog para v${VERSION})*"
+          fi
+
+          {
+            echo 'section<<CHANGELOG_EOF'
+            echo "$SECTION"
+            echo CHANGELOG_EOF
+          } >> $GITHUB_OUTPUT
+
+          echo "Changelog extraído (${#SECTION} bytes)"
+
+      # --- Empacota release ---
+      - name: Package release
+        if: steps.check-tag.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Copia conteúdo do repo para pasta limpa (nome = nfsenacional)
+          PKG_DIR="/tmp/nfsenacional"
+          mkdir -p "$PKG_DIR"
+          rsync -a --exclude='.git' --exclude='.gitignore' ./ "$PKG_DIR/"
+
+          # Cria zip
+          cd /tmp
+          zip -r "$GITHUB_WORKSPACE/nfsenacional-v${VERSION}.zip" nfsenacional
+          cd "$GITHUB_WORKSPACE"
+
+          # Limpa diretório temporário
+          rm -rf "$PKG_DIR"
+
+          echo "Package: nfsenacional-v${VERSION}.zip"
+          ls -lh "nfsenacional-v${VERSION}.zip"
+
+      # --- Cria tag no Git ---
+      - name: Create tag
+        if: steps.check-tag.outputs.exists == 'false'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "v${{ steps.version.outputs.version }}" \
+                  -m "Release v${{ steps.version.outputs.version }} — gerado automaticamente pelo merge do PR #${{ github.event.pull_request.number }}"
+          git push origin "v${{ steps.version.outputs.version }}"
+
+      # --- Cria Release no GitHub ---
+      - name: Create GitHub Release
+        if: steps.check-tag.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: NFS-e Nacional v${{ steps.version.outputs.version }}
+          body: |
+            ## 📦 NFS-e Nacional — v${{ steps.version.outputs.version }}
+
+            Release gerado automaticamente pelo merge do PR **#${{ github.event.pull_request.number }}** — ${{ github.event.pull_request.title }}.
+
+            ${{ steps.changelog.outputs.section }}
+
+            ---
+
+            ### Instalação
+
+            1. Baixe o arquivo `nfsenacional-v${{ steps.version.outputs.version }}.zip`
+            2. Extraia a pasta `nfsenacional` em `modules/addons/` do WHMCS
+            3. Ative o addon em **Configurações → Addon Modules**
+
+            ### Requisitos
+
+            - WHMCS 8.x+
+            - PHP 8.3+ com extensões: dom, openssl, zlib, curl, json, xml, zip
+            - Certificado digital ICP-Brasil (A1 ou A3)
+          files: nfsenacional-v${{ steps.version.outputs.version }}.zip
+          generate_release_notes: false

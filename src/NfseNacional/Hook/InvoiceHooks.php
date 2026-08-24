@@ -4,8 +4,8 @@ namespace GK2\NfseNacional\Hook;
 
 use GK2\NfseNacional\Config\ModuleConfig;
 use GK2\NfseNacional\Domain\AmbienteGuard;
-use GK2\NfseNacional\Domain\Service\EmissaoService;
 use GK2\NfseNacional\Domain\Service\CancelamentoService;
+use GK2\NfseNacional\Domain\Service\EmissaoService;
 use GK2\NfseNacional\Persistence\NfseRepository;
 
 /**

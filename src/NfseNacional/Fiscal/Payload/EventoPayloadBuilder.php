@@ -60,7 +60,7 @@ class EventoPayloadBuilder
     public function buildCancelamento(
         string $chaveAcesso,
         int    $cMotivo = self::MOTIVO_ERRO_EMISSAO,
-        string $xMotivo = ''
+        string $xMotivo = '',
     ): string {
         if (empty($xMotivo)) {
             $xMotivo = match ($cMotivo) {

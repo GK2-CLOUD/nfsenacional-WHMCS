@@ -8,8 +8,8 @@ use GK2\NfseNacional\Domain\Enum\EmissaoPolitica;
 use GK2\NfseNacional\Domain\Enum\NfseStatus;
 use GK2\NfseNacional\Fiscal\NacionalProvider;
 use GK2\NfseNacional\Fiscal\Payload\DpsPayloadBuilder;
-use GK2\NfseNacional\Persistence\NfseRepository;
 use GK2\NfseNacional\Persistence\DpsSequence;
+use GK2\NfseNacional\Persistence\NfseRepository;
 use GK2\NfseNacional\Transport\ApiEndpoints;
 
 /**

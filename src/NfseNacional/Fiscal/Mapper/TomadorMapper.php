@@ -244,7 +244,7 @@ class TomadorMapper
 
             logActivity(
                 "NfseNacional: CEP {$cep} não resolvido (ViaCEP falhou e cache local sem entrada). "
-                . "Adicione manualmente em: {$this->cepCache->getFilePath()}"
+                . "Adicione manualmente em: {$this->cepCache->getFilePath()}",
             );
         }
 
