@@ -232,8 +232,11 @@ XML;
             . '</soapenv:Envelope>';
 
         $dom = new \DOMDocument('1.0', 'UTF-8');
+        // Zero formatação: nenhum whitespace text node entre tags — a string
+        // final enviada ao cURL deve ser uma linha única (canonicamente idêntica
+        // ao que foi assinado).
         $dom->formatOutput = false;
-        $dom->preserveWhiteSpace = true;
+        $dom->preserveWhiteSpace = false;
         if ($dom->loadXML($envelopeXml) === false) {
             throw new \RuntimeException('Falha ao montar o envelope SOAP da DPS.');
         }

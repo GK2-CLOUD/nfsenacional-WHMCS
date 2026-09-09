@@ -85,6 +85,13 @@ class XmlSigner
             ['overwrite' => false],
         );
 
+        // Zero formatação: o template do xmlseclibs (BASE_TEMPLATE) contém
+        // quebras de linha/indentação que viram text nodes dentro de <Signature>.
+        // Removê-los ANTES de assinar garante que a forma canônica (SignedInfo)
+        // seja idêntica à string minificada que será enviada — senão o digest
+        // diverge no destino (erro E0714).
+        $this->stripWhitespaceNodes($dsig->sigNode);
+
         $key = new \RobRichards\XMLSecLibs\XMLSecurityKey(
             $signAlgo,
             ['type' => 'private'],
@@ -124,5 +131,32 @@ class XmlSigner
         $dsig->appendSignature($parentNode);
 
         return $dom;
+    }
+
+    /**
+     * Remove recursivamente text nodes que contenham apenas whitespace
+     * (quebras de linha, indentações) de uma subárvore DOM.
+     *
+     * Necessário para "zero formatação": o XML assinado deve ser minificado
+     * (linha única), canonicamente idêntico ao que será serializado e enviado.
+     */
+    private function stripWhitespaceNodes(\DOMNode $node): void
+    {
+        // Snapshot: childNodes é uma NodeList viva; remover durante a iteração
+        // direta corrompe o índice.
+        $children = [];
+        foreach ($node->childNodes as $child) {
+            $children[] = $child;
+        }
+
+        foreach ($children as $child) {
+            if ($child->nodeType === XML_TEXT_NODE) {
+                if (trim($child->nodeValue) === '') {
+                    $node->removeChild($child);
+                }
+            } elseif ($child->nodeType === XML_ELEMENT_NODE) {
+                $this->stripWhitespaceNodes($child);
+            }
+        }
     }
 }
