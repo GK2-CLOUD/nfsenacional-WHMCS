@@ -178,6 +178,13 @@ XML;
         // SOAPAction com namespace, conforme contrato validado (1.2).
         $action = self::SOAP_ACTION_NAMESPACE . $soapAction;
 
+        // Zero formatação definitivo: remove TODO \r e \n da string SOAP
+        // imediatamente antes do envio (CURLOPT_POSTFIELDS / body Guzzle).
+        // A assinatura foi calculada sobre um DOM minificado; resíduos de
+        // quebra de linha alteram o C14N no destino (erro E0714).
+        $envelope = str_replace(["\r", "\n"], '', $envelope);
+        $envelope = str_replace('encoding="UTF-8"', 'encoding="utf-8"', $envelope);
+
         // Log do payload BRUTO exato enviado ao servidor (CURLOPT_POSTFIELDS).
         // O envelope vai como request string para facilitar a cópia do XML cru.
         logModuleCall('nfsenacional', 'NotaControl-' . $soapAction . '-Requisicao', $envelope, [

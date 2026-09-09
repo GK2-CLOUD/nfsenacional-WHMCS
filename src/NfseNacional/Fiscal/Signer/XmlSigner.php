@@ -73,6 +73,10 @@ class XmlSigner
             throw new \RuntimeException("Elemento a assinar não possui atributo 'Id'.");
         }
 
+        // Registra o atributo Id como ID real no DOM. Crítico para a resolução
+        // do URI="#..." na validação da assinatura no destino (Nota Control).
+        $elementToSign->setIdAttribute('Id', true);
+
         // Referência pelo Id — não sobrescrever o atributo existente (overwrite=false)
         // para evitar que xmlseclibs gere um novo Id (pfx...) que viola o XSD.
         $dsig->addReference(
