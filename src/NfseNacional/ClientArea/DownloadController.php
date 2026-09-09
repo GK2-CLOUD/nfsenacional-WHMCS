@@ -83,6 +83,14 @@ class DownloadController
             $this->abort(404, 'URL do DANFS-e não disponível.');
         }
 
+        // Nota Control devolve link externo real (nfse.issnetonline.com.br) →
+        // redirect 302, pois o proxy quebraria o HTML relativo do documento.
+        if ($this->isNotaControlUrl($url)) {
+            http_response_code(302);
+            header('Location: ' . $url);
+            exit;
+        }
+
         $body = $this->fetch($url, $certPath, $certPass, 'application/pdf,text/html,*/*');
 
         $chave    = $nfse->chaveAcesso ?? (string) $nfse->id;
@@ -98,8 +106,21 @@ class DownloadController
     private function serveXml(Nfse $nfse, string $certPath, string $certPass): void
     {
         $url = $nfse->xmlUrl ?? '';
-        if (empty($url)) {
-            $this->abort(404, 'URL do XML não disponível.');
+        $xmlRetorno = $nfse->xmlRetorno ?? '';
+
+        // Nota Control: não há URL de XML — serve o XML autorizado armazenado
+        // (gzip+base64 gravado em xml_retorno durante a emissão).
+        if (empty($url) || $this->isNotaControlUrl($url)) {
+            if (!empty($xmlRetorno)) {
+                $xml = @gzdecode(base64_decode($xmlRetorno));
+                if ($xml === false) {
+                    $this->abort(502, 'Erro ao descomprimir XML.');
+                }
+                $this->outputXml($xml, $nfse);
+            }
+            if (empty($url)) {
+                $this->abort(404, 'URL do XML não disponível.');
+            }
         }
 
         $body = $this->fetch($url, $certPath, $certPass, 'application/json');
@@ -115,6 +136,14 @@ class DownloadController
             $xml = $body; // fallback: corpo já é XML
         }
 
+        $this->outputXml($xml, $nfse);
+    }
+
+    /**
+     * Envia o XML autorizado ao cliente e encerra.
+     */
+    private function outputXml(string $xml, Nfse $nfse): void
+    {
         $chave    = $nfse->chaveAcesso ?? (string) $nfse->id;
         $filename = 'nfse-' . $chave . '.xml';
 
@@ -123,6 +152,15 @@ class DownloadController
         header('Cache-Control: private, no-store');
         echo $xml;
         exit;
+    }
+
+    /**
+     * Detecta URL externa da Nota Control pelo host.
+     */
+    private function isNotaControlUrl(string $url): bool
+    {
+        $host = parse_url($url, PHP_URL_HOST) ?: '';
+        return str_contains($host, 'issnetonline.com.br');
     }
 
     // ──────────────────────────────────────────────────────────────────────────

@@ -47,3 +47,7 @@ jobs:
       # --- Auditoria de vulnerabilidades ---
       - name: Composer Audit
         run: composer audit
+
+      # --- Testes (PHPUnit, Etapa 7) ---
+      - name: PHPUnit
+        run: composer test

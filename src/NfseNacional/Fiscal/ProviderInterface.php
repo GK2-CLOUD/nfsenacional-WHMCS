@@ -65,20 +65,25 @@ interface ProviderInterface
     /**
      * Retorna a URL publica de acesso ao DANFS-e (PDF).
      *
-     * Usado para persistir a URL no banco apos emissao, sem chamada HTTP.
+     * Pode consultar o provedor (ex.: Nota Control via ConsultarUrlNfse) ou
+     * montar a URL localmente (Sefin). NUNCA deve lancar excecao: e chamado
+     * dentro do bloco de sucesso da emissao, e uma excecao indevida marcaria
+     * uma NFS-e AUTORIZADA como ERRO.
      *
      * @param string $chaveAcesso Chave de acesso da NFS-e
-     * @return string URL completa do DANFS-e
+     * @return string URL completa do DANFS-e (vazia em falha)
      */
     public function getDanfseUrl(string $chaveAcesso): string;
 
     /**
      * Retorna a URL publica de acesso ao XML autorizado.
      *
-     * Usado para persistir a URL no banco apos emissao, sem chamada HTTP.
+     * Pode retornar vazio quando o provedor nao expoe URL de XML (Nota Control
+     * so devolve a URL de visualizacao do DANFS-e); nesse caso o download usa
+     * o XML autorizado armazenado (xml_retorno). NUNCA deve lancar excecao.
      *
      * @param string $chaveAcesso Chave de acesso da NFS-e
-     * @return string URL completa do XML
+     * @return string URL completa do XML (vazia se indisponivel)
      */
     public function getXmlUrl(string $chaveAcesso): string;
 }

@@ -7,15 +7,15 @@ use GK2\NfseNacional\Domain\AmbienteGuard;
 use GK2\NfseNacional\Domain\Enum\Ambiente;
 use GK2\NfseNacional\Fiscal\ProviderInterface;
 use GK2\NfseNacional\Transport\ApiResponse;
-use GK2\NfseNacional\Transport\Auth\CertificateAuth;
 
 /**
  * Provider para emissores baseados na plataforma Nota Control / ISS.net Online.
  *
  * Exemplos de municípios: Ribeirão Preto/SP e outros conveniados.
  *
- * Protocolo: SOAP 1.1 sobre HTTPS com mTLS (certificado de cliente) + XMLDSIG.
- * Namespace: http://www.sped.fazenda.gov.br/nfse (mesmo da Sefin Nacional).
+ * Protocolo: SOAP 1.1 sobre HTTPS simples (sem mTLS na camada de rede).
+ * Autenticação: somente XMLDSIG no documento. Namespace:
+ * http://www.sped.fazenda.gov.br/nfse (mesmo da Sefin Nacional).
  *
  * Referência: Manual de Integração Webservice v1.01 (Nota Control, ago/2026).
  */
@@ -24,24 +24,30 @@ class NotaControlProvider implements ProviderInterface
     private ModuleConfig $config;
     private AmbienteGuard $guard;
     private Ambiente $ambiente;
-    private CertificateAuth $certificateAuth;
+
+    /**
+     * Cliente HTTP injetável (Guzzle). Quando nulo, usa cURL nativo (produção).
+     * Permite testar o transporte com MockHandler sem depender de rede.
+     */
+    private ?\GuzzleHttp\ClientInterface $http;
+
+    /** Cache da URL de visualização consultada (evita SOAP duplicado por requisição). */
+    private ?string $cachedDanfseUrl = null;
 
     private const BASE_URL = 'https://nfse.issnetonline.com.br/wsnfsenacional';
+
+    private const SOAP_ACTION_NAMESPACE = 'http://www.sped.fazenda.gov.br/nfse/';
 
     // ─── SOAP Envelope (template estático) ─────────────────────────
 
     private const SOAP_ENVELOPE = <<<'XML'
 <?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-  <soap:Header>
-    <cabecalho versao="1.01" xmlns="http://www.sped.fazenda.gov.br/nfse">
-      <versaoDados>1.01</versaoDados>
-    </cabecalho>
-  </soap:Header>
-  <soap:Body>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:nfse="http://www.sped.fazenda.gov.br/nfse">
+  <soapenv:Header/>
+  <soapenv:Body>
     {body}
-  </soap:Body>
-</soap:Envelope>
+  </soapenv:Body>
+</soapenv:Envelope>
 XML;
 
     // ─── Construtor ────────────────────────────────────────────────
@@ -49,19 +55,21 @@ XML;
     public function __construct(
         ?ModuleConfig $config = null,
         ?AmbienteGuard $guard = null,
+        ?\GuzzleHttp\ClientInterface $http = null,
     ) {
         $this->config = $config ?? new ModuleConfig();
         $this->guard = $guard ?? AmbienteGuard::getInstance($this->config);
         $this->ambiente = $this->guard->getAmbiente();
-        $this->certificateAuth = new CertificateAuth($this->config);
+        $this->http = $http;
     }
 
     // ═══ ProviderInterface ══════════════════════════════════════════
 
     public function emitirDps(string $dpsXml): ApiResponse
     {
-        $inner = '<GerarNfseEnvio>' . $this->stripXmlDeclaration($dpsXml) . '</GerarNfseEnvio>';
-        $body = $this->wrapSoapMethod('GerarNfse', $inner);
+        // Contrato validado: DPS completa e assinada vai DIRETO em nfseDadosMsg
+        // (sem o wrapper <GerarNfseEnvio>).
+        $body = $this->wrapSoapMethod('GerarNfse', $this->stripXmlDeclaration($dpsXml));
 
         return $this->send('GerarNfse', $body, function (\DOMDocument $dom): ApiResponse {
             return $this->parseEmitirResposta($dom);
@@ -119,12 +127,16 @@ XML;
 
     public function getDanfseUrl(string $chaveAcesso): string
     {
-        return $this->getBaseUrl() . '?chave=' . urlencode($chaveAcesso) . '&tipo=danfse';
+        return $this->consultarUrlVisualizacao($chaveAcesso);
     }
 
     public function getXmlUrl(string $chaveAcesso): string
     {
-        return $this->getBaseUrl() . '?chave=' . urlencode($chaveAcesso) . '&tipo=xml';
+        // ConsultarUrlNfse (Nota Control) não devolve URL de XML, apenas a de
+        // visualização do DANFS-e (UrlVisualizacaoNfseNacional). O XML autorizado
+        // é servido pelo fallback via `xml_retorno` (DownloadController) — ver
+        // Tarefa D do handoff. Retorna vazio por design; nunca lança exceção.
+        return '';
     }
 
     // ═══ Transporte SOAP ═══════════════════════════════════════════
@@ -133,23 +145,76 @@ XML;
      * Envia uma requisição SOAP e parseia a resposta.
      *
      * @param string $soapAction Nome do método SOAP (ex: 'GerarNfse')
-     * @param string $body       XML do corpo (sem envelope)
+     * @param string $body       XML do corpo (método + cabecMsg + dadosMsg)
      * @param callable $parser   Função que recebe DOMDocument e retorna ApiResponse
      */
     private function send(string $soapAction, string $body, callable $parser): ApiResponse
     {
         $envelope = str_replace('{body}', $body, self::SOAP_ENVELOPE);
-
         $url = $this->getBaseUrl() . '/nfse.asmx';
+
+        // SOAPAction com namespace, conforme contrato validado (1.2).
+        $action = self::SOAP_ACTION_NAMESPACE . $soapAction;
 
         // Log da requisição completa (envelope SOAP) para diagnóstico
         logModuleCall('nfsenacional', 'NotaControl-' . $soapAction . '-Requisicao', [
             'url' => $url,
+            'soap_action' => $action,
         ], mb_substr($envelope, 0, 8000));
 
-        // Certificado de cliente (mTLS) — exigido pela Nota Control
-        [$certPem, $keyPem] = $this->certificateAuth->getPemPaths();
+        if ($this->http !== null) {
+            return $this->sendWithGuzzle($this->http, $url, $action, $envelope, $parser);
+        }
 
+        return $this->sendWithCurl($url, $action, $envelope, $parser);
+    }
+
+    /**
+     * Envia via Guzzle (cliente injetado — usado em testes com MockHandler).
+     */
+    private function sendWithGuzzle(
+        \GuzzleHttp\ClientInterface $http,
+        string $url,
+        string $action,
+        string $envelope,
+        callable $parser,
+    ): ApiResponse
+    {
+        try {
+            $response = $http->request('POST', $url, [
+                'headers' => [
+                    'Content-Type' => 'text/xml; charset=utf-8',
+                    'SOAPAction' => $action,
+                ],
+                'body' => $envelope,
+                'verify' => true,
+                'http_errors' => false,
+                'timeout' => 30,
+                'connect_timeout' => 10,
+            ]);
+        } catch (\Throwable $e) {
+            return ApiResponse::error(['Falha na comunicacao: ' . $e->getMessage()]);
+        }
+
+        $rawBody = (string) $response->getBody();
+        $httpCode = $response->getStatusCode();
+
+        logModuleCall('nfsenacional', 'NotaControl-' . $action . '-Resposta', [
+            'http_code' => $httpCode,
+        ], mb_substr($rawBody, 0, 4000));
+
+        if ($httpCode < 200 || $httpCode >= 300) {
+            return ApiResponse::error(['HTTP ' . $httpCode . ': ' . mb_substr(strip_tags($rawBody), 0, 300)]);
+        }
+
+        return $this->parseSoapBody($rawBody, $parser);
+    }
+
+    /**
+     * Envia via cURL nativo (produção). Sem mTLS — autenticação é XMLDSIG.
+     */
+    private function sendWithCurl(string $url, string $action, string $envelope, callable $parser): ApiResponse
+    {
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_POST           => true,
@@ -159,17 +224,11 @@ XML;
             CURLOPT_CONNECTTIMEOUT => 10,
             CURLOPT_HTTPHEADER     => [
                 'Content-Type: text/xml; charset=utf-8',
-                'SOAPAction: ' . $soapAction,
+                'SOAPAction: ' . $action,
             ],
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_SSL_VERIFYHOST => 2,
         ]);
-
-        // mTLS: certificado de cliente (autenticação mútua)
-        if ($certPem !== null && $keyPem !== null) {
-            curl_setopt($ch, CURLOPT_SSLCERT, $certPem);
-            curl_setopt($ch, CURLOPT_SSLKEY, $keyPem);
-        }
 
         $rawBody = curl_exec($ch);
         $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -177,7 +236,7 @@ XML;
         curl_close($ch);
 
         // Log da resposta crua para diagnóstico (sempre, com limite de tamanho)
-        logModuleCall('nfsenacional', 'NotaControl-' . $soapAction . '-Resposta', [
+        logModuleCall('nfsenacional', 'NotaControl-' . $action . '-Resposta', [
             'http_code' => $httpCode,
         ], mb_substr((string) $rawBody, 0, 4000));
 
@@ -316,6 +375,39 @@ XML;
     // ═══ Helpers ════════════════════════════════════════════════════
 
     /**
+     * Consulta a URL de visualização do DANFS-e via ConsultarUrlNfse.
+     *
+     * Nunca lança exceção: em falha retorna '' e registra log. Usado por
+     * EmissaoService dentro do bloco de sucesso, onde uma exceção indevida
+     * transformaria uma emissão AUTORIZADA em ERRO.
+     */
+    private function consultarUrlVisualizacao(string $chaveAcesso): string
+    {
+        if ($this->cachedDanfseUrl !== null) {
+            return $this->cachedDanfseUrl;
+        }
+
+        try {
+            $response = $this->obterDanfse($chaveAcesso);
+            if ($response->success) {
+                $this->cachedDanfseUrl = (string) ($response->data['url'] ?? '');
+                return $this->cachedDanfseUrl;
+            }
+
+            logModuleCall('nfsenacional', 'NotaControl-ConsultarUrlNfse-Erro', [
+                'chave' => $chaveAcesso,
+            ], implode('; ', $response->errors));
+        } catch (\Throwable $e) {
+            logModuleCall('nfsenacional', 'NotaControl-ConsultarUrlNfse-Exception', [
+                'chave' => $chaveAcesso,
+            ], $e->getMessage());
+        }
+
+        $this->cachedDanfseUrl = '';
+        return '';
+    }
+
+    /**
      * Extrai mensagens de erro do bloco ListaMensagemRetorno.
      *
      * @return string[]
@@ -345,16 +437,27 @@ XML;
     }
 
     /**
-     * Envolve o XML interno no elemento do método SOAP (wrapper do nome do método).
+     * Monta o corpo do método SOAP no padrão validado (contrato 1.1):
      *
-     * ASP.NET .asmx exige que o elemento raiz do <soap:Body> seja o nome do
-     * método (ex: <GerarNfse>), com a mensagem de entrada (*Envio) aninhada.
+     * <nfse:{Metodo}>
+     *   <nfseCabecMsg><cabecalho versao="1.01">…</cabecalho></nfseCabecMsg>
+     *   <nfseDadosMsg>{payload}</nfseDadosMsg>
+     * </nfse:{Metodo}>
+     *
+     * O prefixo nfse: é declarado no envelope raiz (sem redeclarar xmlns aqui).
      */
-    private function wrapSoapMethod(string $method, string $innerXml): string
+    private function wrapSoapMethod(string $method, string $payload): string
     {
-        return '<' . $method . ' xmlns="http://www.sped.fazenda.gov.br/nfse">'
-             . $innerXml
-             . '</' . $method . '>';
+        return '<nfse:' . $method . '>'
+            . '<nfseCabecMsg>'
+            . '<cabecalho xmlns="http://www.sped.fazenda.gov.br/nfse" versao="1.01">'
+            . '<versaoDados>1.01</versaoDados>'
+            . '</cabecalho>'
+            . '</nfseCabecMsg>'
+            . '<nfseDadosMsg>'
+            . $payload
+            . '</nfseDadosMsg>'
+            . '</nfse:' . $method . '>';
     }
 
     /**
