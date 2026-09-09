@@ -78,6 +78,14 @@ class NacionalProvider implements ProviderInterface
     /**
      * {@inheritdoc}
      */
+    public function usaGerarNfseEnvio(): bool
+    {
+        return false;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function consultarNfse(string $chaveAcesso): ApiResponse
     {
         $endpoint = $this->endpoints->consultarNfseSefin($this->ambiente, $chaveAcesso);

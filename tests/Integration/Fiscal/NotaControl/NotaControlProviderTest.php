@@ -74,7 +74,12 @@ final class NotaControlProviderTest extends TestCase
             . '</GerarNfseResposta>'
         )));
 
-        $response = $this->provider()->emitirDps('<?xml version="1.0"?><DPS xmlns="urn:x"><conteudo/></DPS>');
+        $response = $this->provider()->emitirDps(
+            '<?xml version="1.0"?>'
+            . '<GerarNfseEnvio xmlns="http://www.sped.fazenda.gov.br/nfse">'
+            . '<DPS versao="1.01"><infDPS Id="' . $chave . '"><conteudo/></infDPS></DPS>'
+            . '</GerarNfseEnvio>'
+        );
 
         $this->assertTrue($response->success);
         $this->assertSame($chave, $response->data['chaveAcesso']);
@@ -86,9 +91,10 @@ final class NotaControlProviderTest extends TestCase
         // Envelope no padrão validado: nfseCabecMsg + nfseDadosMsg
         $this->assertStringContainsString('nfseCabecMsg', $body);
         $this->assertStringContainsString('nfseDadosMsg', $body);
-        // E160: DPS deve estar envelopada por GerarNfseEnvio dentro de nfseDadosMsg
+        // DPS envelopada por GerarNfseEnvio dentro de nfseDadosMsg
         $this->assertStringContainsString('GerarNfseEnvio', $body);
         $this->assertStringContainsString('<DPS', $body);
+        $this->assertStringContainsString('infDPS', $body);
 
         // SOAPAction com namespace
         $this->assertSame(
@@ -107,7 +113,10 @@ final class NotaControlProviderTest extends TestCase
             . '</GerarNfseResposta>'
         )));
 
-        $response = $this->provider()->emitirDps('<?xml version="1.0"?><DPS/>');
+        $response = $this->provider()->emitirDps(
+            '<?xml version="1.0"?>'
+            . '<GerarNfseEnvio xmlns="http://www.sped.fazenda.gov.br/nfse"><DPS/></GerarNfseEnvio>'
+        );
 
         $this->assertFalse($response->success);
         $this->assertNotEmpty($response->errors);

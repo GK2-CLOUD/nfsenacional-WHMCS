@@ -16,10 +16,20 @@ interface ProviderInterface
     /**
      * Emite uma DPS (Declaracao de Prestacao de Servicos).
      *
-     * @param string $dpsXml XML da DPS conforme XSD da NFS-e Nacional
+     * @param string $dpsXml XML do payload a enviar (DPS nua ou <GerarNfseEnvio>,
+     *                        conforme usaGerarNfseEnvio())
      * @return ApiResponse Resposta da API com dados da NFS-e emitida
      */
     public function emitirDps(string $dpsXml): ApiResponse;
+
+    /**
+     * Indica se o provedor exige que a DPS seja envelopada em <GerarNfseEnvio>
+     * (montado e assinado pelo DpsPayloadBuilder::buildGerarNfseEnvio) antes do
+     * envelopamento SOAP, em vez de enviar a DPS nua.
+     *
+     * @return bool true quando o payload deve ser montado com <GerarNfseEnvio>
+     */
+    public function usaGerarNfseEnvio(): bool;
 
     /**
      * Consulta uma NFS-e pela chave de acesso.

@@ -69,16 +69,21 @@ XML;
 
     public function emitirDps(string $dpsXml): ApiResponse
     {
-        // E160: a DPS (mesmo já assinada) deve ser envelopada pelo nó raiz
-        // <GerarNfseEnvio>, que é o elemento de comunicação deste método.
-        $inner = '<GerarNfseEnvio xmlns="http://www.sped.fazenda.gov.br/nfse">'
-            . $this->stripXmlDeclaration($dpsXml)
-            . '</GerarNfseEnvio>';
-        $body = $this->wrapSoapMethod('GerarNfse', $inner);
+        // $dpsXml já vem completo e assinado como <GerarNfseEnvio>
+        // (DpsPayloadBuilder::buildGerarNfseEnvio). Insere direto em nfseDadosMsg.
+        $body = $this->wrapSoapMethod('GerarNfse', $this->stripXmlDeclaration($dpsXml));
 
         return $this->send('GerarNfse', $body, function (\DOMDocument $dom): ApiResponse {
             return $this->parseEmitirResposta($dom);
         });
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function usaGerarNfseEnvio(): bool
+    {
+        return true;
     }
 
     public function consultarNfse(string $chaveAcesso): ApiResponse

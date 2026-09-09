@@ -44,15 +44,60 @@ class DpsPayloadBuilder
     }
 
     /**
-     * Monta o XML completo da DPS.
+     * Monta o XML completo da DPS já assinada.
      *
      * @param array $invoice Dados da fatura (retorno de GetInvoice com client)
      * @param int $numeroDps Numero sequencial da DPS
      * @param string $serieDps Serie da DPS
      * @param string $origem Origem da emissao: 'hook', 'cron', 'manual'
-     * @return string XML da DPS pronto para compactacao
+     * @return string XML da DPS assinada, pronto para compactacao (Sefin)
      */
     public function build(array $invoice, int $numeroDps, string $serieDps, string $origem = 'hook'): string
+    {
+        $dom = $this->buildDpsDom($invoice, $numeroDps, $serieDps, $origem);
+        $infDPS = $dom->getElementsByTagName('infDPS')->item(0);
+        $this->signIfConfigured($dom, $infDPS);
+
+        return $dom->saveXML();
+    }
+
+    /**
+     * Monta o XML completo do <GerarNfseEnvio> (DPS + envelope) e assina o
+     * <infDPS> já dentro desse contexto, antes do envelopamento SOAP.
+     *
+     * Usado pelo NotaControlProvider — a assinatura deve ocorrer sobre o
+     * documento já montado para evitar alteração estrutural posterior
+     * (que invalidaria o digest da assinatura).
+     *
+     * @param array $invoice Dados da fatura (retorno de GetInvoice com client)
+     * @param int $numeroDps Numero sequencial da DPS
+     * @param string $serieDps Serie da DPS
+     * @param string $origem Origem da emissao: 'hook', 'cron', 'manual'
+     * @return string XML <GerarNfseEnvio> assinado
+     */
+    public function buildGerarNfseEnvio(array $invoice, int $numeroDps, string $serieDps, string $origem = 'hook'): string
+    {
+        // 1. Constrói a DPS (sem assinar) em um DOM isolado
+        $dpsDom = $this->buildDpsDom($invoice, $numeroDps, $serieDps, $origem);
+
+        // 2. Envelopa a DPS dentro de <GerarNfseEnvio> (namespaces no nó raiz)
+        $envioDom = new \DOMDocument('1.0', 'UTF-8');
+        $envioDom->formatOutput = false;
+        $envio = $envioDom->createElementNS(self::NAMESPACE, 'GerarNfseEnvio');
+        $envioDom->appendChild($envio);
+        $envio->appendChild($envioDom->importNode($dpsDom->documentElement, true));
+
+        // 3. Assina o <infDPS> dentro do documento já montado
+        $infDPS = $envioDom->getElementsByTagName('infDPS')->item(0);
+        $this->signIfConfigured($envioDom, $infDPS);
+
+        return $envioDom->saveXML();
+    }
+
+    /**
+     * Constrói o DOM da <DPS> (sem assinar) e o retorna.
+     */
+    private function buildDpsDom(array $invoice, int $numeroDps, string $serieDps, string $origem = 'hook'): \DOMDocument
     {
         $prestador = $this->prestadorMapper->map();
         $tomador = $this->tomadorMapper->map($invoice);
@@ -136,14 +181,25 @@ class DpsPayloadBuilder
         $idDpsFinal = 'DPS' . $idPieces['codMun'] . $tipoInscFinal . $inscFederalFinal . $idPieces['serieId'] . $numIdFinal;
         $infDPS->setAttribute('Id', $idDpsFinal);
 
-        // Assinar XML (se certificado configurado)
-        $certPath = $this->config->getCertificadoPath();
-        if (!empty($certPath)) {
-            $signer = new \GK2\NfseNacional\Fiscal\Signer\XmlSigner($this->config);
-            $signer->signDom($dom, $infDPS);
+        return $dom;
+    }
+
+    /**
+     * Assina o <infDPS> no DOM informado, se um certificado estiver configurado.
+     */
+    private function signIfConfigured(\DOMDocument $dom, ?\DOMElement $infDPS): void
+    {
+        if ($infDPS === null) {
+            return;
         }
 
-        return $dom->saveXML();
+        $certPath = $this->config->getCertificadoPath();
+        if (empty($certPath)) {
+            return;
+        }
+
+        $signer = new \GK2\NfseNacional\Fiscal\Signer\XmlSigner($this->config);
+        $signer->signDom($dom, $infDPS);
     }
 
     /**
