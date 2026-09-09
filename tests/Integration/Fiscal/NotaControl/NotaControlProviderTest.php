@@ -86,8 +86,9 @@ final class NotaControlProviderTest extends TestCase
         // Envelope no padrão validado: nfseCabecMsg + nfseDadosMsg
         $this->assertStringContainsString('nfseCabecMsg', $body);
         $this->assertStringContainsString('nfseDadosMsg', $body);
-        // DPS direto em nfseDadosMsg (sem wrapper GerarNfseEnvio)
-        $this->assertStringNotContainsString('GerarNfseEnvio', $body);
+        // E160: DPS deve estar envelopada por GerarNfseEnvio dentro de nfseDadosMsg
+        $this->assertStringContainsString('GerarNfseEnvio', $body);
+        $this->assertStringContainsString('<DPS', $body);
 
         // SOAPAction com namespace
         $this->assertSame(

@@ -69,9 +69,12 @@ XML;
 
     public function emitirDps(string $dpsXml): ApiResponse
     {
-        // Contrato validado: DPS completa e assinada vai DIRETO em nfseDadosMsg
-        // (sem o wrapper <GerarNfseEnvio>).
-        $body = $this->wrapSoapMethod('GerarNfse', $this->stripXmlDeclaration($dpsXml));
+        // E160: a DPS (mesmo já assinada) deve ser envelopada pelo nó raiz
+        // <GerarNfseEnvio>, que é o elemento de comunicação deste método.
+        $inner = '<GerarNfseEnvio xmlns="http://www.sped.fazenda.gov.br/nfse">'
+            . $this->stripXmlDeclaration($dpsXml)
+            . '</GerarNfseEnvio>';
+        $body = $this->wrapSoapMethod('GerarNfse', $inner);
 
         return $this->send('GerarNfse', $body, function (\DOMDocument $dom): ApiResponse {
             return $this->parseEmitirResposta($dom);
