@@ -16,7 +16,8 @@ use PHPUnit\Framework\TestCase;
  * Testes de integração do NotaControlProvider com Guzzle MockHandler.
  *
  * Simula respostas SOAP no formato validado (contrato 1.1 do handoff) e
- * verifica o envelope da requisição, o SOAPAction e a ausência de mTLS.
+ * verifica o envelope da requisição e o SOAPAction. O Guzzle MockHandler não
+ * exercita o cURL nativo (produção), onde ocorre a configuração do mTLS.
  */
 final class NotaControlProviderTest extends TestCase
 {
@@ -93,11 +94,6 @@ final class NotaControlProviderTest extends TestCase
             'http://www.sped.fazenda.gov.br/nfse/GerarNfse',
             $request->getHeaderLine('SOAPAction')
         );
-
-        // Sem mTLS: nenhuma opção cert/ssl_key no request
-        $options = $this->history[0]['options'];
-        $this->assertArrayNotHasKey('cert', $options);
-        $this->assertArrayNotHasKey('ssl_key', $options);
     }
 
     public function testEmitirDpsErroRetornaMensagens(): void

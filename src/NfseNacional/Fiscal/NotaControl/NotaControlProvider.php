@@ -7,15 +7,15 @@ use GK2\NfseNacional\Domain\AmbienteGuard;
 use GK2\NfseNacional\Domain\Enum\Ambiente;
 use GK2\NfseNacional\Fiscal\ProviderInterface;
 use GK2\NfseNacional\Transport\ApiResponse;
+use GK2\NfseNacional\Transport\Auth\CertificateAuth;
 
 /**
  * Provider para emissores baseados na plataforma Nota Control / ISS.net Online.
  *
  * Exemplos de municípios: Ribeirão Preto/SP e outros conveniados.
  *
- * Protocolo: SOAP 1.1 sobre HTTPS simples (sem mTLS na camada de rede).
- * Autenticação: somente XMLDSIG no documento. Namespace:
- * http://www.sped.fazenda.gov.br/nfse (mesmo da Sefin Nacional).
+ * Protocolo: SOAP 1.1 sobre HTTPS com mTLS (certificado de cliente) + XMLDSIG.
+ * Namespace: http://www.sped.fazenda.gov.br/nfse (mesmo da Sefin Nacional).
  *
  * Referência: Manual de Integração Webservice v1.01 (Nota Control, ago/2026).
  */
@@ -24,6 +24,7 @@ class NotaControlProvider implements ProviderInterface
     private ModuleConfig $config;
     private AmbienteGuard $guard;
     private Ambiente $ambiente;
+    private CertificateAuth $certificateAuth;
 
     /**
      * Cliente HTTP injetável (Guzzle). Quando nulo, usa cURL nativo (produção).
@@ -61,6 +62,7 @@ XML;
         $this->guard = $guard ?? AmbienteGuard::getInstance($this->config);
         $this->ambiente = $this->guard->getAmbiente();
         $this->http = $http;
+        $this->certificateAuth = new CertificateAuth($this->config);
     }
 
     // ═══ ProviderInterface ══════════════════════════════════════════
@@ -211,10 +213,14 @@ XML;
     }
 
     /**
-     * Envia via cURL nativo (produção). Sem mTLS — autenticação é XMLDSIG.
+     * Envia via cURL nativo (produção). Exige mTLS (certificado de cliente,
+     * configurado via CURLOPT_SSLCERT/CURLOPT_SSLKEY) + XMLDSIG no documento.
      */
     private function sendWithCurl(string $url, string $action, string $envelope, callable $parser): ApiResponse
     {
+        // Certificado de cliente (mTLS) — exigido pela Nota Control
+        [$certPem, $keyPem] = $this->certificateAuth->getPemPaths();
+
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_POST           => true,
@@ -229,6 +235,12 @@ XML;
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_SSL_VERIFYHOST => 2,
         ]);
+
+        // mTLS: certificado de cliente (autenticação mútua)
+        if ($certPem !== null && $keyPem !== null) {
+            curl_setopt($ch, CURLOPT_SSLCERT, $certPem);
+            curl_setopt($ch, CURLOPT_SSLKEY, $keyPem);
+        }
 
         $rawBody = curl_exec($ch);
         $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
