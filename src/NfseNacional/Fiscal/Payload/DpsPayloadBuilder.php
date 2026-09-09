@@ -62,36 +62,22 @@ class DpsPayloadBuilder
     }
 
     /**
-     * Monta o XML completo do <GerarNfseEnvio> (DPS + envelope) e assina o
-     * <infDPS> já dentro desse contexto, antes do envelopamento SOAP.
+     * Monta o XML da <DPS> SEM assinatura.
      *
-     * Usado pelo NotaControlProvider — a assinatura deve ocorrer sobre o
-     * documento já montado para evitar alteração estrutural posterior
-     * (que invalidaria o digest da assinatura).
+     * Usado pelo NotaControlProvider, que monta o envelope SOAP completo em um
+     * único DOMDocument e assina o <infDPS> já nesse contexto final (o C14N
+     * inclusivo inclui os namespaces soapenv/nfse no digest — assinar aqui,
+     * isoladamente, geraria digest divergente do servidor, erro E0714).
      *
      * @param array $invoice Dados da fatura (retorno de GetInvoice com client)
      * @param int $numeroDps Numero sequencial da DPS
      * @param string $serieDps Serie da DPS
      * @param string $origem Origem da emissao: 'hook', 'cron', 'manual'
-     * @return string XML <GerarNfseEnvio> assinado
+     * @return string XML da <DPS> sem assinatura
      */
-    public function buildGerarNfseEnvio(array $invoice, int $numeroDps, string $serieDps, string $origem = 'hook'): string
+    public function buildDpsSemAssinatura(array $invoice, int $numeroDps, string $serieDps, string $origem = 'hook'): string
     {
-        // 1. Constrói a DPS (sem assinar) em um DOM isolado
-        $dpsDom = $this->buildDpsDom($invoice, $numeroDps, $serieDps, $origem);
-
-        // 2. Envelopa a DPS dentro de <GerarNfseEnvio> (namespaces no nó raiz)
-        $envioDom = new \DOMDocument('1.0', 'UTF-8');
-        $envioDom->formatOutput = false;
-        $envio = $envioDom->createElementNS(self::NAMESPACE, 'GerarNfseEnvio');
-        $envioDom->appendChild($envio);
-        $envio->appendChild($envioDom->importNode($dpsDom->documentElement, true));
-
-        // 3. Assina o <infDPS> dentro do documento já montado
-        $infDPS = $envioDom->getElementsByTagName('infDPS')->item(0);
-        $this->signIfConfigured($envioDom, $infDPS);
-
-        return $envioDom->saveXML();
+        return $this->buildDpsDom($invoice, $numeroDps, $serieDps, $origem)->saveXML();
     }
 
     /**

@@ -76,9 +76,9 @@ final class NotaControlProviderTest extends TestCase
 
         $response = $this->provider()->emitirDps(
             '<?xml version="1.0"?>'
-            . '<GerarNfseEnvio xmlns="http://www.sped.fazenda.gov.br/nfse">'
-            . '<DPS versao="1.01"><infDPS Id="' . $chave . '"><conteudo/></infDPS></DPS>'
-            . '</GerarNfseEnvio>'
+            . '<DPS versao="1.01" xmlns="http://www.sped.fazenda.gov.br/nfse">'
+            . '<infDPS Id="' . $chave . '"><conteudo/></infDPS>'
+            . '</DPS>'
         );
 
         $this->assertTrue($response->success);
@@ -115,7 +115,9 @@ final class NotaControlProviderTest extends TestCase
 
         $response = $this->provider()->emitirDps(
             '<?xml version="1.0"?>'
-            . '<GerarNfseEnvio xmlns="http://www.sped.fazenda.gov.br/nfse"><DPS/></GerarNfseEnvio>'
+            . '<DPS versao="1.01" xmlns="http://www.sped.fazenda.gov.br/nfse">'
+            . '<infDPS Id="x"><conteudo/></infDPS>'
+            . '</DPS>'
         );
 
         $this->assertFalse($response->success);

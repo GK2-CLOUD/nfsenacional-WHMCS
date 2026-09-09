@@ -6,6 +6,7 @@ use GK2\NfseNacional\Config\ModuleConfig;
 use GK2\NfseNacional\Domain\AmbienteGuard;
 use GK2\NfseNacional\Domain\Enum\Ambiente;
 use GK2\NfseNacional\Fiscal\ProviderInterface;
+use GK2\NfseNacional\Fiscal\Signer\XmlSigner;
 use GK2\NfseNacional\Transport\ApiResponse;
 use GK2\NfseNacional\Transport\Auth\CertificateAuth;
 
@@ -39,6 +40,10 @@ class NotaControlProvider implements ProviderInterface
 
     private const SOAP_ACTION_NAMESPACE = 'http://www.sped.fazenda.gov.br/nfse/';
 
+    private const SOAP_ENV_NS = 'http://schemas.xmlsoap.org/soap/envelope/';
+
+    private const NFSE_NS = 'http://www.sped.fazenda.gov.br/nfse';
+
     // ─── SOAP Envelope (template estático) ─────────────────────────
 
     private const SOAP_ENVELOPE = <<<'XML'
@@ -69,11 +74,13 @@ XML;
 
     public function emitirDps(string $dpsXml): ApiResponse
     {
-        // $dpsXml já vem completo e assinado como <GerarNfseEnvio>
-        // (DpsPayloadBuilder::buildGerarNfseEnvio). Insere direto em nfseDadosMsg.
-        $body = $this->wrapSoapMethod('GerarNfse', $this->stripXmlDeclaration($dpsXml));
+        // $dpsXml é a <DPS> SEM assinatura (DpsPayloadBuilder::buildDpsSemAssinatura).
+        // Monta o envelope SOAP completo em um único DOMDocument e assina o
+        // <infDPS> já nesse contexto final, para que o C14N inclua os namespaces
+        // soapenv/nfse herdados (evita o erro E0714 de digest divergente).
+        $envelope = $this->buildEnvelopeAssinado('GerarNfse', $dpsXml);
 
-        return $this->send('GerarNfse', $body, function (\DOMDocument $dom): ApiResponse {
+        return $this->sendEnvelope('GerarNfse', $envelope, function (\DOMDocument $dom): ApiResponse {
             return $this->parseEmitirResposta($dom);
         });
     }
@@ -161,6 +168,15 @@ XML;
     private function send(string $soapAction, string $body, callable $parser): ApiResponse
     {
         $envelope = str_replace('{body}', $body, self::SOAP_ENVELOPE);
+
+        return $this->sendEnvelope($soapAction, $envelope, $parser);
+    }
+
+    /**
+     * Envia um envelope SOAP já montado (string final) e parseia a resposta.
+     */
+    private function sendEnvelope(string $soapAction, string $envelope, callable $parser): ApiResponse
+    {
         $url = $this->getBaseUrl() . '/nfse.asmx';
 
         // SOAPAction com namespace, conforme contrato validado (1.2).
@@ -177,6 +193,89 @@ XML;
         }
 
         return $this->sendWithCurl($url, $action, $envelope, $parser);
+    }
+
+    /**
+     * Monta o envelope SOAP completo em um único DOMDocument e assina o
+     * <infDPS> já dentro desse contexto final.
+     *
+     * A assinatura precisa ocorrer com a árvore inteira montada para que o
+     * C14N inclusivo inclua os namespaces herdados do nó raiz do SOAP
+     * (xmlns:soapenv e xmlns:nfse) — caso contrário o digest diverge do
+     * calculado pelo servidor (erro E0714).
+     *
+     * @param string $method Nome do método SOAP (ex: 'GerarNfse')
+     * @param string $dpsXml XML da <DPS> sem assinatura
+     * @return string Envelope SOAP completo serializado
+     */
+    private function buildEnvelopeAssinado(string $method, string $dpsXml): string
+    {
+        $dom = new \DOMDocument('1.0', 'UTF-8');
+        $dom->formatOutput = false;
+        $dom->preserveWhiteSpace = true;
+
+        // <soapenv:Envelope xmlns:soapenv xmlns:nfse>
+        $envelope = $dom->createElementNS(self::SOAP_ENV_NS, 'soapenv:Envelope');
+        $envelope->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:nfse', self::NFSE_NS);
+        $dom->appendChild($envelope);
+
+        $header = $dom->createElementNS(self::SOAP_ENV_NS, 'soapenv:Header');
+        $envelope->appendChild($header);
+
+        $body = $dom->createElementNS(self::SOAP_ENV_NS, 'soapenv:Body');
+        $envelope->appendChild($body);
+
+        // <nfse:{method}>
+        $methodEl = $dom->createElementNS(self::NFSE_NS, 'nfse:' . $method);
+        $body->appendChild($methodEl);
+
+        // <nfseCabecMsg> (sem namespace, conforme contrato validado)
+        $cabecMsg = $dom->createElement('nfseCabecMsg');
+        $methodEl->appendChild($cabecMsg);
+
+        $cabecalho = $dom->createElementNS(self::NFSE_NS, 'cabecalho');
+        $cabecalho->setAttribute('versao', '1.01');
+        $cabecMsg->appendChild($cabecalho);
+        $cabecalho->appendChild($dom->createElementNS(self::NFSE_NS, 'versaoDados', '1.01'));
+
+        // <nfseDadosMsg> (sem namespace)
+        $dadosMsg = $dom->createElement('nfseDadosMsg');
+        $methodEl->appendChild($dadosMsg);
+
+        // <GerarNfseEnvio> com a <DPS> importada dentro
+        $envio = $dom->createElementNS(self::NFSE_NS, 'GerarNfseEnvio');
+        $dadosMsg->appendChild($envio);
+
+        $dpsDom = new \DOMDocument('1.0', 'UTF-8');
+        $dpsDom->preserveWhiteSpace = true;
+        if ($dpsDom->loadXML($dpsXml) === false) {
+            throw new \RuntimeException('Falha ao interpretar o XML da DPS (sem assinatura).');
+        }
+        $envio->appendChild($dom->importNode($dpsDom->documentElement, true));
+
+        // Assina o <infDPS> no contexto completo do envelope SOAP
+        $this->signInfDps($dom);
+
+        return $dom->saveXML();
+    }
+
+    /**
+     * Assina o nó <infDPS> no DOM já montado, se houver certificado configurado.
+     */
+    private function signInfDps(\DOMDocument $dom): void
+    {
+        $certPath = $this->config->getCertificadoPath();
+        if (empty($certPath)) {
+            return; // sem certificado (ex.: testes) — payload segue sem assinatura
+        }
+
+        $infDps = $dom->getElementsByTagName('infDPS')->item(0);
+        if ($infDps === null) {
+            return;
+        }
+
+        $signer = new XmlSigner($this->config);
+        $signer->signDom($dom, $infDps);
     }
 
     /**

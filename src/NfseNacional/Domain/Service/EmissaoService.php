@@ -102,7 +102,7 @@ class EmissaoService
         try {
             // 5. Montar XML da DPS conforme XSD v1.01
             $dpsXml = $this->provider->usaGerarNfseEnvio()
-                ? $this->payloadBuilder->buildGerarNfseEnvio($invoice, $numeroDps, $serieDps, $origem)
+                ? $this->payloadBuilder->buildDpsSemAssinatura($invoice, $numeroDps, $serieDps, $origem)
                 : $this->payloadBuilder->build($invoice, $numeroDps, $serieDps, $origem);
 
             // 6. Registrar como PROCESSANDO — grava o ambiente no registro

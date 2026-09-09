@@ -16,18 +16,18 @@ interface ProviderInterface
     /**
      * Emite uma DPS (Declaracao de Prestacao de Servicos).
      *
-     * @param string $dpsXml XML do payload a enviar (DPS nua ou <GerarNfseEnvio>,
-     *                        conforme usaGerarNfseEnvio())
+     * @param string $dpsXml XML da <DPS> sem assinatura (a assinatura e o
+     *                        envelopamento SOAP ficam a cargo do provedor)
      * @return ApiResponse Resposta da API com dados da NFS-e emitida
      */
     public function emitirDps(string $dpsXml): ApiResponse;
 
     /**
-     * Indica se o provedor exige que a DPS seja envelopada em <GerarNfseEnvio>
-     * (montado e assinado pelo DpsPayloadBuilder::buildGerarNfseEnvio) antes do
-     * envelopamento SOAP, em vez de enviar a DPS nua.
+     * Indica se o provedor monta e assina o envelope SOAP completo em um único
+     * DOMDocument (Nota Control) — necessário para o C14N incluir os namespaces
+     * soapenv/nfse no digest — em vez de enviar a DPS nua já assinada (Sefin).
      *
-     * @return bool true quando o payload deve ser montado com <GerarNfseEnvio>
+     * @return bool true quando o provedor envelopa e assina a DPS no SOAP
      */
     public function usaGerarNfseEnvio(): bool;
 
