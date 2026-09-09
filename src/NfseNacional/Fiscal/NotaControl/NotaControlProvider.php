@@ -40,10 +40,6 @@ class NotaControlProvider implements ProviderInterface
 
     private const SOAP_ACTION_NAMESPACE = 'http://www.sped.fazenda.gov.br/nfse/';
 
-    private const SOAP_ENV_NS = 'http://schemas.xmlsoap.org/soap/envelope/';
-
-    private const NFSE_NS = 'http://www.sped.fazenda.gov.br/nfse';
-
     // ─── SOAP Envelope (template estático) ─────────────────────────
 
     private const SOAP_ENVELOPE = <<<'XML'
@@ -182,11 +178,12 @@ XML;
         // SOAPAction com namespace, conforme contrato validado (1.2).
         $action = self::SOAP_ACTION_NAMESPACE . $soapAction;
 
-        // Log da requisição completa (envelope SOAP) para diagnóstico
-        logModuleCall('nfsenacional', 'NotaControl-' . $soapAction . '-Requisicao', [
+        // Log do payload BRUTO exato enviado ao servidor (CURLOPT_POSTFIELDS).
+        // O envelope vai como request string para facilitar a cópia do XML cru.
+        logModuleCall('nfsenacional', 'NotaControl-' . $soapAction . '-Requisicao', $envelope, [
             'url' => $url,
             'soap_action' => $action,
-        ], mb_substr($envelope, 0, 8000));
+        ]);
 
         if ($this->http !== null) {
             return $this->sendWithGuzzle($this->http, $url, $action, $envelope, $parser);
@@ -196,13 +193,14 @@ XML;
     }
 
     /**
-     * Monta o envelope SOAP completo em um único DOMDocument e assina o
-     * <infDPS> já dentro desse contexto final.
+     * Monta o envelope SOAP completo e assina o <infDPS> já dentro desse
+     * contexto final.
      *
-     * A assinatura precisa ocorrer com a árvore inteira montada para que o
-     * C14N inclusivo inclua os namespaces herdados do nó raiz do SOAP
-     * (xmlns:soapenv e xmlns:nfse) — caso contrário o digest diverge do
-     * calculado pelo servidor (erro E0714).
+     * Montagem feita por string (não por DOM com createElementNS), para
+     * controle exato dos namespaces: o prefixo nfse: aparece apenas no nó raiz
+     * e em <nfse:{method}>; <cabecalho> e <GerarNfseEnvio> declaram o namespace
+     * SPED como default (xmlns="..."); as tags da DPS ficam SEM prefixo,
+     * herdando o default namespace — exatamente o gabarito do servidor.
      *
      * @param string $method Nome do método SOAP (ex: 'GerarNfse')
      * @param string $dpsXml XML da <DPS> sem assinatura
@@ -210,48 +208,35 @@ XML;
      */
     private function buildEnvelopeAssinado(string $method, string $dpsXml): string
     {
+        // Remove a declaração XML e o xmlns do nó raiz <DPS>, para que a DPS
+        // herde o default namespace declarado em <GerarNfseEnvio xmlns="...">.
+        $dpsSemXmlns = $this->removeDpsRootXmlns($this->stripXmlDeclaration($dpsXml));
+
+        $envelopeXml = '<?xml version="1.0" encoding="utf-8"?>'
+            . '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:nfse="http://www.sped.fazenda.gov.br/nfse">'
+            . '<soapenv:Header/>'
+            . '<soapenv:Body>'
+            . '<nfse:' . $method . '>'
+            . '<nfseCabecMsg>'
+            . '<cabecalho xmlns="http://www.sped.fazenda.gov.br/nfse" versao="1.01">'
+            . '<versaoDados>1.01</versaoDados>'
+            . '</cabecalho>'
+            . '</nfseCabecMsg>'
+            . '<nfseDadosMsg>'
+            . '<GerarNfseEnvio xmlns="http://www.sped.fazenda.gov.br/nfse">'
+            . $dpsSemXmlns
+            . '</GerarNfseEnvio>'
+            . '</nfseDadosMsg>'
+            . '</nfse:' . $method . '>'
+            . '</soapenv:Body>'
+            . '</soapenv:Envelope>';
+
         $dom = new \DOMDocument('1.0', 'UTF-8');
         $dom->formatOutput = false;
         $dom->preserveWhiteSpace = true;
-
-        // <soapenv:Envelope xmlns:soapenv xmlns:nfse>
-        $envelope = $dom->createElementNS(self::SOAP_ENV_NS, 'soapenv:Envelope');
-        $envelope->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:nfse', self::NFSE_NS);
-        $dom->appendChild($envelope);
-
-        $header = $dom->createElementNS(self::SOAP_ENV_NS, 'soapenv:Header');
-        $envelope->appendChild($header);
-
-        $body = $dom->createElementNS(self::SOAP_ENV_NS, 'soapenv:Body');
-        $envelope->appendChild($body);
-
-        // <nfse:{method}>
-        $methodEl = $dom->createElementNS(self::NFSE_NS, 'nfse:' . $method);
-        $body->appendChild($methodEl);
-
-        // <nfseCabecMsg> (sem namespace, conforme contrato validado)
-        $cabecMsg = $dom->createElement('nfseCabecMsg');
-        $methodEl->appendChild($cabecMsg);
-
-        $cabecalho = $dom->createElementNS(self::NFSE_NS, 'cabecalho');
-        $cabecalho->setAttribute('versao', '1.01');
-        $cabecMsg->appendChild($cabecalho);
-        $cabecalho->appendChild($dom->createElementNS(self::NFSE_NS, 'versaoDados', '1.01'));
-
-        // <nfseDadosMsg> (sem namespace)
-        $dadosMsg = $dom->createElement('nfseDadosMsg');
-        $methodEl->appendChild($dadosMsg);
-
-        // <GerarNfseEnvio> com a <DPS> remontada dentro (namespace padrão, sem prefixo)
-        $envio = $dom->createElementNS(self::NFSE_NS, 'GerarNfseEnvio');
-        $dadosMsg->appendChild($envio);
-
-        $dpsDom = new \DOMDocument('1.0', 'UTF-8');
-        $dpsDom->preserveWhiteSpace = true;
-        if ($dpsDom->loadXML($dpsXml) === false) {
-            throw new \RuntimeException('Falha ao interpretar o XML da DPS (sem assinatura).');
+        if ($dom->loadXML($envelopeXml) === false) {
+            throw new \RuntimeException('Falha ao montar o envelope SOAP da DPS.');
         }
-        $this->appendNode($dom, $dpsDom->documentElement, $envio);
 
         // Assina o <infDPS> no contexto completo do envelope SOAP
         $this->signInfDps($dom);
@@ -260,36 +245,16 @@ XML;
     }
 
     /**
-     * Copia um nó (e subárvore) da DPS para dentro do DOM do envelope,
-     * recriando cada elemento no namespace padrão do SPED (sem prefixo).
+     * Remove o xmlns="..." (default) do nó raiz <DPS> da string standalone.
      *
-     * Evita importNode: ao reconstruir com createElementNS(..., sem prefixo),
-     * as tags herdam o xmlns padrão declarado em <GerarNfseEnvio> e NÃO ganham
-     * o prefixo nfse: — o que quebraria a canonicalização C14N (E0714).
+     * A DPS é gerada com <DPS xmlns="...">. Ao embuti-la dentro de
+     * <GerarNfseEnvio xmlns="...">, manter o xmlns no nó raiz faz o libxml
+     * reutilizar o prefixo nfse: nas tags internas. Removendo-o, as tags
+     * herdam o default namespace (sem prefixo).
      */
-    private function appendNode(\DOMDocument $target, \DOMNode $src, \DOMNode $parent): void
+    private function removeDpsRootXmlns(string $dpsXml): string
     {
-        if ($src->nodeType === XML_TEXT_NODE || $src->nodeType === XML_CDATA_SECTION_NODE) {
-            $parent->appendChild($target->createTextNode($src->nodeValue));
-            return;
-        }
-
-        if ($src->nodeType !== XML_ELEMENT_NODE) {
-            return;
-        }
-
-        $el = $target->createElementNS(self::NFSE_NS, $src->localName);
-        foreach ($src->attributes as $attr) {
-            if ($attr->nodeName === 'xmlns' || str_starts_with($attr->nodeName, 'xmlns:')) {
-                continue;
-            }
-            $el->setAttribute($attr->nodeName, $attr->nodeValue);
-        }
-        $parent->appendChild($el);
-
-        foreach ($src->childNodes as $child) {
-            $this->appendNode($target, $child, $el);
-        }
+        return preg_replace('/\s+xmlns="[^"]*"/', '', $dpsXml, 1) ?? $dpsXml;
     }
 
     /**
