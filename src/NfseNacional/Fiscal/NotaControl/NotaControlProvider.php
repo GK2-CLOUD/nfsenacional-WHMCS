@@ -248,7 +248,20 @@ XML;
             throw new \RuntimeException('Falha ao montar o envelope SOAP da DPS.');
         }
 
-        // Assina o <infDPS> no contexto completo do envelope SOAP
+        // Dump & Reload: força o libxml a renderizar e redistribuir os
+        // namespaces herdados (soapenv/nfse) para os nós filhos antes da
+        // assinatura. Sem isso, o C14N() do <infDPS> omite os xmlns e o digest
+        // diverge do C14N Inclusivo do servidor (erro E0714).
+        $xmlString = $dom->saveXML();
+
+        $dom = new \DOMDocument('1.0', 'utf-8');
+        $dom->preserveWhiteSpace = false;
+        $dom->formatOutput = false;
+        if ($dom->loadXML($xmlString) === false) {
+            throw new \RuntimeException('Falha ao recarregar o envelope SOAP da DPS.');
+        }
+
+        // Marca o Id como âncora de referência e assina no DOM recarregado
         $this->signInfDps($dom);
 
         return $dom->saveXML();
