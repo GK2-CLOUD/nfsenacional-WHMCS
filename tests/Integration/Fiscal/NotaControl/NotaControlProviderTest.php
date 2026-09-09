@@ -96,6 +96,12 @@ final class NotaControlProviderTest extends TestCase
         $this->assertStringContainsString('<DPS', $body);
         $this->assertStringContainsString('infDPS', $body);
 
+        // Método SOAP usa o prefixo nfse:; DPS e dados usam namespace padrão (sem prefixo)
+        $this->assertStringContainsString('<nfse:GerarNfse>', $body);
+        $this->assertStringNotContainsString('nfse:DPS', $body);
+        $this->assertStringNotContainsString('nfse:infDPS', $body);
+        $this->assertStringNotContainsString('nfse:conteudo', $body);
+
         // SOAPAction com namespace
         $this->assertSame(
             'http://www.sped.fazenda.gov.br/nfse/GerarNfse',

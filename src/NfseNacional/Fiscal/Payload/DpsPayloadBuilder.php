@@ -124,7 +124,7 @@ class DpsPayloadBuilder
         $dom->appendChild($dps);
 
         // <infDPS> (Id será calculado e aplicado mais abaixo, após inserção dos campos)
-        $infDPS = $dom->createElement('infDPS');
+        $infDPS = $dom->createElementNS(self::NAMESPACE, 'infDPS');
         $dps->appendChild($infDPS);
 
         // Campos obrigatorios da TCInfDPS
@@ -193,7 +193,7 @@ class DpsPayloadBuilder
      */
     private function buildPrestador(\DOMDocument $dom, \DOMElement $parent, array $prest): void
     {
-        $el = $dom->createElement('prest');
+        $el = $dom->createElementNS(self::NAMESPACE, 'prest');
         $parent->appendChild($el);
 
         $cnpj = preg_replace('/\D/', '', $prest['cnpj'] ?? '');
@@ -208,7 +208,7 @@ class DpsPayloadBuilder
         }
 
         // <regTrib> — TCRegTrib (obrigatório)
-        $regTrib = $dom->createElement('regTrib');
+        $regTrib = $dom->createElementNS(self::NAMESPACE, 'regTrib');
         $el->appendChild($regTrib);
 
         // opSimpNac: 1=Não Optante, 2=MEI, 3=ME/EPP
@@ -228,7 +228,7 @@ class DpsPayloadBuilder
      */
     private function buildTomador(\DOMDocument $dom, \DOMElement $parent, array $toma): void
     {
-        $el = $dom->createElement('toma');
+        $el = $dom->createElementNS(self::NAMESPACE, 'toma');
         $parent->appendChild($el);
 
         $doc = preg_replace('/\D/', '', $toma['documento'] ?? '');
@@ -259,12 +259,12 @@ class DpsPayloadBuilder
      */
     private function buildEndereco(\DOMDocument $dom, \DOMElement $parent, array $end): void
     {
-        $elEnd = $dom->createElement('end');
+        $elEnd = $dom->createElementNS(self::NAMESPACE, 'end');
         $parent->appendChild($elEnd);
 
         // <endNac> — TCEnderNac (cMun + CEP)
         if (!empty($end['cMun']) || !empty($end['cep'])) {
-            $endNac = $dom->createElement('endNac');
+            $endNac = $dom->createElementNS(self::NAMESPACE, 'endNac');
             $elEnd->appendChild($endNac);
 
             if (!empty($end['cMun'])) {
@@ -299,16 +299,16 @@ class DpsPayloadBuilder
      */
     private function buildServico(\DOMDocument $dom, \DOMElement $parent, array $serv): void
     {
-        $el = $dom->createElement('serv');
+        $el = $dom->createElementNS(self::NAMESPACE, 'serv');
         $parent->appendChild($el);
 
         // <locPrest> — TCLocPrest
-        $locPrest = $dom->createElement('locPrest');
+        $locPrest = $dom->createElementNS(self::NAMESPACE, 'locPrest');
         $el->appendChild($locPrest);
         $this->addElement($dom, $locPrest, 'cLocPrestacao', $serv['codigoMunicipioIncidencia']);
 
         // <cServ> — TCCServ
-        $cServ = $dom->createElement('cServ');
+        $cServ = $dom->createElementNS(self::NAMESPACE, 'cServ');
         $el->appendChild($cServ);
 
         // cTribNac: 6 dígitos numéricos (Item+Subitem LC 116 + Desdobro Nacional)
@@ -340,20 +340,20 @@ class DpsPayloadBuilder
      */
     private function buildValores(\DOMDocument $dom, \DOMElement $parent, array $serv, array $tributos): void
     {
-        $el = $dom->createElement('valores');
+        $el = $dom->createElementNS(self::NAMESPACE, 'valores');
         $parent->appendChild($el);
 
         // <vServPrest> — TCVServPrest
-        $vServPrest = $dom->createElement('vServPrest');
+        $vServPrest = $dom->createElementNS(self::NAMESPACE, 'vServPrest');
         $el->appendChild($vServPrest);
         $this->addElement($dom, $vServPrest, 'vServ', $this->formatDecimal($serv['valorServicos']));
 
         // <trib> — TCInfoTributacao
-        $trib = $dom->createElement('trib');
+        $trib = $dom->createElementNS(self::NAMESPACE, 'trib');
         $el->appendChild($trib);
 
         // <tribMun> — TCTribMunicipal
-        $tribMun = $dom->createElement('tribMun');
+        $tribMun = $dom->createElementNS(self::NAMESPACE, 'tribMun');
         $trib->appendChild($tribMun);
 
         $this->addElement($dom, $tribMun, 'tribISSQN', '1'); // 1 = Operação tributável
@@ -364,7 +364,7 @@ class DpsPayloadBuilder
         }
 
         // <totTrib> — TCTribTotal
-        $totTrib = $dom->createElement('totTrib');
+        $totTrib = $dom->createElementNS(self::NAMESPACE, 'totTrib');
         $trib->appendChild($totTrib);
 
         if ($this->config->isOptanteSimplesNacional()) {
@@ -444,20 +444,20 @@ class DpsPayloadBuilder
         $cst       = $this->config->get('ibscbs_cst', '000');
         $cClassTrib = $this->config->get('ibscbs_cclass_trib', '000001');
 
-        $ibscbs = $dom->createElement('IBSCBS');
+        $ibscbs = $dom->createElementNS(self::NAMESPACE, 'IBSCBS');
         $parent->appendChild($ibscbs);
 
         $this->addElement($dom, $ibscbs, 'finNFSe', '0');
         $this->addElement($dom, $ibscbs, 'cIndOp', $cIndOp);
         $this->addElement($dom, $ibscbs, 'indDest', '0');
 
-        $valores = $dom->createElement('valores');
+        $valores = $dom->createElementNS(self::NAMESPACE, 'valores');
         $ibscbs->appendChild($valores);
 
-        $trib = $dom->createElement('trib');
+        $trib = $dom->createElementNS(self::NAMESPACE, 'trib');
         $valores->appendChild($trib);
 
-        $gIBSCBS = $dom->createElement('gIBSCBS');
+        $gIBSCBS = $dom->createElementNS(self::NAMESPACE, 'gIBSCBS');
         $trib->appendChild($gIBSCBS);
 
         $this->addElement($dom, $gIBSCBS, 'CST', $cst);
@@ -477,7 +477,7 @@ class DpsPayloadBuilder
      */
     private function addElement(\DOMDocument $dom, \DOMElement $parent, string $name, string $value): void
     {
-        $el = $dom->createElement($name, htmlspecialchars($value, ENT_XML1, 'UTF-8'));
+        $el = $dom->createElementNS(self::NAMESPACE, $name, htmlspecialchars($value, ENT_XML1, 'UTF-8'));
         $parent->appendChild($el);
     }
 }

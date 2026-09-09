@@ -242,7 +242,7 @@ XML;
         $dadosMsg = $dom->createElement('nfseDadosMsg');
         $methodEl->appendChild($dadosMsg);
 
-        // <GerarNfseEnvio> com a <DPS> importada dentro
+        // <GerarNfseEnvio> com a <DPS> remontada dentro (namespace padrão, sem prefixo)
         $envio = $dom->createElementNS(self::NFSE_NS, 'GerarNfseEnvio');
         $dadosMsg->appendChild($envio);
 
@@ -251,12 +251,45 @@ XML;
         if ($dpsDom->loadXML($dpsXml) === false) {
             throw new \RuntimeException('Falha ao interpretar o XML da DPS (sem assinatura).');
         }
-        $envio->appendChild($dom->importNode($dpsDom->documentElement, true));
+        $this->appendNode($dom, $dpsDom->documentElement, $envio);
 
         // Assina o <infDPS> no contexto completo do envelope SOAP
         $this->signInfDps($dom);
 
         return $dom->saveXML();
+    }
+
+    /**
+     * Copia um nó (e subárvore) da DPS para dentro do DOM do envelope,
+     * recriando cada elemento no namespace padrão do SPED (sem prefixo).
+     *
+     * Evita importNode: ao reconstruir com createElementNS(..., sem prefixo),
+     * as tags herdam o xmlns padrão declarado em <GerarNfseEnvio> e NÃO ganham
+     * o prefixo nfse: — o que quebraria a canonicalização C14N (E0714).
+     */
+    private function appendNode(\DOMDocument $target, \DOMNode $src, \DOMNode $parent): void
+    {
+        if ($src->nodeType === XML_TEXT_NODE || $src->nodeType === XML_CDATA_SECTION_NODE) {
+            $parent->appendChild($target->createTextNode($src->nodeValue));
+            return;
+        }
+
+        if ($src->nodeType !== XML_ELEMENT_NODE) {
+            return;
+        }
+
+        $el = $target->createElementNS(self::NFSE_NS, $src->localName);
+        foreach ($src->attributes as $attr) {
+            if ($attr->nodeName === 'xmlns' || str_starts_with($attr->nodeName, 'xmlns:')) {
+                continue;
+            }
+            $el->setAttribute($attr->nodeName, $attr->nodeValue);
+        }
+        $parent->appendChild($el);
+
+        foreach ($src->childNodes as $child) {
+            $this->appendNode($target, $child, $el);
+        }
     }
 
     /**
