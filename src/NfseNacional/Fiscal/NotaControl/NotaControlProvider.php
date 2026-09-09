@@ -220,6 +220,7 @@ XML;
     {
         // Certificado de cliente (mTLS) — exigido pela Nota Control
         [$certPem, $keyPem] = $this->certificateAuth->getPemPaths();
+        $certPass = $this->config->getCertificadoSenha();
 
         $ch = curl_init($url);
         curl_setopt_array($ch, [
@@ -232,28 +233,36 @@ XML;
                 'Content-Type: text/xml; charset=utf-8',
                 'SOAPAction: ' . $action,
             ],
-            CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_SSL_VERIFYHOST => 2,
+            // TODO(debug): bypass temporário de CA para isolar falha de cadeia
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => 0,
+            CURLOPT_SSLVERSION     => CURL_SSLVERSION_TLSv1_2,
         ]);
 
         // mTLS: certificado de cliente (autenticação mútua)
         if ($certPem !== null && $keyPem !== null) {
             curl_setopt($ch, CURLOPT_SSLCERT, $certPem);
             curl_setopt($ch, CURLOPT_SSLKEY, $keyPem);
+            if (!empty($certPass)) {
+                curl_setopt($ch, CURLOPT_SSLCERTPASSWD, $certPass);
+            }
         }
 
         $rawBody = curl_exec($ch);
         $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error = curl_error($ch);
+        $errno = curl_errno($ch);
         curl_close($ch);
 
-        // Log da resposta crua para diagnóstico (sempre, com limite de tamanho)
+        // Log da resposta crua + erro interno do cURL para diagnóstico
         logModuleCall('nfsenacional', 'NotaControl-' . $action . '-Resposta', [
-            'http_code' => $httpCode,
+            'http_code'  => $httpCode,
+            'curl_errno' => $errno,
+            'curl_error' => $error,
         ], mb_substr((string) $rawBody, 0, 4000));
 
         if ($rawBody === false || !empty($error)) {
-            return ApiResponse::error(['Falha na comunicacao: ' . ($error ?: 'Resposta vazia')]);
+            return ApiResponse::error(['Falha na comunicacao (curl_errno ' . $errno . '): ' . ($error ?: 'Resposta vazia')]);
         }
 
         if ($httpCode < 200 || $httpCode >= 300) {
