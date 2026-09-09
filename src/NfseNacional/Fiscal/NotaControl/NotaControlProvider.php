@@ -200,14 +200,16 @@ XML;
     }
 
     /**
-     * Monta o envelope SOAP completo e assina o <infDPS> já dentro desse
-     * contexto final.
+     * Monta o envelope SOAP completo e assina o <infDPS>.
      *
-     * Montagem feita por string (não por DOM com createElementNS), para
-     * controle exato dos namespaces: o prefixo nfse: aparece apenas no nó raiz
-     * e em <nfse:{method}>; <cabecalho> e <GerarNfseEnvio> declaram o namespace
-     * SPED como default (xmlns="..."); as tags da DPS ficam SEM prefixo,
-     * herdando o default namespace — exatamente o gabarito do servidor.
+     * Estratégia espelhada do repositório de referência willkerms/NFSe
+     * (provider notacontrol-br-v1): a DPS é assinada STANDALONE (com o
+     * namespace xmlns="..." declarado no próprio nó <DPS>), e SÓ DEPOIS a
+     * DPS assinada é embrulhada em <GerarNfseEnvio> e no envelope SOAP.
+     *
+     * Assinar a DPS fora do SOAP garante que o C14N Inclusivo do <infDPS>
+     * seja calculado com o mesmo contexto de namespace que o servidor usa
+     * na verificação — sem os prefixos soapenv/nfse do envelope.
      *
      * @param string $method Nome do método SOAP (ex: 'GerarNfse')
      * @param string $dpsXml XML da <DPS> sem assinatura
@@ -215,11 +217,11 @@ XML;
      */
     private function buildEnvelopeAssinado(string $method, string $dpsXml): string
     {
-        // Remove a declaração XML e o xmlns do nó raiz <DPS>, para que a DPS
-        // herde o default namespace declarado em <GerarNfseEnvio xmlns="...">.
-        $dpsSemXmlns = $this->removeDpsRootXmlns($this->stripXmlDeclaration($dpsXml));
+        // 1. Assina a DPS standalone (xmlns já está no nó raiz <DPS>).
+        $dpsAssinada = $this->signDpsStandalone($dpsXml);
 
-        $envelopeXml = '<?xml version="1.0" encoding="utf-8"?>'
+        // 2. Embrulha a DPS assinada em <GerarNfseEnvio> + envelope SOAP.
+        return '<?xml version="1.0" encoding="utf-8"?>'
             . '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:nfse="http://www.sped.fazenda.gov.br/nfse">'
             . '<soapenv:Header/>'
             . '<soapenv:Body>'
@@ -231,53 +233,42 @@ XML;
             . '</nfseCabecMsg>'
             . '<nfseDadosMsg>'
             . '<GerarNfseEnvio xmlns="http://www.sped.fazenda.gov.br/nfse">'
-            . $dpsSemXmlns
+            . $dpsAssinada
             . '</GerarNfseEnvio>'
             . '</nfseDadosMsg>'
             . '</nfse:' . $method . '>'
             . '</soapenv:Body>'
             . '</soapenv:Envelope>';
+    }
 
+    /**
+     * Assina o <infDPS> na DPS standalone e devolve o XML minificado
+     * (linha única, sem declaração XML).
+     */
+    private function signDpsStandalone(string $dpsXml): string
+    {
         $dom = new \DOMDocument('1.0', 'UTF-8');
-        // Zero formatação: nenhum whitespace text node entre tags — a string
-        // final enviada ao cURL deve ser uma linha única (canonicamente idêntica
-        // ao que foi assinado).
         $dom->formatOutput = false;
         $dom->preserveWhiteSpace = false;
-        if ($dom->loadXML($envelopeXml) === false) {
-            throw new \RuntimeException('Falha ao montar o envelope SOAP da DPS.');
+        if ($dom->loadXML($dpsXml, LIBXML_NOBLANKS | LIBXML_NOEMPTYTAG | LIBXML_NOERROR) === false) {
+            throw new \RuntimeException('Falha ao carregar o XML da DPS.');
         }
 
-        // Dump & Reload: força o libxml a renderizar e redistribuir os
-        // namespaces herdados (soapenv/nfse) para os nós filhos antes da
-        // assinatura. Sem isso, o C14N() do <infDPS> omite os xmlns e o digest
-        // diverge do C14N Inclusivo do servidor (erro E0714).
+        // Dump & Reload: força o libxml a renderizar os namespaces herdados
+        // antes da assinatura (corrige a não-propagação nativa do DOMDocument).
         $xmlString = $dom->saveXML();
 
         $dom = new \DOMDocument('1.0', 'utf-8');
         $dom->preserveWhiteSpace = false;
         $dom->formatOutput = false;
-        if ($dom->loadXML($xmlString) === false) {
-            throw new \RuntimeException('Falha ao recarregar o envelope SOAP da DPS.');
+        if ($dom->loadXML($xmlString, LIBXML_NOBLANKS | LIBXML_NOEMPTYTAG | LIBXML_NOERROR) === false) {
+            throw new \RuntimeException('Falha ao recarregar o XML da DPS.');
         }
 
-        // Marca o Id como âncora de referência e assina no DOM recarregado
         $this->signInfDps($dom);
 
-        return $dom->saveXML();
-    }
-
-    /**
-     * Remove o xmlns="..." (default) do nó raiz <DPS> da string standalone.
-     *
-     * A DPS é gerada com <DPS xmlns="...">. Ao embuti-la dentro de
-     * <GerarNfseEnvio xmlns="...">, manter o xmlns no nó raiz faz o libxml
-     * reutilizar o prefixo nfse: nas tags internas. Removendo-o, as tags
-     * herdam o default namespace (sem prefixo).
-     */
-    private function removeDpsRootXmlns(string $dpsXml): string
-    {
-        return preg_replace('/\s+xmlns="[^"]*"/', '', $dpsXml, 1) ?? $dpsXml;
+        // Remove a declaração XML para embutir a DPS no envelope sem duplicá-la.
+        return $this->stripXmlDeclaration($dom->saveXML());
     }
 
     /**
