@@ -498,10 +498,13 @@ XML;
 
     /**
      * Retorna a URL base do serviço conforme ambiente.
+     *
+     * Produção usa a rota específica do município (Ribeirão Preto);
+     * homologação usa a URL genérica informada pela Nota Control.
      */
     private function getBaseUrl(): string
     {
-        $suffix = $this->ambiente->isProducao() ? '' : '/homologacao';
+        $suffix = $this->ambiente->isProducao() ? '/ribeiraopreto' : '/homologacao';
         return self::BASE_URL . $suffix;
     }
 }
