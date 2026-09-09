@@ -508,12 +508,19 @@ XML;
     /**
      * Retorna a URL base do serviço conforme ambiente.
      *
-     * Produção usa a rota específica do município (Ribeirão Preto);
-     * homologação usa a URL genérica informada pela Nota Control.
+     * Produção usa a rota específica do município (nome da cidade configurado
+     * no addon, ex: ribeiraopreto); homologação usa a URL genérica informada
+     * pela Nota Control.
      */
     private function getBaseUrl(): string
     {
-        $suffix = $this->ambiente->isProducao() ? '/ribeiraopreto' : '/homologacao';
+        if ($this->ambiente->isProducao()) {
+            $cidade = $this->config->getCidadeNotaControl();
+            $suffix = $cidade !== '' ? '/' . $cidade : '';
+        } else {
+            $suffix = '/homologacao';
+        }
+
         return self::BASE_URL . $suffix;
     }
 }

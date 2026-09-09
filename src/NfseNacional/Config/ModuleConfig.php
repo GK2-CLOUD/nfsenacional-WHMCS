@@ -315,6 +315,29 @@ class ModuleConfig
         return $chave !== '' ? $chave : 'sefin';
     }
 
+    /**
+     * Retorna a cidade usada na rota do endpoint de produção da Nota Control.
+     *
+     * Normalizada para slug de URL (minúsculas, sem acentos, só alfanumérico).
+     */
+    public function getCidadeNotaControl(): string
+    {
+        $valor = strtolower(trim($this->get('cidade_notacontrol', 'ribeiraopreto')));
+
+        $mapa = [
+            'á' => 'a', 'à' => 'a', 'â' => 'a', 'ã' => 'a', 'ä' => 'a',
+            'é' => 'e', 'è' => 'e', 'ê' => 'e', 'ë' => 'e',
+            'í' => 'i', 'ì' => 'i', 'î' => 'i', 'ï' => 'i',
+            'ó' => 'o', 'ò' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'o',
+            'ú' => 'u', 'ù' => 'u', 'û' => 'u', 'ü' => 'u',
+            'ç' => 'c',
+        ];
+        $valor = strtr($valor, $mapa);
+        $valor = preg_replace('/[^a-z0-9]+/', '', $valor) ?? '';
+
+        return $valor;
+    }
+
     // ─── Setup (ativacao) ──────────────────────────────────────────
 
     /**
@@ -325,6 +348,7 @@ class ModuleConfig
         $defaults = [
             '_token_secret' => bin2hex(random_bytes(32)),
             'provedor' => 'sefin',
+            'cidade_notacontrol' => 'ribeiraopreto',
             'ambiente' => 'homologacao',
             'serie_dps' => '1',
             'documento_cliente' => 'taxid',

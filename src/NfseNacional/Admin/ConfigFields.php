@@ -405,6 +405,23 @@ HTML;
             'Default'      => 'sefin',
         ];
 
+        $configarray['fields']['cidade_notacontrol'] = [
+            'FriendlyName' => $fn('Cidade (Nota Control)', false),
+            'Type'         => 'text',
+            'Size'         => '30',
+            'Description'  => 'Nome da cidade usado na rota do endpoint de produção do provedor Nota Control. '
+                . 'Sem acentos e sem espaços. Ex: <strong>ribeiraopreto</strong>.'
+                . $tip(
+                    'Cidade (Nota Control)',
+                    'Apenas para o provedor "Nota Control / ISS.net". '
+                    . 'O nome da cidade compõe a URL de produção: '
+                    . 'https://nfse.issnetonline.com.br/wsnfsenacional/{cidade}/nfse.asmx. '
+                    . 'Digite o nome sem acentos e sem espaços (ex: ribeiraopreto, saojosedoriopreto). '
+                    . 'A homologação usa URL genérica e não depende deste campo.',
+                ),
+            'Default'      => 'ribeiraopreto',
+        ];
+
         $configarray['fields']['ambiente'] = [
             'FriendlyName' => $fn('Ambiente', true),
             'Type'         => 'dropdown',
