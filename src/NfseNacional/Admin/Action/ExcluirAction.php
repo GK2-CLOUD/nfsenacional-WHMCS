@@ -66,7 +66,7 @@ class ExcluirAction
     {
         $access = Capsule::table('tbladdonmodules')
             ->where('module', 'nfsenacional')
-            ->where('setting', 'access')
+            ->where('setting', 'perfis_manuais')
             ->value('value');
 
         if (empty($access)) {

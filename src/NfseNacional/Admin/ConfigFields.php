@@ -675,8 +675,8 @@ HTML;
                 ),
         ];
 
-        $configarray['fields']['access'] = [
-            'FriendlyName' => $fn('Perfis com Permissão Manual de NFS-e', true),
+        $configarray['fields']['perfis_manuais'] = [
+            'FriendlyName' => $fn('Perfis com Permissão Manual de NFS-e', false),
             'Type'         => 'text',
             'Size'         => '40',
             'Description'  => 'IDs dos perfis de admin autorizados (separados por vírgula). Vazio = todos os admins.'

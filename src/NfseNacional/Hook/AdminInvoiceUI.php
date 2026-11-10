@@ -140,14 +140,14 @@ class AdminInvoiceUI
     /**
      * Verifica se o admin com o roleId informado tem acesso.
      *
-     * Se o campo "access" estiver vazio, todos tem acesso.
+     * Se o campo "perfis_manuais" estiver vazio, todos tem acesso.
      * Caso contrario, o roleId deve estar na lista.
      */
     private function checkAccess($roleId): bool
     {
         $access = Capsule::table('tbladdonmodules')
             ->where('module', 'nfsenacional')
-            ->where('setting', 'access')
+            ->where('setting', 'perfis_manuais')
             ->value('value');
 
         if (empty($access)) {
