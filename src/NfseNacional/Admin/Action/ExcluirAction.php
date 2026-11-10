@@ -2,6 +2,8 @@
 
 namespace GK2\NfseNacional\Admin\Action;
 
+use GK2\NfseNacional\Security\AdminAccess;
+
 use GK2\NfseNacional\Domain\AmbienteGuard;
 use GK2\NfseNacional\Persistence\NfseRepository;
 use GK2\NfseNacional\Security\TokenSigner;
@@ -66,14 +68,9 @@ class ExcluirAction
     {
         $access = Capsule::table('tbladdonmodules')
             ->where('module', 'nfsenacional')
-            ->where('setting', 'perfis_manuais')
+            ->where('setting', 'access')
             ->value('value');
 
-        if (empty($access)) {
-            return true;
-        }
-
-        $allowed = array_map('trim', explode(',', (string) $access));
-        return in_array((string) $roleId, $allowed, true);
+        return AdminAccess::permite(is_string($access) ? $access : null, $roleId);
     }
 }

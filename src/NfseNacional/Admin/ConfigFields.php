@@ -675,20 +675,6 @@ HTML;
                 ),
         ];
 
-        $configarray['fields']['perfis_manuais'] = [
-            'FriendlyName' => $fn('Perfis com Permissão Manual de NFS-e', false),
-            'Type'         => 'text',
-            'Size'         => '40',
-            'Description'  => 'IDs dos perfis de admin autorizados (separados por vírgula). Vazio = todos os admins.'
-                . $tip(
-                    'Perfis com Permissão Manual de NFS-e',
-                    'IDs dos perfis de administrador autorizados a emitir ou cancelar NFS-e '
-                    . 'manualmente pelo painel. Informe os IDs separados por vírgula. '
-                    . 'Deixe vazio para permitir a todos os administradores.',
-                ),
-            'Default'      => '',
-        ];
-
         $configarray['fields']['debug'] = [
             'FriendlyName' => $fn('Modo Debug', false),
             'Type'         => 'yesno',

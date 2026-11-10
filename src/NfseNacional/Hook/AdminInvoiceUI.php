@@ -2,6 +2,8 @@
 
 namespace GK2\NfseNacional\Hook;
 
+use GK2\NfseNacional\Security\AdminAccess;
+
 use GK2\NfseNacional\Domain\AmbienteGuard;
 use GK2\NfseNacional\Domain\Enum\NfseStatus;
 use GK2\NfseNacional\Domain\Service\DownloadUrlService;
@@ -140,21 +142,16 @@ class AdminInvoiceUI
     /**
      * Verifica se o admin com o roleId informado tem acesso.
      *
-     * Se o campo "perfis_manuais" estiver vazio, todos tem acesso.
+     * Se a lista de perfis do WHMCS estiver vazia, todos tem acesso.
      * Caso contrario, o roleId deve estar na lista.
      */
     private function checkAccess($roleId): bool
     {
         $access = Capsule::table('tbladdonmodules')
             ->where('module', 'nfsenacional')
-            ->where('setting', 'perfis_manuais')
+            ->where('setting', 'access')
             ->value('value');
 
-        if (empty($access)) {
-            return true;
-        }
-
-        $allowed = array_map('trim', explode(',', (string) $access));
-        return in_array((string) $roleId, $allowed, true);
+        return AdminAccess::permite(is_string($access) ? $access : null, $roleId);
     }
 }
