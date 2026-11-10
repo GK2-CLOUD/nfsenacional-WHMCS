@@ -299,9 +299,73 @@ class ModuleConfig
         return $this->get('debug') === 'on';
     }
 
+    /**
+     * Exibe o bloco de NFS-e no PDF da fatura (quando o tema inclui o snippet).
+     */
+    public function isPdfNfseLinkEnabled(): bool
+    {
+        return $this->get('pdf_nfse_link') === 'on';
+    }
+
+    /**
+     * Fonte legada (campo unico CPF/CNPJ). Mantida apenas como fallback
+     * de instalacoes anteriores a divisao em CPF e CNPJ.
+     */
     public function getDocumentoCliente(): string
     {
-        return $this->get('documento_cliente', 'taxid');
+        return trim((string) $this->get('documento_cliente', ''));
+    }
+
+    public function getDocumentoCpf(): string
+    {
+        return trim((string) $this->get('documento_cliente_cpf', ''));
+    }
+
+    public function getDocumentoCnpj(): string
+    {
+        return trim((string) $this->get('documento_cliente_cnpj', ''));
+    }
+
+    /**
+     * Modo de abrangencia por pais: "todos" ou "selecionados".
+     */
+    public function getEmissaoPaisesModo(): string
+    {
+        $modo = strtolower(trim((string) $this->get('emissao_paises_modo', 'todos')));
+
+        return $modo === 'selecionados' ? 'selecionados' : 'todos';
+    }
+
+    /**
+     * Codigos ISO (2 letras) dos paises com emissao permitida.
+     *
+     * @return string[]
+     */
+    public function getEmissaoPaises(): array
+    {
+        return self::parsePaisesCodigos((string) $this->get('emissao_paises', ''));
+    }
+
+    /**
+     * Normaliza uma lista de codigos de pais recebida da configuracao.
+     *
+     * Aceita virgula, espaco, ponto e virgula ou pipe como separador.
+     *
+     * @return string[]
+     */
+    public static function parsePaisesCodigos(string $valor): array
+    {
+        $partes = preg_split('/[,\s;|]+/', strtoupper(trim($valor))) ?: [];
+        $codigos = [];
+
+        foreach ($partes as $parte) {
+            $parte = trim($parte);
+            if (preg_match('/^[A-Z]{2}$/', $parte) === 1) {
+                $codigos[$parte] = true;
+            }
+        }
+
+        return array_keys($codigos);
     }
 
     /**
@@ -328,6 +392,11 @@ class ModuleConfig
             'ambiente' => 'homologacao',
             'serie_dps' => '1',
             'documento_cliente' => 'taxid',
+            'documento_cliente_cpf' => '',
+            'documento_cliente_cnpj' => '',
+            'emissao_paises_modo' => 'todos',
+            'emissao_paises' => '',
+            'pdf_nfse_link' => '',
             'optante_simples' => '1',
             'emissao_padrao' => '1-Nao Emitir',
             'danfse_logo' => '',

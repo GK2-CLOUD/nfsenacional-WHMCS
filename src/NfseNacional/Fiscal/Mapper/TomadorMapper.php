@@ -130,26 +130,52 @@ class TomadorMapper
 
     /**
      * Obtem o documento (CPF/CNPJ) do cliente.
+     *
+     * Le as duas fontes configuradas (CPF e CNPJ), a configuracao legada de
+     * campo unico e o Tax ID. O CNPJ prevalece quando preenchido; sem ele,
+     * usa o CPF. As fontes podem ser o mesmo campo do cliente.
      */
     private function getDocumento(int $userId, array $client): string
     {
-        $fonte = $this->config->getDocumentoCliente();
+        $cnpj   = $this->lerDocumentoDaFonte($this->config->getDocumentoCnpj(), $userId, $client);
+        $cpf    = $this->lerDocumentoDaFonte($this->config->getDocumentoCpf(), $userId, $client);
+        $legado = $this->lerDocumentoDaFonte($this->config->getDocumentoCliente(), $userId, $client);
+        $taxid  = (string) ($client['tax_id'] ?? $client['taxid'] ?? '');
+
+        $documento = DocumentoResolver::escolher($cnpj, $cpf, $legado, $taxid);
+
+        if ($documento === '') {
+            logActivity(
+                '[nfsenacional] Documento do tomador nao encontrado: configure o campo CPF e/ou CNPJ '
+                . 'no addon (Configuracoes) ou preencha o documento no cliente.'
+            );
+        }
+
+        return $documento;
+    }
+
+    /**
+     * Le o valor de uma fonte de documento: "taxid" ou "[ID] Nome do campo".
+     */
+    private function lerDocumentoDaFonte(string $fonte, int $userId, array $client): string
+    {
+        if ($fonte === '') {
+            return '';
+        }
 
         if ($fonte === 'taxid') {
-            return $client['tax_id'] ?? $client['taxid'] ?? '';
+            return (string) ($client['tax_id'] ?? $client['taxid'] ?? '');
         }
 
         // Extrair ID do custom field do formato "[ID] Nome"
         if (preg_match('/^\[(\d+)\]/', $fonte, $matches)) {
-            $fieldId = (int) $matches[1];
-
             return (string) Capsule::table('tblcustomfieldsvalues')
-                ->where('fieldid', $fieldId)
+                ->where('fieldid', (int) $matches[1])
                 ->where('relid', $userId)
                 ->value('value');
         }
 
-        return $client['tax_id'] ?? '';
+        return '';
     }
 
     /**

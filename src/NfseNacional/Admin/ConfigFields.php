@@ -478,19 +478,96 @@ HTML;
             'Comportamento do módulo: emissão automática, e-mail, cancelamento e controles de acesso.',
         );
 
-        $configarray['fields']['documento_cliente'] = [
-            'FriendlyName' => $fn('Campo CPF/CNPJ do Cliente', true),
+        // Duas fontes de documento. Quem tem um unico campo para CPF e CNPJ
+        // aponta os dois seletores para o mesmo campo: o elemento do XML
+        // (CPF ou CNPJ) e escolhido pelo tamanho do valor lido.
+        $configarray['fields']['documento_cliente_cpf'] = [
+            'FriendlyName' => $fn('Campo CPF do Cliente', false),
             'Type'         => 'dropdown',
-            'Options'      => $docOptions,
-            'Description'  => '"taxid" usa o Tax ID padrão do WHMCS. '
-                . 'Ou selecione o campo personalizado que armazena o CPF/CNPJ do cliente.'
+            'Options'      => ',' . $docOptions,
+            'Description'  => 'Campo do WHMCS que guarda o CPF do tomador. '
+                . '"taxid" usa o Tax ID padrão. Instalações com um único campo '
+                . 'para CPF/CNPJ devem selecionar o mesmo campo aqui e no CNPJ.'
                 . $tip(
-                    'Campo CPF/CNPJ do Cliente',
-                    'Escolha o campo do WHMCS que contém o CPF ou CNPJ do tomador do serviço. '
+                    'Campo CPF do Cliente',
+                    'Escolha o campo do WHMCS que contém o CPF do tomador do serviço. '
                     . '"taxid" usa o campo Tax ID padrão do WHMCS. '
-                    . 'Selecione um campo personalizado se o CPF/CNPJ estiver em outro campo.',
+                    . 'Se o cliente tiver também CNPJ configurado e preenchido, o CNPJ prevalece. '
+                    . 'Se a sua instalação tem um único campo para CPF e CNPJ, '
+                    . 'selecione esse mesmo campo aqui e no campo CNPJ.',
                 ),
-            'Default'      => 'taxid',
+            'Default'      => '',
+        ];
+
+        $configarray['fields']['documento_cliente_cnpj'] = [
+            'FriendlyName' => $fn('Campo CNPJ do Cliente', false),
+            'Type'         => 'dropdown',
+            'Options'      => ',' . $docOptions,
+            'Description'  => 'Campo do WHMCS que guarda o CNPJ do tomador. '
+                . 'Quando configurado e preenchido no cliente, o CNPJ prevalece sobre o CPF. '
+                . 'Pode apontar para o mesmo campo do CPF.'
+                . $tip(
+                    'Campo CNPJ do Cliente',
+                    'Escolha o campo do WHMCS que contém o CNPJ do tomador do serviço. '
+                    . 'Se o cliente tiver CNPJ preenchido, a nota é emitida por ele; '
+                    . 'caso contrário, o módulo usa o CPF configurado. '
+                    . 'Aceita CNPJ numérico ou alfanumérico (14 posições). '
+                    . 'Pode ser o mesmo campo do CPF — útil para instalações '
+                    . 'que guardam os dois documentos em um único campo.',
+                ),
+            'Default'      => '',
+        ];
+
+        // Abrangencia da emissao: todos os paises ou apenas os selecionados.
+        // Os codigos usados sao os mesmos do WHMCS (ISO de 2 letras).
+        $configarray['fields']['emissao_paises_modo'] = [
+            'FriendlyName' => $fn('Emitir NFS-e por País', true),
+            'Type'         => 'dropdown',
+            'Options'      => 'todos,selecionados',
+            'Description'  => '<strong>todos</strong> emite para clientes de qualquer país. '
+                . '<strong>selecionados</strong> emite apenas para os países marcados abaixo.'
+                . $tip(
+                    'Emitir NFS-e por País',
+                    'Define a abrangência da emissão de NFS-e. '
+                    . 'Em "todos", qualquer cliente é elegível (respeitando a política de emissão). '
+                    . 'Em "selecionados", só emite quando o país do cliente estiver na lista abaixo. '
+                    . 'A emissão manual pelo admin também respeita esta lista.',
+                ),
+            'Default'      => 'todos',
+        ];
+
+        $paisesSelecionados = \GK2\NfseNacional\Config\ModuleConfig::parsePaisesCodigos(
+            (string) Capsule::table('tbladdonmodules')
+                ->where('module', 'nfsenacional')
+                ->where('setting', 'emissao_paises')
+                ->value('value')
+        );
+        $paisOptions = '';
+        foreach (self::listarPaisesWhmcs() as $codigoPais => $nomePais) {
+            $paisOptions .= '<option value="' . $codigoPais . '"'
+                . (in_array($codigoPais, $paisesSelecionados, true) ? ' selected' : '')
+                . '>' . htmlspecialchars($codigoPais . ' — ' . $nomePais, ENT_QUOTES, 'UTF-8')
+                . '</option>';
+        }
+        $paisJs = "var f=document.getElementsByName('fields[nfsenacional][emissao_paises]')[0];"
+            . "if(f){f.value=Array.prototype.slice.call(this.selectedOptions)"
+            . ".map(function(o){return o.value}).join(',')}";
+        $seletorPaises = '<div style="margin-top:8px;">'
+            . '<select multiple size="10" style="width:100%;max-width:520px;" onchange="'
+            . htmlspecialchars($paisJs, ENT_QUOTES, 'UTF-8') . '">' . $paisOptions . '</select>'
+            . '<div style="font-size:11px;color:#777;margin-top:4px;">'
+            . 'Segure Ctrl (ou Cmd) para marcar vários países.</div></div>';
+
+        $configarray['fields']['emissao_paises'] = [
+            'FriendlyName' => $fn('Países com emissão de NFS-e', false),
+            'Type'         => 'text',
+            'Size'         => '80',
+            'Description'  => 'Códigos ISO de 2 letras separados por vírgula (ex.: <code>BR, US, PT</code>). '
+                . 'A lista abaixo atualiza este campo automaticamente. '
+                . 'Só é usada quando o modo é <strong>selecionados</strong>. '
+                . 'Em branco com o modo "selecionados" = nenhuma emissão.'
+                . $seletorPaises,
+            'Default'      => '',
         ];
 
         $configarray['fields']['emissao_padrao'] = [
@@ -598,18 +675,45 @@ HTML;
                 ),
         ];
 
-        $configarray['fields']['access'] = [
-            'FriendlyName' => $fn('Perfis com Permissão Manual de NFS-e', true),
-            'Type'         => 'text',
-            'Size'         => '40',
-            'Description'  => 'IDs dos perfis de admin autorizados (separados por vírgula). Vazio = todos os admins.'
+        // Link da NFS-e no PDF da fatura (dl.php). O WHMCS nao tem hook de PDF:
+        // o tema precisa incluir o arquivo do modulo no invoicepdf.tpl.
+        $tplAtivo = (string) Capsule::table('tblconfiguration')
+            ->where('setting', 'Template')
+            ->value('value');
+        $pdfTpl     = dirname(__DIR__, 6) . '/templates/' . $tplAtivo . '/invoicepdf.tpl';
+        $pdfSnippet = '$nfsePdf = ROOTDIR . \'/modules/addons/nfsenacional/templates/pdf-nfse.php\';' . "\n"
+            . 'if (is_file($nfsePdf)) { include $nfsePdf; }';
+        if (!is_file($pdfTpl)) {
+            $pdfStatus = '<span style="color:#c62828;font-weight:700;">invoicepdf.tpl nao encontrado</span>';
+        } elseif (strpos((string) file_get_contents($pdfTpl), 'templates/pdf-nfse.php') !== false) {
+            $pdfStatus = '<span style="color:#2e7d32;font-weight:700;">instalado</span>';
+        } else {
+            $pdfStatus = '<span style="color:#c62828;font-weight:700;">pendente</span>';
+        }
+        $tplAtivoEsc = htmlspecialchars($tplAtivo, ENT_QUOTES, 'UTF-8');
+
+        $configarray['fields']['pdf_nfse_link'] = [
+            'FriendlyName' => $fn('Link da NFS-e no PDF da fatura', false),
+            'Type'         => 'yesno',
+            'Description'  => 'Mostra o numero e os links <strong>DANFS-e</strong> e <strong>XML</strong> no PDF gerado por '
+                . '<code>dl.php?type=i</code>, quando a NFS-e estiver autorizada. '
+                . 'Tema ativo: <strong>' . $tplAtivoEsc . '</strong> — status: ' . $pdfStatus . '.'
+                . '<div style="margin-top:8px;"><strong>Instalacao no tema (uma vez por tema):</strong>'
+                . '<ol style="margin:6px 0 0 18px;padding:0;">'
+                . '<li>Abra <code>templates/' . $tplAtivoEsc . '/invoicepdf.tpl</code> (ele ja e PHP).</li>'
+                . '<li>Cole o trecho abaixo dentro do bloco PHP, antes de <code>$pdf-&gt;Output(</code> (ou no fim do arquivo) — sem adicionar <code>&lt;?php</code>:'
+                . '<pre style="white-space:pre-wrap;background:#f6f8fa;padding:8px;border-radius:4px;font-size:11px;">'
+                . htmlspecialchars($pdfSnippet, ENT_QUOTES, 'UTF-8') . '</pre></li>'
+                . '<li>Ative este campo e salve.</li></ol>'
+                . 'Sem essa linha, nada muda no PDF. A logica fica no modulo e qualquer falha nao interrompe a geracao do PDF.'
+                . '<div style="margin-top:6px;font-size:11px;color:#777;">O botao <em>Imprimir</em> usa a pagina HTML, nao este PDF.</div>'
                 . $tip(
-                    'Perfis com Permissão Manual de NFS-e',
-                    'IDs dos perfis de administrador autorizados a emitir ou cancelar NFS-e '
-                    . 'manualmente pelo painel. Informe os IDs separados por vírgula. '
-                    . 'Deixe vazio para permitir a todos os administradores.',
+                    'Link da NFS-e no PDF da fatura',
+                    'O WHMCS nao expoe hook para o PDF da fatura: o unico ponto de extensao e o arquivo '
+                    . 'invoicepdf.tpl de cada tema. Por isso a instalacao exige uma linha no tema ativo. '
+                    . 'Depois disso, este campo liga e desliga a exibicao. Os links usam token HMAC e abrem '
+                    . 'o DANFS-e/XML servidos pelo modulo.',
                 ),
-            'Default'      => '',
         ];
 
         $configarray['fields']['debug'] = [
@@ -695,6 +799,40 @@ HTML;
         }
 
         return $fields;
+    }
+
+    /**
+     * Lista os paises cadastrados no WHMCS (codigo ISO de 2 letras => nome).
+     *
+     * Le o mesmo arquivo usado pelos formularios do WHMCS para garantir que
+     * os codigos salvos pelo modulo sejam identicos aos do campo de pais.
+     *
+     * @return array<string, string>
+     */
+    private static function listarPaisesWhmcs(): array
+    {
+        $arquivo = dirname(__DIR__, 6) . '/resources/country/dist.countries.json';
+        if (!is_file($arquivo)) {
+            return [];
+        }
+
+        $dados = json_decode((string) file_get_contents($arquivo), true);
+        if (!is_array($dados)) {
+            return [];
+        }
+
+        $paises = [];
+        foreach ($dados as $codigo => $info) {
+            $codigo = strtoupper((string) $codigo);
+            if (preg_match('/^[A-Z]{2}$/', $codigo) !== 1) {
+                continue;
+            }
+            $paises[$codigo] = (string) ($info['name'] ?? $codigo);
+        }
+
+        asort($paises);
+
+        return $paises;
     }
 
     /**
