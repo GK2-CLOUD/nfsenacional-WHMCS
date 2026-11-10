@@ -518,6 +518,58 @@ HTML;
             'Default'      => '',
         ];
 
+        // Abrangencia da emissao: todos os paises ou apenas os selecionados.
+        // Os codigos usados sao os mesmos do WHMCS (ISO de 2 letras).
+        $configarray['fields']['emissao_paises_modo'] = [
+            'FriendlyName' => $fn('Emitir NFS-e por País', true),
+            'Type'         => 'dropdown',
+            'Options'      => 'todos,selecionados',
+            'Description'  => '<strong>todos</strong> emite para clientes de qualquer país. '
+                . '<strong>selecionados</strong> emite apenas para os países marcados abaixo.'
+                . $tip(
+                    'Emitir NFS-e por País',
+                    'Define a abrangência da emissão de NFS-e. '
+                    . 'Em "todos", qualquer cliente é elegível (respeitando a política de emissão). '
+                    . 'Em "selecionados", só emite quando o país do cliente estiver na lista abaixo. '
+                    . 'A emissão manual pelo admin também respeita esta lista.',
+                ),
+            'Default'      => 'todos',
+        ];
+
+        $paisesSelecionados = \GK2\NfseNacional\Config\ModuleConfig::parsePaisesCodigos(
+            (string) Capsule::table('tbladdonmodules')
+                ->where('module', 'nfsenacional')
+                ->where('setting', 'emissao_paises')
+                ->value('value')
+        );
+        $paisOptions = '';
+        foreach (self::listarPaisesWhmcs() as $codigoPais => $nomePais) {
+            $paisOptions .= '<option value="' . $codigoPais . '"'
+                . (in_array($codigoPais, $paisesSelecionados, true) ? ' selected' : '')
+                . '>' . htmlspecialchars($codigoPais . ' — ' . $nomePais, ENT_QUOTES, 'UTF-8')
+                . '</option>';
+        }
+        $paisJs = "var f=document.getElementsByName('fields[nfsenacional][emissao_paises]')[0];"
+            . "if(f){f.value=Array.prototype.slice.call(this.selectedOptions)"
+            . ".map(function(o){return o.value}).join(',')}";
+        $seletorPaises = '<div style="margin-top:8px;">'
+            . '<select multiple size="10" style="width:100%;max-width:520px;" onchange="'
+            . htmlspecialchars($paisJs, ENT_QUOTES, 'UTF-8') . '">' . $paisOptions . '</select>'
+            . '<div style="font-size:11px;color:#777;margin-top:4px;">'
+            . 'Segure Ctrl (ou Cmd) para marcar vários países.</div></div>';
+
+        $configarray['fields']['emissao_paises'] = [
+            'FriendlyName' => $fn('Países com emissão de NFS-e', false),
+            'Type'         => 'text',
+            'Size'         => '80',
+            'Description'  => 'Códigos ISO de 2 letras separados por vírgula (ex.: <code>BR, US, PT</code>). '
+                . 'A lista abaixo atualiza este campo automaticamente. '
+                . 'Só é usada quando o modo é <strong>selecionados</strong>. '
+                . 'Em branco com o modo "selecionados" = nenhuma emissão.'
+                . $seletorPaises,
+            'Default'      => '',
+        ];
+
         $configarray['fields']['emissao_padrao'] = [
             'FriendlyName' => $fn('Emissão Automática de NFS-e', true),
             'Type'         => 'dropdown',
@@ -720,6 +772,40 @@ HTML;
         }
 
         return $fields;
+    }
+
+    /**
+     * Lista os paises cadastrados no WHMCS (codigo ISO de 2 letras => nome).
+     *
+     * Le o mesmo arquivo usado pelos formularios do WHMCS para garantir que
+     * os codigos salvos pelo modulo sejam identicos aos do campo de pais.
+     *
+     * @return array<string, string>
+     */
+    private static function listarPaisesWhmcs(): array
+    {
+        $arquivo = dirname(__DIR__, 6) . '/resources/country/dist.countries.json';
+        if (!is_file($arquivo)) {
+            return [];
+        }
+
+        $dados = json_decode((string) file_get_contents($arquivo), true);
+        if (!is_array($dados)) {
+            return [];
+        }
+
+        $paises = [];
+        foreach ($dados as $codigo => $info) {
+            $codigo = strtoupper((string) $codigo);
+            if (preg_match('/^[A-Z]{2}$/', $codigo) !== 1) {
+                continue;
+            }
+            $paises[$codigo] = (string) ($info['name'] ?? $codigo);
+        }
+
+        asort($paises);
+
+        return $paises;
     }
 
     /**

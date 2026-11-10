@@ -319,6 +319,48 @@ class ModuleConfig
     }
 
     /**
+     * Modo de abrangencia por pais: "todos" ou "selecionados".
+     */
+    public function getEmissaoPaisesModo(): string
+    {
+        $modo = strtolower(trim((string) $this->get('emissao_paises_modo', 'todos')));
+
+        return $modo === 'selecionados' ? 'selecionados' : 'todos';
+    }
+
+    /**
+     * Codigos ISO (2 letras) dos paises com emissao permitida.
+     *
+     * @return string[]
+     */
+    public function getEmissaoPaises(): array
+    {
+        return self::parsePaisesCodigos((string) $this->get('emissao_paises', ''));
+    }
+
+    /**
+     * Normaliza uma lista de codigos de pais recebida da configuracao.
+     *
+     * Aceita virgula, espaco, ponto e virgula ou pipe como separador.
+     *
+     * @return string[]
+     */
+    public static function parsePaisesCodigos(string $valor): array
+    {
+        $partes = preg_split('/[,\s;|]+/', strtoupper(trim($valor))) ?: [];
+        $codigos = [];
+
+        foreach ($partes as $parte) {
+            $parte = trim($parte);
+            if (preg_match('/^[A-Z]{2}$/', $parte) === 1) {
+                $codigos[$parte] = true;
+            }
+        }
+
+        return array_keys($codigos);
+    }
+
+    /**
      * Caminho da logo impressa no DANFS-e local.
      *
      * Vazio e o padrao: o modulo nao assume marca nenhuma. Quem instala
@@ -344,6 +386,8 @@ class ModuleConfig
             'documento_cliente' => 'taxid',
             'documento_cliente_cpf' => '',
             'documento_cliente_cnpj' => '',
+            'emissao_paises_modo' => 'todos',
+            'emissao_paises' => '',
             'optante_simples' => '1',
             'emissao_padrao' => '1-Nao Emitir',
             'danfse_logo' => '',

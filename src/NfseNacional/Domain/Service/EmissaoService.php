@@ -6,6 +6,7 @@ use GK2\NfseNacional\Config\ModuleConfig;
 use GK2\NfseNacional\Domain\AmbienteGuard;
 use GK2\NfseNacional\Domain\Enum\EmissaoPolitica;
 use GK2\NfseNacional\Domain\Enum\NfseStatus;
+use GK2\NfseNacional\Domain\PaisPermitido;
 use GK2\NfseNacional\Fiscal\NacionalProvider;
 use GK2\NfseNacional\Fiscal\Payload\DpsPayloadBuilder;
 use GK2\NfseNacional\Persistence\DpsSequence;
@@ -212,6 +213,15 @@ class EmissaoService
      */
     public function deveEmitir(int $userId, string $hookNome): bool
     {
+        if (!$this->paisPermitido($userId)) {
+            logActivity(
+                '[nfsenacional] Emissao automatica ignorada: pais do cliente fora da lista permitida '
+                . '(modo "selecionados").'
+            );
+
+            return false;
+        }
+
         $politica = $this->getPoliticaCliente($userId);
 
         if ($politica === null) {
@@ -239,6 +249,31 @@ class EmissaoService
         }
 
         return trim($result['companyname'] ?? '');
+    }
+
+    /**
+     * Verifica se o pais do cliente bloqueia a emissao (usado no manual).
+     */
+    public function emissaoBloqueadaPorPais(int $userId): bool
+    {
+        return !$this->paisPermitido($userId);
+    }
+
+    /**
+     * Aplica a configuracao de abrangencia por pais.
+     */
+    private function paisPermitido(int $userId): bool
+    {
+        $modo = $this->config->getEmissaoPaisesModo();
+        if ($modo !== 'selecionados') {
+            return true;
+        }
+
+        $pais = (string) \WHMCS\Database\Capsule::table('tblclients')
+            ->where('id', $userId)
+            ->value('country');
+
+        return PaisPermitido::permite($modo, $this->config->getEmissaoPaises(), $pais);
     }
 
     /**

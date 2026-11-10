@@ -49,6 +49,12 @@ class EmitirAction
             exit;
         }
 
+        if ($service->emissaoBloqueadaPorPais($userId)) {
+            $msg = urlencode('Emissão bloqueada: o país do cliente não está na lista de países permitidos.');
+            header('Location: invoices.php?action=edit&id=' . $invoiceId . '&nfse_status=error&nfse_msg=' . $msg);
+            exit;
+        }
+
         $result = $service->processarEmissao($invoiceId, 'manual');
 
         $status = $result['sucesso'] ? 'success' : 'error';
