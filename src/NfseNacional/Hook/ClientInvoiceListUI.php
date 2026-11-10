@@ -110,6 +110,8 @@ class ClientInvoiceListUI
         var a = document.createElement('a');
         a.href = href;
         a.className = 'btn btn-default nfse-action';
+        a.target = '_blank';
+        a.rel = 'noopener';
         a.title = label;
         a.innerHTML = '<i class="fas ' + icon + '"></i> ' + label;
         return a;
