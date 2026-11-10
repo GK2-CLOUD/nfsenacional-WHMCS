@@ -478,19 +478,44 @@ HTML;
             'Comportamento do módulo: emissão automática, e-mail, cancelamento e controles de acesso.',
         );
 
-        $configarray['fields']['documento_cliente'] = [
-            'FriendlyName' => $fn('Campo CPF/CNPJ do Cliente', true),
+        // Duas fontes de documento. Quem tem um unico campo para CPF e CNPJ
+        // aponta os dois seletores para o mesmo campo: o elemento do XML
+        // (CPF ou CNPJ) e escolhido pelo tamanho do valor lido.
+        $configarray['fields']['documento_cliente_cpf'] = [
+            'FriendlyName' => $fn('Campo CPF do Cliente', false),
             'Type'         => 'dropdown',
-            'Options'      => $docOptions,
-            'Description'  => '"taxid" usa o Tax ID padrão do WHMCS. '
-                . 'Ou selecione o campo personalizado que armazena o CPF/CNPJ do cliente.'
+            'Options'      => ',' . $docOptions,
+            'Description'  => 'Campo do WHMCS que guarda o CPF do tomador. '
+                . '"taxid" usa o Tax ID padrão. Instalações com um único campo '
+                . 'para CPF/CNPJ devem selecionar o mesmo campo aqui e no CNPJ.'
                 . $tip(
-                    'Campo CPF/CNPJ do Cliente',
-                    'Escolha o campo do WHMCS que contém o CPF ou CNPJ do tomador do serviço. '
+                    'Campo CPF do Cliente',
+                    'Escolha o campo do WHMCS que contém o CPF do tomador do serviço. '
                     . '"taxid" usa o campo Tax ID padrão do WHMCS. '
-                    . 'Selecione um campo personalizado se o CPF/CNPJ estiver em outro campo.',
+                    . 'Se o cliente tiver também CNPJ configurado e preenchido, o CNPJ prevalece. '
+                    . 'Se a sua instalação tem um único campo para CPF e CNPJ, '
+                    . 'selecione esse mesmo campo aqui e no campo CNPJ.',
                 ),
-            'Default'      => 'taxid',
+            'Default'      => '',
+        ];
+
+        $configarray['fields']['documento_cliente_cnpj'] = [
+            'FriendlyName' => $fn('Campo CNPJ do Cliente', false),
+            'Type'         => 'dropdown',
+            'Options'      => ',' . $docOptions,
+            'Description'  => 'Campo do WHMCS que guarda o CNPJ do tomador. '
+                . 'Quando configurado e preenchido no cliente, o CNPJ prevalece sobre o CPF. '
+                . 'Pode apontar para o mesmo campo do CPF.'
+                . $tip(
+                    'Campo CNPJ do Cliente',
+                    'Escolha o campo do WHMCS que contém o CNPJ do tomador do serviço. '
+                    . 'Se o cliente tiver CNPJ preenchido, a nota é emitida por ele; '
+                    . 'caso contrário, o módulo usa o CPF configurado. '
+                    . 'Aceita CNPJ numérico ou alfanumérico (14 posições). '
+                    . 'Pode ser o mesmo campo do CPF — útil para instalações '
+                    . 'que guardam os dois documentos em um único campo.',
+                ),
+            'Default'      => '',
         ];
 
         $configarray['fields']['emissao_padrao'] = [

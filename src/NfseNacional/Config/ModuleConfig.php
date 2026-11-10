@@ -299,9 +299,23 @@ class ModuleConfig
         return $this->get('debug') === 'on';
     }
 
+    /**
+     * Fonte legada (campo unico CPF/CNPJ). Mantida apenas como fallback
+     * de instalacoes anteriores a divisao em CPF e CNPJ.
+     */
     public function getDocumentoCliente(): string
     {
-        return $this->get('documento_cliente', 'taxid');
+        return trim((string) $this->get('documento_cliente', ''));
+    }
+
+    public function getDocumentoCpf(): string
+    {
+        return trim((string) $this->get('documento_cliente_cpf', ''));
+    }
+
+    public function getDocumentoCnpj(): string
+    {
+        return trim((string) $this->get('documento_cliente_cnpj', ''));
     }
 
     /**
@@ -328,6 +342,8 @@ class ModuleConfig
             'ambiente' => 'homologacao',
             'serie_dps' => '1',
             'documento_cliente' => 'taxid',
+            'documento_cliente_cpf' => '',
+            'documento_cliente_cnpj' => '',
             'optante_simples' => '1',
             'emissao_padrao' => '1-Nao Emitir',
             'danfse_logo' => '',
