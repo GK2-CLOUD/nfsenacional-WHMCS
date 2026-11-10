@@ -106,42 +106,48 @@ class ClientInvoiceListUI
 (function () {
     var nfse = {$json};
 
-    function botao(href, label, bg, fg) {
+    function botao(href, label, icon) {
         var a = document.createElement('a');
         a.href = href;
-        a.target = '_blank';
-        a.rel = 'noopener';
-        a.textContent = label;
-        a.style.cssText = 'display:inline-block;margin:6px 6px 0 0;padding:6px 12px;border-radius:4px;'
-            + 'font-size:12px;font-weight:700;text-decoration:none;background:' + bg + ';color:' + fg + ';';
+        a.className = 'btn btn-default nfse-action';
+        a.title = label;
+        a.innerHTML = '<i class="fas ' + icon + '"></i> ' + label;
         return a;
     }
 
     function montar() {
-        if (document.querySelector('.nfse-invoice-actions')) {
+        if (document.querySelector('.nfse-action')) {
             return;
         }
 
-        var box = document.createElement('div');
-        box.className = 'nfse-invoice-actions';
-        box.style.cssText = 'margin-top:8px;';
-
+        var botoes = [];
         if (nfse.danfse) {
-            box.appendChild(botao(nfse.danfse, 'Baixar DANFS-e', '#2e7d32', '#fff'));
-            box.appendChild(botao(nfse.xml, 'Baixar XML', '#1565c0', '#fff'));
+            botoes.push(botao(nfse.danfse, 'DANFS-e', 'fa-file-invoice'));
+            botoes.push(botao(nfse.xml, 'XML', 'fa-file-code'));
         } else {
-            box.appendChild(botao(nfse.module, 'Ver NFS-e (' + nfse.status + ')', '#607d8b', '#fff'));
+            botoes.push(botao(nfse.module, 'NFS-e (' + nfse.status + ')', 'fa-file-invoice'));
+        }
+
+        var dl    = document.querySelector('a[href*="dl.php?type=i"]');
+        var grupo = dl ? dl.parentNode : document.querySelector('.btn-group.d-print-none');
+
+        if (grupo && grupo.classList.contains('btn-group')) {
+            botoes.forEach(function (b) { grupo.appendChild(b); });
+            return;
         }
 
         var alvo = document.querySelector('.invoice-status') || document.querySelector('.invoice-container');
+        var box  = document.createElement('div');
+        box.style.cssText = 'margin-top:8px;';
+        botoes.forEach(function (b) { box.appendChild(b); });
+
         if (alvo) {
             alvo.appendChild(box);
             return;
         }
 
         box.style.cssText = 'position:fixed;right:18px;bottom:18px;z-index:9999;'
-            + 'background:#fff;padding:8px 10px;border-radius:6px;'
-            + 'box-shadow:0 2px 10px rgba(0,0,0,.18);';
+            + 'background:#fff;padding:8px;border-radius:6px;box-shadow:0 2px 10px rgba(0,0,0,.18);';
         document.body.appendChild(box);
     }
 
