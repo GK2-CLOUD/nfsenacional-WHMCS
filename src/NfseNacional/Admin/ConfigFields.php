@@ -675,6 +675,47 @@ HTML;
                 ),
         ];
 
+        // Link da NFS-e no PDF da fatura (dl.php). O WHMCS nao tem hook de PDF:
+        // o tema precisa incluir o arquivo do modulo no invoicepdf.tpl.
+        $tplAtivo = (string) Capsule::table('tblconfiguration')
+            ->where('setting', 'Template')
+            ->value('value');
+        $pdfTpl     = dirname(__DIR__, 6) . '/templates/' . $tplAtivo . '/invoicepdf.tpl';
+        $pdfSnippet = '$nfsePdf = ROOTDIR . \'/modules/addons/nfsenacional/templates/pdf-nfse.php\';' . "\n"
+            . 'if (is_file($nfsePdf)) { include $nfsePdf; }';
+        if (!is_file($pdfTpl)) {
+            $pdfStatus = '<span style="color:#c62828;font-weight:700;">invoicepdf.tpl nao encontrado</span>';
+        } elseif (strpos((string) file_get_contents($pdfTpl), 'templates/pdf-nfse.php') !== false) {
+            $pdfStatus = '<span style="color:#2e7d32;font-weight:700;">instalado</span>';
+        } else {
+            $pdfStatus = '<span style="color:#c62828;font-weight:700;">pendente</span>';
+        }
+        $tplAtivoEsc = htmlspecialchars($tplAtivo, ENT_QUOTES, 'UTF-8');
+
+        $configarray['fields']['pdf_nfse_link'] = [
+            'FriendlyName' => $fn('Link da NFS-e no PDF da fatura', false),
+            'Type'         => 'yesno',
+            'Description'  => 'Mostra o numero e os links <strong>DANFS-e</strong> e <strong>XML</strong> no PDF gerado por '
+                . '<code>dl.php?type=i</code>, quando a NFS-e estiver autorizada. '
+                . 'Tema ativo: <strong>' . $tplAtivoEsc . '</strong> — status: ' . $pdfStatus . '.'
+                . '<div style="margin-top:8px;"><strong>Instalacao no tema (uma vez por tema):</strong>'
+                . '<ol style="margin:6px 0 0 18px;padding:0;">'
+                . '<li>Abra <code>templates/' . $tplAtivoEsc . '/invoicepdf.tpl</code> (ele ja e PHP).</li>'
+                . '<li>Cole o trecho abaixo dentro do bloco PHP, antes de <code>$pdf-&gt;Output(</code> (ou no fim do arquivo) — sem adicionar <code>&lt;?php</code>:'
+                . '<pre style="white-space:pre-wrap;background:#f6f8fa;padding:8px;border-radius:4px;font-size:11px;">'
+                . htmlspecialchars($pdfSnippet, ENT_QUOTES, 'UTF-8') . '</pre></li>'
+                . '<li>Ative este campo e salve.</li></ol>'
+                . 'Sem essa linha, nada muda no PDF. A logica fica no modulo e qualquer falha nao interrompe a geracao do PDF.'
+                . '<div style="margin-top:6px;font-size:11px;color:#777;">O botao <em>Imprimir</em> usa a pagina HTML, nao este PDF.</div>'
+                . $tip(
+                    'Link da NFS-e no PDF da fatura',
+                    'O WHMCS nao expoe hook para o PDF da fatura: o unico ponto de extensao e o arquivo '
+                    . 'invoicepdf.tpl de cada tema. Por isso a instalacao exige uma linha no tema ativo. '
+                    . 'Depois disso, este campo liga e desliga a exibicao. Os links usam token HMAC e abrem '
+                    . 'o DANFS-e/XML servidos pelo modulo.',
+                ),
+        ];
+
         $configarray['fields']['debug'] = [
             'FriendlyName' => $fn('Modo Debug', false),
             'Type'         => 'yesno',

@@ -300,6 +300,14 @@ class ModuleConfig
     }
 
     /**
+     * Exibe o bloco de NFS-e no PDF da fatura (quando o tema inclui o snippet).
+     */
+    public function isPdfNfseLinkEnabled(): bool
+    {
+        return $this->get('pdf_nfse_link') === 'on';
+    }
+
+    /**
      * Fonte legada (campo unico CPF/CNPJ). Mantida apenas como fallback
      * de instalacoes anteriores a divisao em CPF e CNPJ.
      */
@@ -388,6 +396,7 @@ class ModuleConfig
             'documento_cliente_cnpj' => '',
             'emissao_paises_modo' => 'todos',
             'emissao_paises' => '',
+            'pdf_nfse_link' => '',
             'optante_simples' => '1',
             'emissao_padrao' => '1-Nao Emitir',
             'danfse_logo' => '',

@@ -32,6 +32,36 @@ Resumo rápido:
 - Gera o DANFS-e (PDF) a partir do XML autorizado, sem depender do endpoint do governo, e disponibiliza junto do XML na área do cliente e no admin.
 - Mantém histórico completo por fatura (status, protocolo, chave de acesso, valores de ISS) em tabela própria do banco.
 
+## NFS-e no PDF da fatura
+
+O PDF gerado pelo botão **Download** da fatura (`dl.php?type=i&id=...`) é montado a
+partir de `templates/<tema>/invoicepdf.tpl`. O WHMCS não expõe hook para essa
+geração, então o tema precisa incluir o bloco do módulo.
+
+### Instalação (uma vez por tema)
+
+1. Ative a opção **Link da NFS-e no PDF da fatura** nas configurações do addon.
+2. Abra `templates/<seu-tema>/invoicepdf.tpl`.
+3. Cole o trecho abaixo dentro do bloco PHP do template, antes de
+   `$pdf->Output(` (ou no fim do arquivo). O `invoicepdf.tpl` já está em modo
+   PHP — não adicione `<?php`:
+
+```php
+$nfsePdf = ROOTDIR . '/modules/addons/nfsenacional/templates/pdf-nfse.php';
+if (is_file($nfsePdf)) { include $nfsePdf; }
+```
+
+4. Salve. O campo de configuração mostra se o tema ativo já está com o trecho
+   instalado (status **instalado/pendente**).
+
+Quando a opção está desligada, ou quando a fatura não tem NFS-e autorizada, o
+PDF sai exatamente como antes. Toda a lógica fica em
+`templates/pdf-nfse.php`, com `try/catch`: nenhuma falha interrompe a geração do
+PDF.
+
+> Observação: o botão **Imprimir** usa a página HTML da fatura, não este PDF.
+> Os links ali são os botões injetados na própria página.
+
 ## Arquitetura
 
 O código vive em `src/NfseNacional/` sob o namespace `GK2\NfseNacional`, organizado
