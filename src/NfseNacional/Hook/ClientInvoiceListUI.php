@@ -3,27 +3,34 @@
 namespace GK2\NfseNacional\Hook;
 
 use GK2\NfseNacional\Domain\AmbienteGuard;
+use GK2\NfseNacional\Domain\Service\DownloadUrlService;
+use GK2\NfseNacional\Persistence\NfseRepository;
 use WHMCS\Database\Capsule;
 
 /**
- * Injeta ícone de NFS-e ao lado de cada fatura na área do cliente.
+ * Injeta o acesso a NFS-e na area do cliente.
+ *
+ * - Lista de faturas: badge ao lado do numero da fatura.
+ * - Pagina da fatura (viewinvoice.php): botao com DANFS-e e XML assinados.
+ *
+ * O tema twenty-one usa DataTables e linhas com onclick (sem data-url),
+ * por isso a injecao observa o tbody e tambem o evento draw.dt.
  */
 class ClientInvoiceListUI
 {
     private const TABLE = 'tblnfsenacional';
 
-    /** Actions do clientarea.php onde links de fatura aparecem. */
-    private const ALLOWED_ACTIONS = ['invoices', 'viewinvoice', ''];
+    /** Evita injetar o script duas vezes (head + footer). */
+    private static bool $rendered = false;
 
     public function getScript(array $vars): string
     {
-        $script = basename($_SERVER['SCRIPT_NAME'] ?? '');
-        if ($script !== 'clientarea.php') {
+        if (self::$rendered) {
             return '';
         }
 
-        $action = $_GET['action'] ?? '';
-        if (!in_array($action, self::ALLOWED_ACTIONS, true)) {
+        $script = basename($_SERVER['SCRIPT_NAME'] ?? '');
+        if (!in_array($script, ['clientarea.php', 'viewinvoice.php'], true)) {
             return '';
         }
 
@@ -35,101 +42,241 @@ class ClientInvoiceListUI
 
             $ambiente = AmbienteGuard::getInstance()->value();
 
-            $rows = Capsule::table(self::TABLE)
-                ->where('id_client', $clientId)
-                ->where('ambiente', $ambiente)
-                ->select('id_invoice', 'status')
-                ->get();
+            if ($script === 'viewinvoice.php') {
+                $html = $this->scriptFatura($clientId, $ambiente);
+                self::$rendered = $html !== '';
 
-            if ($rows->isEmpty()) {
+                return $html;
+            }
+
+            $action = $_GET['action'] ?? '';
+            if (!in_array($action, ['invoices', ''], true)) {
                 return '';
             }
 
-            $map = [];
-            foreach ($rows as $row) {
-                $map[(int) $row->id_invoice] = $row->status;
-            }
+            $html = $this->scriptLista($clientId, $ambiente);
+            self::$rendered = $html !== '';
 
-            $mapJson = json_encode($map, JSON_THROW_ON_ERROR);
-            $nfseUrl = 'index.php?m=nfsenacional&search=';
+            return $html;
         } catch (\Throwable $e) {
             return '';
         }
+    }
+
+    /**
+     * Script da pagina da fatura: botoes diretos para DANFS-e e XML.
+     */
+    private function scriptFatura(int $clientId, string $ambiente): string
+    {
+        $invoiceId = (int) ($_GET['id'] ?? 0);
+        if ($invoiceId <= 0) {
+            return '';
+        }
+
+        $row = Capsule::table(self::TABLE)
+            ->where('id_client', $clientId)
+            ->where('id_invoice', $invoiceId)
+            ->where('ambiente', $ambiente)
+            ->first();
+
+        if ($row === null) {
+            return '';
+        }
+
+        $danfse = $xml = '';
+        if ((string) $row->status === 'AUTORIZADA') {
+            $nfse = (new NfseRepository())->findById((int) $row->id);
+            if ($nfse !== null) {
+                $urls   = new DownloadUrlService();
+                $danfse = $urls->danfseUrl($nfse);
+                $xml    = $urls->xmlUrl($nfse);
+            }
+        }
+
+        $moduleUrl = 'index.php?m=nfsenacional&search=' . $invoiceId;
+        $json = json_encode([
+            'status' => (string) $row->status,
+            'danfse' => $danfse,
+            'xml'    => $xml,
+            'module' => $moduleUrl,
+        ], JSON_THROW_ON_ERROR);
+
+        return <<<HTML
+<script>
+(function () {
+    var nfse = {$json};
+
+    function botao(href, label, bg, fg) {
+        var a = document.createElement('a');
+        a.href = href;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.textContent = label;
+        a.style.cssText = 'display:inline-block;margin:6px 6px 0 0;padding:6px 12px;border-radius:4px;'
+            + 'font-size:12px;font-weight:700;text-decoration:none;background:' + bg + ';color:' + fg + ';';
+        return a;
+    }
+
+    function montar() {
+        if (document.querySelector('.nfse-invoice-actions')) {
+            return;
+        }
+
+        var box = document.createElement('div');
+        box.className = 'nfse-invoice-actions';
+        box.style.cssText = 'margin-top:8px;';
+
+        if (nfse.danfse) {
+            box.appendChild(botao(nfse.danfse, 'Baixar DANFS-e', '#2e7d32', '#fff'));
+            box.appendChild(botao(nfse.xml, 'Baixar XML', '#1565c0', '#fff'));
+        } else {
+            box.appendChild(botao(nfse.module, 'Ver NFS-e (' + nfse.status + ')', '#607d8b', '#fff'));
+        }
+
+        var alvo = document.querySelector('.invoice-status') || document.querySelector('.invoice-container');
+        if (alvo) {
+            alvo.appendChild(box);
+            return;
+        }
+
+        box.style.cssText = 'position:fixed;right:18px;bottom:18px;z-index:9999;'
+            + 'background:#fff;padding:8px 10px;border-radius:6px;'
+            + 'box-shadow:0 2px 10px rgba(0,0,0,.18);';
+        document.body.appendChild(box);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', montar);
+    } else {
+        montar();
+    }
+})();
+</script>
+HTML;
+    }
+
+    /**
+     * Script da lista de faturas: badge por fatura, tolerante a DataTables.
+     */
+    private function scriptLista(int $clientId, string $ambiente): string
+    {
+        $rows = Capsule::table(self::TABLE)
+            ->where('id_client', $clientId)
+            ->where('ambiente', $ambiente)
+            ->select('id_invoice', 'status')
+            ->get();
+
+        if ($rows->isEmpty()) {
+            return '';
+        }
+
+        $map = [];
+        foreach ($rows as $row) {
+            $map[(int) $row->id_invoice] = $row->status;
+        }
+
+        $mapJson = json_encode($map, JSON_THROW_ON_ERROR);
+        $permBase = 'index.php?m=nfsenacional&search=';
 
         return <<<HTML
 <script>
 (function () {
     var nfseMap  = {$mapJson};
-    var nfseBase = '{$nfseUrl}';
+    var nfseBase = '{$permBase}';
 
-    var nfseColors = {
-        'AUTORIZADA':  {bg:'#e8f5e9', fg:'#2e7d32', border:'#c8e6c9'},
-        'CANCELADA':   {bg:'#fff3e0', fg:'#e65100', border:'#ffe0b2'},
-        'ERRO':        {bg:'#ffebee', fg:'#c62828', border:'#ffcdd2'},
-        'PROCESSANDO': {bg:'#e3f2fd', fg:'#1565c0', border:'#bbdefb'},
-        'PENDENTE':    {bg:'#f5f5f5', fg:'#757575', border:'#e0e0e0'},
-        'SUBSTITUIDA': {bg:'#efebe9', fg:'#4e342e', border:'#d7ccc8'}
+    var cores = {
+        'AUTORIZADA':  {bg:'#e8f5e9', fg:'#2e7d32', bd:'#c8e6c9'},
+        'CANCELADA':   {bg:'#fff3e0', fg:'#e65100', bd:'#ffe0b2'},
+        'ERRO':        {bg:'#ffebee', fg:'#c62828', bd:'#ffcdd2'},
+        'PROCESSANDO': {bg:'#e3f2fd', fg:'#1565c0', bd:'#bbdefb'},
+        'PENDENTE':    {bg:'#f5f5f5', fg:'#757575', bd:'#e0e0e0'},
+        'SUBSTITUIDA': {bg:'#efebe9', fg:'#4e342e', bd:'#d7ccc8'}
     };
 
-    var nfseIcons = {
-        'AUTORIZADA':  'fa-check-circle',
-        'CANCELADA':   'fa-ban',
-        'ERRO':        'fa-exclamation-circle',
-        'PROCESSANDO': 'fa-sync-alt',
-        'PENDENTE':    'fa-clock',
-        'SUBSTITUIDA': 'fa-exchange-alt'
-    };
-
-    function buildBadge(status, invoiceId) {
-        var c    = nfseColors[status] || {bg:'#f5f5f5', fg:'#888', border:'#e0e0e0'};
-        var icon = nfseIcons[status]  || 'fa-file-invoice';
-        var label = status.charAt(0) + status.slice(1).toLowerCase();
-        var a    = document.createElement('a');
+    function badge(status, invoiceId) {
+        var c = cores[status] || {bg:'#f5f5f5', fg:'#888', bd:'#e0e0e0'};
+        var a = document.createElement('a');
         a.className = 'nfse-client-badge';
         a.href  = nfseBase + invoiceId;
         a.title = 'Ver NFS-e desta fatura';
-        a.style.cssText = [
-            'display:inline-flex', 'align-items:center', 'gap:3px',
-            'margin-left:6px', 'padding:1px 6px', 'border-radius:3px',
-            'font-size:10px', 'font-weight:700', 'vertical-align:middle',
-            'text-decoration:none', 'cursor:pointer', 'white-space:nowrap',
-            'background:' + c.bg, 'color:' + c.fg, 'border:1px solid ' + c.border
-        ].join(';');
-        a.innerHTML = '<i class="fas ' + icon + '" style="font-size:10px;"></i> NFS-e';
-        a.addEventListener('click', function(e){ e.stopPropagation(); });
+        a.style.cssText = 'display:inline-block;margin-left:6px;padding:1px 6px;border-radius:3px;'
+            + 'font-size:10px;font-weight:700;text-decoration:none;white-space:nowrap;'
+            + 'background:' + c.bg + ';color:' + c.fg + ';border:1px solid ' + c.bd + ';';
+        a.innerHTML = '<i class="fas fa-file-invoice" style="font-size:10px;"></i> NFS-e';
+        a.addEventListener('click', function (e) { e.stopPropagation(); });
         return a;
     }
 
+    function idDaLinha(tr) {
+        var onclick = tr.getAttribute('onclick') || '';
+        var m = onclick.match(/viewinvoice\.php\?id=(\d+)/);
+        if (m) return parseInt(m[1], 10);
+
+        var link = tr.querySelector('a[href*="viewinvoice.php?id="]');
+        if (link) {
+            var m2 = link.href.match(/[?&]id=(\d+)/);
+            if (m2) return parseInt(m2[1], 10);
+        }
+
+        var cells = tr.querySelectorAll('td');
+        for (var i = 0; i < cells.length; i++) {
+            var t = (cells[i].textContent || '').trim();
+            if (/^\d+$/.test(t) && Object.prototype.hasOwnProperty.call(nfseMap, parseInt(t, 10))) {
+                return parseInt(t, 10);
+            }
+        }
+
+        return 0;
+    }
+
     function addIcons() {
-        /* Tabela de faturas do cliente: cada <tr data-url="viewinvoice.php?id=X"> */
-        var rows = document.querySelectorAll('tr[data-url*="viewinvoice.php?id="]');
-        rows.forEach(function (tr) {
-            var match = tr.getAttribute('data-url').match(/[?&]id=(\d+)/);
-            if (!match) return;
-            var invoiceId = parseInt(match[1], 10);
-            if (!Object.prototype.hasOwnProperty.call(nfseMap, invoiceId)) return;
+        var trs = document.querySelectorAll('table tbody tr');
+        trs.forEach(function (tr) {
+            var invoiceId = idDaLinha(tr);
+            if (!invoiceId || !Object.prototype.hasOwnProperty.call(nfseMap, invoiceId)) return;
+            if (tr.querySelector('.nfse-client-badge')) return;
 
-            var td = tr.querySelector('td.dtr-control');
-            if (!td || td.querySelector('.nfse-client-badge')) return;
-            td.appendChild(buildBadge(nfseMap[invoiceId], invoiceId));
-        });
-
-        /* Fallback: links diretos em outros contextos */
-        document.querySelectorAll('a[href*="viewinvoice.php?id="]:not([data-nfse-checked])').forEach(function (link) {
-            link.setAttribute('data-nfse-checked', '1');
-            var match = link.href.match(/[?&]id=(\d+)/);
-            if (!match) return;
-            var invoiceId = parseInt(match[1], 10);
-            if (!Object.prototype.hasOwnProperty.call(nfseMap, invoiceId)) return;
-            if (link.parentNode.querySelector('.nfse-client-badge')) return;
-            link.insertAdjacentElement('afterend', buildBadge(nfseMap[invoiceId], invoiceId));
+            var cells = tr.querySelectorAll('td');
+            var alvo = null;
+            for (var i = 0; i < cells.length; i++) {
+                if ((cells[i].textContent || '').trim().indexOf(String(invoiceId)) === 0) {
+                    alvo = cells[i];
+                    break;
+                }
+            }
+            alvo = alvo || cells[cells.length - 1];
+            if (alvo) alvo.appendChild(badge(nfseMap[invoiceId], invoiceId));
         });
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', addIcons);
-    } else {
+    function observar() {
+        var tbody = document.querySelector('#tableInvoicesList tbody') || document.querySelector('table tbody');
+        if (!tbody) return false;
+
+        new MutationObserver(addIcons).observe(tbody, {childList: true, subtree: true});
+        return true;
+    }
+
+    function iniciar() {
         addIcons();
+        if (!observar()) {
+            var tentativas = 0;
+            var timer = setInterval(function () {
+                tentativas++;
+                if (observar() || tentativas > 20) clearInterval(timer);
+            }, 500);
+        }
+    }
+
+    if (window.jQuery) {
+        window.jQuery(document).on('draw.dt', addIcons);
+        window.jQuery(document).ajaxComplete(addIcons);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', iniciar);
+    } else {
+        iniciar();
     }
 })();
 </script>

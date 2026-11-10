@@ -46,8 +46,13 @@ class HookHandler
             return $ui->getScript();
         });
 
-        // Ícone NFS-e nas listagens de faturas da área do cliente
+        // Ícone/botão NFS-e na área do cliente (head e footer como fallback)
         add_hook('ClientAreaHeadOutput', 1, function ($vars) {
+            $ui = new ClientInvoiceListUI();
+            return $ui->getScript($vars);
+        });
+
+        add_hook('ClientAreaFooterOutput', 1, function ($vars) {
             $ui = new ClientInvoiceListUI();
             return $ui->getScript($vars);
         });
