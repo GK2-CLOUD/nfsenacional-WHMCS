@@ -54,7 +54,7 @@ class ConsultaService
 
         logModuleCall('nfsenacional', '[' . strtoupper($ambiente->value) . '] Cron-Inicio', [
             'pendentes' => count($pendentes),
-        ], '');
+        ], []);
 
         foreach ($pendentes as $nfse) {
             $resultado = $this->consultarUnica($nfse);
@@ -67,7 +67,7 @@ class ConsultaService
         logModuleCall('nfsenacional', '[' . strtoupper($ambiente->value) . '] Cron-Fim', [
             'processados' => $processados,
             'total_pendentes' => count($pendentes),
-        ], '');
+        ], []);
 
         return $processados;
     }
@@ -89,7 +89,7 @@ class ConsultaService
             logModuleCall('nfsenacional', '[' . strtoupper($ambiente->value) . '] Consulta-Bloqueada', [
                 'id' => $id,
                 'ambiente_registro' => $ambienteRegistro,
-            ], $e->getMessage());
+            ], ['error' => $e->getMessage()]);
 
             return ['sucesso' => false, 'msg' => $e->getMessage()];
         }
@@ -149,7 +149,7 @@ class ConsultaService
         } catch (\Exception $e) {
             logModuleCall('nfsenacional', '[' . strtoupper($ambiente->value) . '] Consulta-Exception', [
                 'invoiceId' => $invoiceId,
-            ], $e->getMessage(), $e->getTraceAsString());
+            ], ['error' => $e->getMessage()], ['trace' => $e->getTraceAsString()]);
 
             return ['sucesso' => false, 'msg' => 'Excecao: ' . $e->getMessage()];
         }

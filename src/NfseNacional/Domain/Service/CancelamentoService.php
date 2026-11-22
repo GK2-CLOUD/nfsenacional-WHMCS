@@ -64,7 +64,7 @@ class CancelamentoService
                 'invoiceId' => $invoiceId,
                 'ambiente_nota' => $nfse->ambiente,
                 'ambiente_ativo' => $ambiente->value,
-            ], $e->getMessage());
+            ], ['error' => $e->getMessage()]);
 
             return ['sucesso' => false, 'msg' => $e->getMessage()];
         }
@@ -117,13 +117,13 @@ class CancelamentoService
             logModuleCall('nfsenacional', '[' . strtoupper($ambiente->value) . '] Cancelamento-Erro', [
                 'invoiceId' => $invoiceId,
                 'chaveAcesso' => $nfse->chaveAcesso,
-            ], $response->rawBody);
+            ], ['raw' => $response->rawBody]);
 
             return ['sucesso' => false, 'msg' => 'Erro no cancelamento: ' . $erroMsg];
         } catch (\Exception $e) {
             logModuleCall('nfsenacional', '[' . strtoupper($ambiente->value) . '] Cancelamento-Exception', [
                 'invoiceId' => $invoiceId,
-            ], $e->getMessage(), $e->getTraceAsString());
+            ], ['error' => $e->getMessage()], ['trace' => $e->getTraceAsString()]);
 
             return ['sucesso' => false, 'msg' => 'Excecao: ' . $e->getMessage()];
         }

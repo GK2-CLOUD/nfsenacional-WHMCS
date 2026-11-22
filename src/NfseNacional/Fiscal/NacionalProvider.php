@@ -151,9 +151,9 @@ class NacionalProvider implements ProviderInterface
             logModuleCall(
                 'nfsenacional',
                 $prefix,
-                $request,
-                $response->rawBody,
-                json_encode($response->data),
+                is_array($request) ? $request : ['xml' => $request],
+                ['raw' => $response->rawBody],
+                $response->data,
             );
         }
     }

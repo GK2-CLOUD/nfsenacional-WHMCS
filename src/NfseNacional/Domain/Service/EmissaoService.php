@@ -186,7 +186,7 @@ class EmissaoService
             logModuleCall('nfsenacional', '[' . strtoupper($ambiente->value) . '] Emissao-Erro', [
                 'invoiceId' => $invoiceId,
                 'origem' => $origem,
-            ], $response->rawBody);
+            ], ['raw' => $response->rawBody]);
 
             return ['sucesso' => false, 'msg' => 'Erro na emissao: ' . $erroMsg, 'data' => $response->data];
         } catch (\Exception $e) {
@@ -198,7 +198,7 @@ class EmissaoService
             logModuleCall('nfsenacional', '[' . strtoupper($ambiente->value) . '] Emissao-Exception', [
                 'invoiceId' => $invoiceId,
                 'origem' => $origem,
-            ], $e->getMessage(), $e->getTraceAsString());
+            ], ['error' => $e->getMessage()], ['trace' => $e->getTraceAsString()]);
 
             return ['sucesso' => false, 'msg' => 'Excecao: ' . $e->getMessage(), 'data' => []];
         }

@@ -6,7 +6,7 @@
  * consulta, cancelamento e download de documentos fiscais eletronicos.
  *
  * @package    GK2\NfseNacional
- * @version    1.0.1
+ * @version    1.0.2
  */
 
 if (!defined("WHMCS")) {

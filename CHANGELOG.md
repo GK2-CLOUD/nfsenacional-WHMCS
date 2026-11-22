@@ -5,6 +5,14 @@ Todos as mudanças notáveis deste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [1.0.2] - 2026-11-22
+
+### Corrigido
+- Compatibilidade com WHMCS 9: `logModuleCall` passa a receber arrays em request/response/processedData,
+  evitando `TypeError: array_merge(): Argument #1 must be of type array, string given` no hook `InvoiceCreated`.
+- Auditoria de todas as chamadas de log do addon: strings vazias foram substituidas por `[]` e valores
+  escalares foram encapsulados em arrays.
+
 ## [1.0.0] - 2026-07-25
 
 ### Adicionado
