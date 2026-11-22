@@ -71,7 +71,7 @@ class EmailService
         } catch (\Exception $e) {
             logModuleCall('nfsenacional', 'Email-Exception', [
                 'invoiceId' => $invoiceId,
-            ], $e->getMessage());
+            ], ['error' => $e->getMessage()]);
 
             return ['sucesso' => false, 'msg' => 'Excecao: ' . $e->getMessage()];
         }

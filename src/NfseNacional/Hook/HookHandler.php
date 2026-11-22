@@ -23,7 +23,7 @@ class HookHandler
 
         // Emitir ao gerar fatura
         add_hook('InvoiceCreated', 1, function ($vars) {
-            logModuleCall('nfsenacional', 'Hook-InvoiceCreated', $vars, '', '', '');
+            logModuleCall('nfsenacional', 'Hook-InvoiceCreated', $vars, [], [], []);
             $hooks = new InvoiceHooks();
             $hooks->onInvoiceCreated($vars);
         });
